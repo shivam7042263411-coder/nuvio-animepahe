@@ -39,11 +39,15 @@ const sandbox = {
     fetch: async (url, options) => {
         fetchCalls++;
         const r = route(url, options);
+        const headerMap = r.headers || {};
         return {
             ok: r.status >= 200 && r.status < 300,
             status: r.status,
             text: async () => r.body,
             json: async () => JSON.parse(r.body),
+            headers: {
+                get: (name) => headerMap[String(name).toLowerCase()] ?? null,
+            },
         };
     },
 };
@@ -130,49 +134,63 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     sandbox.responseCache = null;
 
     // --- kwik download: the only source (HLS is not offered) ----------------
+    // The /e/ embed URL maps to the /f/ file page, whose form POSTs to /d/ and
+    // answers 302 with the media file in Location.
     check(
-        "kwik download url swaps /e/ for /d/",
+        "kwik file url swaps /e/ for /f/",
         sandbox.kwikDownloadUrl("https://kwik.cx/e/abc123"),
-        "https://kwik.cx/d/abc123"
+        "https://kwik.cx/f/abc123"
     );
 
+    const filePage =
+        '<form method="POST" action="https://kwik.cx/d/abc123">' +
+        '<input type="hidden" name="_token" value="tok123"></form>';
+
     let postBody = null;
+    let postRedirect = null;
     routes = {
+        "kwik.cx/f/": () => ({ status: 200, body: filePage }),
         "kwik.cx/d/": (url, options) => {
-            if (options && options.method === "POST") {
-                postBody = options.body;
-                return { status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) };
-            }
-            return { status: 200, body: '<form method="POST"><input type="hidden" name="_token" value="tok123"></form>' };
+            postBody = options && options.body;
+            postRedirect = options && options.redirect;
+            return { status: 302, body: "", headers: { location: "https://cdn.example/ep1.mp4" } };
         },
     };
     const dl = await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123");
     check("kwik download yields a direct mp4", [dl && dl.url, dl && dl.type], ["https://cdn.example/ep1.mp4", "mp4"]);
     check("kwik download posts its token", postBody, "_token=tok123");
+    check("kwik download does not auto-follow the redirect", postRedirect, "manual");
 
-    // No token (no download offered, or the form changed) -> null, so the
+    // A JSON body answer is also accepted (older kwik builds).
+    routes = {
+        "kwik.cx/f/": () => ({ status: 200, body: filePage }),
+        "kwik.cx/d/": () => ({ status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) }),
+    };
+    check(
+        "kwik download accepts a JSON body",
+        (await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"))?.url,
+        "https://cdn.example/ep1.mp4"
+    );
+
+    // No form (no download offered, or the page changed) -> null, so the
     // episode is reported as having no stream rather than downgraded to HLS.
-    routes = { "kwik.cx/d/": () => ({ status: 200, body: "<html>no form</html>" }) };
-    check("missing download token returns null", await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"), null);
+    routes = { "kwik.cx/f/": () => ({ status: 200, body: "<html>no form</html>" }) };
+    check("missing download form returns null", await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"), null);
 
-    // --- kwik 429 retry (the download page is the first request) -------------
+    // --- kwik 429 retry (the file page is the first request) -----------------
     let attempt = 0;
     routes = {
-        "kwik.cx/d/": (url, options) => {
-            if (options && options.method === "POST") {
-                return { status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) };
-            }
+        "kwik.cx/f/": () => {
             attempt++;
-            return attempt < 3
-                ? { status: 429, body: "" }
-                : { status: 200, body: '<input name="_token" value="ck">' };
+            return attempt < 3 ? { status: 429, body: "" } : { status: 200, body: filePage };
         },
+        "kwik.cx/d/": () => ({ status: 302, body: "", headers: { location: "https://cdn.example/ep1.mp4" } }),
     };
     const dl429 = await sandbox.resolveKwikDownload("https://kwik.cx/e/rate");
     check("429 retried twice then succeeds", [dl429 && dl429.url, attempt], ["https://cdn.example/ep1.mp4", 3]);
 
     attempt = 0;
-    routes = { "kwik.cx/d/": () => { attempt++; return { status: 429, body: "" }; } };
+    routes = { "kwik.cx/f/": () => { attempt++; return { status: 429, body: "" }; } };
     check("gives up after 3 attempts", [await sandbox.resolveKwikDownload("https://kwik.cx/e/dead"), attempt], [null, 3]);
 
     // --- apGet: one retry after the host rate-limits (429) -------------------
@@ -435,10 +453,11 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         }),
     };
     routes = Object.assign({}, playable, {
-        "kwik.cx/d/ep1": (url, options) =>
-            options && options.method === "POST"
-                ? { status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) }
-                : { status: 200, body: '<input type="hidden" name="_token" value="t1">' },
+        "kwik.cx/f/ep1": () => ({
+            status: 200,
+            body: '<form action="https://kwik.cx/d/ep1"><input name="_token" value="t1"></form>',
+        }),
+        "kwik.cx/d/ep1": () => ({ status: 302, body: "", headers: { location: "https://cdn.example/ep1.mp4" } }),
     });
     let out = await sandbox.getStreams(900, "tv", 1, 1, 1);
     check(
@@ -449,7 +468,7 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
 
     // Download unavailable -> no stream at all; HLS is never returned.
     routes = Object.assign({}, playable, {
-        "kwik.cx/d/ep1": () => ({ status: 200, body: "<html>no form</html>" }),
+        "kwik.cx/f/ep1": () => ({ status: 200, body: "<html>no form</html>" }),
     });
     out = await sandbox.getStreams(900, "tv", 1, 1, 1);
     check("getStreams never returns HLS", [out.length], [0]);

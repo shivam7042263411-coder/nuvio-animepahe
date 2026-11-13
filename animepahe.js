@@ -7,8 +7,9 @@
 //     -> season/part aware episode selection
 //     -> release list (/api?m=release) -> episode session
 //     -> play page (/play/<animeSession>/<episodeSession>)
-//     -> kwik.cx /d/ download -> direct .mp4 (seeks/resumes). The /e/ HLS
-//        playlist is deliberately not offered: it cannot seek or resume.
+//     -> kwik.cx /f/ file page -> POST its form -> 302 Location = direct .mp4
+//        (seeks/resumes). The /e/ HLS playlist is deliberately not offered:
+//        it cannot seek or resume.
 //
 // AnimePahe is reached directly first (that is how the site is meant to be
 // used and it works from residential/mobile networks). The configured
@@ -235,67 +236,83 @@ function kwikPageHeaders() {
     return Object.assign({}, AP_HEADERS, { Accept: "*/*", Referer: BASE_URL + "/" });
 }
 
-/** The kwik "download" page for the same file an /e/ embed URL points at. */
+/** The kwik FILE page for the same shortlink an /e/ embed URL points at. Only
+ *  /f/ carries the download form; /d/ is POST-only (GET answers 405). */
 function kwikDownloadUrl(embedUrl) {
-    return String(embedUrl).replace("/e/", "/d/");
+    return String(embedUrl).replace("/e/", "/f/");
 }
 
-/** The CSRF token kwik's download form posts back. */
-function findKwikToken(html) {
+/** kwik's download form: the CSRF `_token` and the /d/ URL it posts to. */
+function findKwikDownloadForm(html) {
+    var token = null;
     var inputs = html.match(/<input\b[^>]*>/gi) || [];
     for (var i = 0; i < inputs.length; i++) {
         if (!/name\s*=\s*["']?_token["']?/i.test(inputs[i])) continue;
         var value = attr(inputs[i], "value");
-        if (value) return decodeEntities(value);
+        if (value) {
+            token = decodeEntities(value);
+            break;
+        }
     }
-    return null;
+    if (!token) return null;
+
+    var fa = html.match(/action\s*=\s*["']([^"']*\/d\/[^"']+)["']/i);
+    if (!fa) return null;
+    var action = decodeEntities(fa[1]);
+    if (action.indexOf("//") === 0) action = "https:" + action;
+    else if (action.indexOf("/") === 0) action = "https://kwik.cx" + action;
+    else if (action.indexOf("http") !== 0) action = null;
+    return action ? { token: token, action: action } : null;
 }
 
 /** Resolve a kwik embed URL to a direct MP4. Unlike the HLS playlist this is a
  *  plain progressive file, so the player can seek, resume and buffer normally.
- *  kwik's /d/ page carries a _token the download form POSTs back for a
- *  {"url": "..."} answer. */
+ *  The /f/ form is POSTed manually (not followed) because kwik answers with a
+ *  302 whose Location is the media file. */
 async function resolveKwikDownload(embedUrl) {
-    var dlUrl = kwikDownloadUrl(embedUrl);
-    var html = await kwikGet(dlUrl, kwikPageHeaders());
+    var fileUrl = kwikDownloadUrl(embedUrl);
+    var html = await kwikGet(fileUrl, kwikPageHeaders());
     if (!html) return null;
 
-    var token = findKwikToken(html);
-    if (!token) {
-        console.error("[AnimePahe] no download token on " + dlUrl);
+    var form = findKwikDownloadForm(html);
+    if (!form) {
+        console.error("[AnimePahe] no download form on " + fileUrl);
         return null;
     }
 
     try {
-        var res = await fetch(dlUrl, {
+        var res = await fetch(form.action, {
             method: "POST",
+            redirect: "manual",
             headers: {
                 "User-Agent": UA,
                 Accept: "application/json, text/plain, */*",
                 "Content-Type": "application/x-www-form-urlencoded",
                 "X-Requested-With": "XMLHttpRequest",
-                Referer: dlUrl,
+                Referer: fileUrl,
                 Origin: "https://kwik.cx"
             },
-            body: "_token=" + encodeURIComponent(token)
+            body: "_token=" + encodeURIComponent(form.token)
         });
-        if (!res.ok) {
-            console.error("[AnimePahe] kwik download HTTP " + res.status + " " + dlUrl);
-            return null;
-        }
-        var body = await res.text();
-        var mp4 = null;
-        try {
-            var json = JSON.parse(body);
-            mp4 = json && json.url;
-        } catch (e) {
-            var m = body.match(/https?:\/\/[^\s'"]+\.mp4[^\s'"]*/);
-            mp4 = m ? m[0] : null;
+
+        var mp4 = res.headers && res.headers.get ? res.headers.get("location") : null;
+        if (!mp4) {
+            var body = await res.text();
+            try {
+                var json = JSON.parse(body);
+                mp4 = json && json.url;
+            } catch (e) {
+                var m = body.match(/https?:\/\/[^\s'"<>]+?\.(?:mp4|mkv)[^\s'"<>]*/);
+                mp4 = m ? m[0] : null;
+            }
         }
         if (!mp4) {
-            console.error("[AnimePahe] no mp4 in download response for " + dlUrl);
+            // 419 is Laravel rejecting the CSRF token, i.e. the session cookie
+            // for kwik.cx was not attached.
+            console.error("[AnimePahe] kwik download HTTP " + res.status + " " + form.action);
             return null;
         }
+        if (mp4.indexOf("//") === 0) mp4 = "https:" + mp4;
         return { url: mp4, headers: Object.assign({}, PLAYBACK_HEADERS), type: "mp4" };
     } catch (e) {
         console.error("[AnimePahe] kwik download failed: " + (e && e.message));

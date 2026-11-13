@@ -29,9 +29,11 @@ Plugins settings.
 - Season/episode matching uses the app's own absolute episode number when
   available, falls back to cumulative TMDB season counting, and skips
   OVAs/movies/specials so they cannot shift the offset.
-- **Returns the direct MP4 download** from kwik's `/d/` page, and nothing else.
-  The `/e/` HLS playlist is never offered: it cannot seek or resume in the
-  player. A release with no download is reported as no stream.
+- **Returns the direct MP4 download** and nothing else: the `/e/` embed id is
+  opened as the `/f/` file page, whose form is POSTed (not followed) so the
+  302 `Location` — the media file — is read directly. The `/e/` HLS playlist is
+  never offered: it cannot seek or resume in the player. A release with no
+  download is reported as no stream.
 - At most two AnimePahe searches (English title + shortest JP romaji title) and
   at most two release pages per probe, cached per run, because AnimePahe
   rate-limits hard. A single 429 is retried once.
