@@ -1,6 +1,6 @@
 # Nuvio AnimePahe plugin
 
-AnimePahe scraper plugin for [Nuvio](https://github.com/) (plugin format, QuickJS).
+AnimePahe scraper plugin for the Nuvio app (plugin format, QuickJS).
 1080p Sub streams only.
 
 ## Install in the app
