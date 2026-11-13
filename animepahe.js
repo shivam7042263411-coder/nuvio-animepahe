@@ -7,7 +7,8 @@
 //     -> season/part aware episode selection
 //     -> release list (/api?m=release) -> episode session
 //     -> play page (/play/<animeSession>/<episodeSession>)
-//     -> kwik.cx player -> packed JS -> .m3u8
+//     -> kwik.cx /d/ download -> direct .mp4 (seeks/resumes); /e/ HLS is the
+//        fallback because the m3u8 cannot seek or resume
 //
 // AnimePahe is reached directly first (that is how the site is meant to be
 // used and it works from residential/mobile networks). The configured
@@ -352,37 +353,111 @@ function findM3u8(html) {
     return raw ? raw[0] : null;
 }
 
-/** Resolve a kwik.cx embed page to a playable m3u8 + required headers. */
-async function resolveKwik(kwikUrl) {
-    var headers = Object.assign({}, AP_HEADERS, {
-        Accept: "*/*",
-        Referer: BASE_URL + "/"
-    });
-
-    // kwik rate-limits hard: back-to-back episodes routinely answer 429, so
-    // wait it out instead of dropping the episode.
+/** Fetch a kwik page. kwik rate-limits hard: back-to-back episodes routinely
+ *  answer 429, so wait it out instead of dropping the episode. */
+async function kwikGet(url, headers) {
     var res = null;
     for (var attempt = 1; attempt <= 3; attempt++) {
-        res = await fetch(kwikUrl, { headers: headers });
+        res = await fetch(url, { headers: headers });
         if (res.status !== 429) break;
-        console.error("[AnimePahe] kwik 429 (attempt " + attempt + "/3) " + kwikUrl);
+        console.error("[AnimePahe] kwik 429 (attempt " + attempt + "/3) " + url);
         if (attempt < 3) await sleep(2000 + attempt * 1000);
     }
     if (!res.ok) {
-        console.error("[AnimePahe] kwik HTTP " + res.status + " " + kwikUrl);
+        console.error("[AnimePahe] kwik HTTP " + res.status + " " + url);
         return null;
     }
     var html = await res.text();
     if (isCloudflareBlock(html)) {
-        console.error("[AnimePahe] kwik blocked by Cloudflare: " + kwikUrl);
+        console.error("[AnimePahe] kwik blocked by Cloudflare: " + url);
         return null;
     }
+    return html;
+}
+
+function kwikPageHeaders() {
+    return Object.assign({}, AP_HEADERS, { Accept: "*/*", Referer: BASE_URL + "/" });
+}
+
+/** Resolve a kwik.cx embed page to a playable m3u8 + required headers. */
+async function resolveKwik(kwikUrl) {
+    var html = await kwikGet(kwikUrl, kwikPageHeaders());
+    if (!html) return null;
+
     var m3u8 = findM3u8(html);
     if (!m3u8) {
         console.error("[AnimePahe] no m3u8 in kwik page: " + kwikUrl);
         return null;
     }
-    return { url: m3u8, headers: Object.assign({}, PLAYBACK_HEADERS) };
+    return { url: m3u8, headers: Object.assign({}, PLAYBACK_HEADERS), type: "m3u8" };
+}
+
+/** The kwik "download" page for the same file an /e/ embed URL points at. */
+function kwikDownloadUrl(embedUrl) {
+    return String(embedUrl).replace("/e/", "/d/");
+}
+
+/** The CSRF token kwik's download form posts back. */
+function findKwikToken(html) {
+    var inputs = html.match(/<input\b[^>]*>/gi) || [];
+    for (var i = 0; i < inputs.length; i++) {
+        if (!/name\s*=\s*["']?_token["']?/i.test(inputs[i])) continue;
+        var value = attr(inputs[i], "value");
+        if (value) return decodeEntities(value);
+    }
+    return null;
+}
+
+/** Resolve a kwik embed URL to a direct MP4. Unlike the HLS playlist this is a
+ *  plain progressive file, so the player can seek, resume and buffer normally.
+ *  kwik's /d/ page carries a _token the download form POSTs back for a
+ *  {"url": "..."} answer. */
+async function resolveKwikDownload(embedUrl) {
+    var dlUrl = kwikDownloadUrl(embedUrl);
+    var html = await kwikGet(dlUrl, kwikPageHeaders());
+    if (!html) return null;
+
+    var token = findKwikToken(html);
+    if (!token) {
+        console.error("[AnimePahe] no download token on " + dlUrl);
+        return null;
+    }
+
+    try {
+        var res = await fetch(dlUrl, {
+            method: "POST",
+            headers: {
+                "User-Agent": UA,
+                Accept: "application/json, text/plain, */*",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Requested-With": "XMLHttpRequest",
+                Referer: dlUrl,
+                Origin: "https://kwik.cx"
+            },
+            body: "_token=" + encodeURIComponent(token)
+        });
+        if (!res.ok) {
+            console.error("[AnimePahe] kwik download HTTP " + res.status + " " + dlUrl);
+            return null;
+        }
+        var body = await res.text();
+        var mp4 = null;
+        try {
+            var json = JSON.parse(body);
+            mp4 = json && json.url;
+        } catch (e) {
+            var m = body.match(/https?:\/\/[^\s'"]+\.mp4[^\s'"]*/);
+            mp4 = m ? m[0] : null;
+        }
+        if (!mp4) {
+            console.error("[AnimePahe] no mp4 in download response for " + dlUrl);
+            return null;
+        }
+        return { url: mp4, headers: Object.assign({}, PLAYBACK_HEADERS), type: "mp4" };
+    } catch (e) {
+        console.error("[AnimePahe] kwik download failed: " + (e && e.message));
+        return null;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -831,8 +906,13 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             seenUrls[chosen[i].url] = true;
 
             try {
-                var stream = await resolveKwik(chosen[i].url);
+                // Prefer the direct MP4 download: the HLS playlist cannot seek
+                // or resume in the player. HLS is the fallback when kwik has no
+                // download for this release (or the download form changed).
+                var stream = await resolveKwikDownload(chosen[i].url);
+                if (!stream) stream = await resolveKwik(chosen[i].url);
                 if (!stream) continue;
+                console.log("[AnimePahe] source=" + stream.type + " " + stream.url);
 
                 var language = audioToLanguage(chosen[i].audio);
                 var quality = chosen[i].quality || "";
@@ -848,7 +928,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
                     quality: quality || null,
                     language: language,
                     provider: "AnimePahe",
-                    type: "m3u8",
+                    type: stream.type,
                     headers: stream.headers,
                     subtitles: [],
                     size: null,

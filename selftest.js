@@ -12,9 +12,9 @@ const source = fs
 let routes = {};
 let fetchCalls = 0;
 
-function route(url) {
+function route(url, options) {
     for (const key of Object.keys(routes)) {
-        if (url.indexOf(key) !== -1) return routes[key](url);
+        if (url.indexOf(key) !== -1) return routes[key](url, options);
     }
     return { status: 404, body: "{}" };
 }
@@ -36,9 +36,9 @@ const sandbox = {
     setTimeout: (fn) => { fn(); return 0; }, // timers fire immediately
     clearTimeout() {},
     TMDB_API_KEY: "test",
-    fetch: async (url) => {
+    fetch: async (url, options) => {
         fetchCalls++;
-        const r = route(url);
+        const r = route(url, options);
         return {
             ok: r.status >= 200 && r.status < 300,
             status: r.status,
@@ -135,6 +135,33 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     routes = { "kwik.cx": () => (++attempt < 3 ? { status: 429, body: "" } : { status: 200, body: page }) };
     const stream = await sandbox.resolveKwik("https://kwik.cx/e/test");
     check("kwik 429 retried twice then succeeds", [stream && stream.url, attempt], [page, 3]);
+    check("kwik HLS result is typed m3u8", stream && stream.type, "m3u8");
+
+    // --- kwik download: direct MP4 (seekable) preferred over HLS -------------
+    check(
+        "kwik download url swaps /e/ for /d/",
+        sandbox.kwikDownloadUrl("https://kwik.cx/e/abc123"),
+        "https://kwik.cx/d/abc123"
+    );
+
+    let postBody = null;
+    routes = {
+        "kwik.cx/d/": (url, options) => {
+            if (options && options.method === "POST") {
+                postBody = options.body;
+                return { status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) };
+            }
+            return { status: 200, body: '<form method="POST"><input type="hidden" name="_token" value="tok123"></form>' };
+        },
+    };
+    const dl = await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123");
+    check("kwik download yields a direct mp4", [dl && dl.url, dl && dl.type], ["https://cdn.example/ep1.mp4", "mp4"]);
+    check("kwik download posts its token", postBody, "_token=tok123");
+
+    // No token (no download offered, or the form changed) -> null so the
+    // caller falls back to the HLS playlist.
+    routes = { "kwik.cx/d/": () => ({ status: 200, body: "<html>no form</html>" }) };
+    check("missing download token returns null", await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"), null);
 
     attempt = 0;
     routes = { "kwik.cx": () => { attempt++; return { status: 429, body: "" }; } };
@@ -377,6 +404,52 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     // --- resolveEpisode: nothing found --------------------------------------
     routes = { "m=search": search([]) };
     check("no candidates returns null", await sandbox.resolveEpisode({ titles: ["Nope"], seasons: [] }, 1, 1, 1), null);
+
+    // --- getStreams: the seekable download wins over the HLS playlist --------
+    const playable = {
+        "api.themoviedb.org/3/tv/900": (url) =>
+            url.indexOf("alternative_titles") !== -1
+                ? { status: 200, body: JSON.stringify({ results: [] }) }
+                : {
+                      status: 200,
+                      body: JSON.stringify({
+                          name: "Show",
+                          seasons: [{ season_number: 1, episode_count: 12 }],
+                      }),
+                  },
+        "m=search": search([{ session: "a1", title: "Show", episodes: 12, year: 2019 }]),
+        "m=release": () => release(1, 12),
+        "/play/a1/": () => ({
+            status: 200,
+            body:
+                '<div id="resolutionMenu"><button data-src="https://kwik.cx/e/ep1" ' +
+                'data-resolution="1080" data-audio="jpn"></button></div>',
+        }),
+        "kwik.cx/e/ep1": () => ({ status: 200, body: "https://cdn.example/ep1.m3u8" }),
+    };
+    routes = Object.assign({}, playable, {
+        "kwik.cx/d/ep1": (url, options) =>
+            options && options.method === "POST"
+                ? { status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) }
+                : { status: 200, body: '<input type="hidden" name="_token" value="t1">' },
+    });
+    let out = await sandbox.getStreams(900, "tv", 1, 1, 1);
+    check(
+        "getStreams returns the seekable download mp4",
+        [out.length, out[0] && out[0].url, out[0] && out[0].type],
+        [1, "https://cdn.example/ep1.mp4", "mp4"]
+    );
+
+    // Download unavailable -> the HLS playlist keeps the episode playable.
+    routes = Object.assign({}, playable, {
+        "kwik.cx/d/ep1": () => ({ status: 200, body: "<html>no form</html>" }),
+    });
+    out = await sandbox.getStreams(900, "tv", 1, 1, 1);
+    check(
+        "getStreams falls back to HLS when there is no download",
+        [out.length, out[0] && out[0].url, out[0] && out[0].type],
+        [1, "https://cdn.example/ep1.m3u8", "m3u8"]
+    );
 
     console.log(failures.length ? `\n${failures.length} FAILED` : "\nALL PASS");
     console.log(`fetch calls: ${fetchCalls}`);
