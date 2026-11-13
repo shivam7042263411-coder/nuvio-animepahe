@@ -276,7 +276,10 @@ async function resolveKwikDownload(embedUrl) {
 
     var form = findKwikDownloadForm(html);
     if (!form) {
-        console.error("[AnimePahe] no download form on " + fileUrl);
+        console.error(
+            "[AnimePahe] no download form on " + fileUrl +
+            " (action=" + (html.indexOf("action=") !== -1) + " token=" + (html.indexOf("_token") !== -1) + ")"
+        );
         return null;
     }
 
