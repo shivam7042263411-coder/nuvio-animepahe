@@ -7,8 +7,8 @@
 //     -> season/part aware episode selection
 //     -> release list (/api?m=release) -> episode session
 //     -> play page (/play/<animeSession>/<episodeSession>)
-//     -> kwik.cx /d/ download -> direct .mp4 (seeks/resumes); /e/ HLS is the
-//        fallback because the m3u8 cannot seek or resume
+//     -> kwik.cx /d/ download -> direct .mp4 (seeks/resumes). The /e/ HLS
+//        playlist is deliberately not offered: it cannot seek or resume.
 //
 // AnimePahe is reached directly first (that is how the site is meant to be
 // used and it works from residential/mobile networks). The configured
@@ -209,150 +209,6 @@ async function tmdbJson(path) {
     return await res.json();
 }
 
-// ---------------------------------------------------------------------------
-// Packed-player unpacker (dean.edwards packer, base-a alphabet)
-// ---------------------------------------------------------------------------
-
-/** Read a JS string literal starting at `start`; returns raw (still escaped) value. */
-function readJsString(src, start) {
-    var quote = src.charAt(start);
-    if (quote !== "'" && quote !== '"') return null;
-    var i = start + 1;
-    while (i < src.length) {
-        var ch = src.charAt(i);
-        if (ch === "\\") {
-            i += 2;
-            continue;
-        }
-        if (ch === quote) return { value: src.substring(start + 1, i), end: i + 1 };
-        i++;
-    }
-    return null;
-}
-
-/** Decode the escape sequences of a JS string literal. */
-function unescapeJsString(str) {
-    var out = "";
-    for (var i = 0; i < str.length; i++) {
-        var ch = str.charAt(i);
-        if (ch !== "\\") {
-            out += ch;
-            continue;
-        }
-        var next = str.charAt(++i);
-        if (next === "n") out += "\n";
-        else if (next === "r") out += "\r";
-        else if (next === "t") out += "\t";
-        else if (next === "b") out += "\b";
-        else if (next === "f") out += "\f";
-        else if (next === "v") out += "\v";
-        else if (next === "0") out += "\0";
-        else if (next === "x") {
-            out += String.fromCharCode(parseInt(str.substring(i + 1, i + 3), 16));
-            i += 2;
-        } else if (next === "u") {
-            out += String.fromCharCode(parseInt(str.substring(i + 1, i + 5), 16));
-            i += 4;
-        } else if (next === "\n") {
-            // line continuation
-        } else {
-            out += next;
-        }
-    }
-    return out;
-}
-
-/** Packer alphabet: 0-9, a-z, then A-Z for base 62. */
-function packerBase(num, base) {
-    var prefix = num < base ? "" : packerBase(Math.floor(num / base), base);
-    var digit = num % base;
-    return prefix + (digit > 35 ? String.fromCharCode(digit + 29) : digit.toString(36));
-}
-
-/**
- * Unpack one `eval(function(p,a,c,k,e,d){...}('...',a,c,'...'.split('|'),0,{}))`
- * block into readable JS.
- */
-function unpackPackedBlock(block) {
-    var marker = block.indexOf("}(");
-    if (marker === -1) return null;
-    var i = marker + 2;
-
-    var pLit = readJsString(block, i);
-    if (!pLit) return null;
-    i = pLit.end;
-
-    var nums = block.substring(i).match(/^\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*/);
-    if (!nums) return null;
-    var base = parseInt(nums[1], 10);
-    var count = parseInt(nums[2], 10);
-    if (!base || !count) return null;
-    i += nums[0].length;
-
-    var kLit = readJsString(block, i);
-    if (!kLit) return null;
-
-    var payload = unescapeJsString(pLit.value);
-    var words = unescapeJsString(kLit.value).split("|");
-
-    var dict = {};
-    for (var n = 0; n < count; n++) {
-        var token = packerBase(n, base);
-        dict[token] = words[n] || token;
-    }
-
-    return payload.replace(/\b\w+\b/g, function (word) {
-        return dict[word] !== undefined ? dict[word] : word;
-    });
-}
-
-/** Collect every packed player block in an HTML page. */
-function extractPackedBlocks(html) {
-    var blocks = [];
-    var markers = [".split('|'),0,{}))", '.split("|"),0,{}))'];
-    var pos = 0;
-
-    while (true) {
-        var start = html.indexOf("eval(function", pos);
-        if (start === -1) break;
-
-        var end = -1;
-        var markerLength = 0;
-        for (var i = 0; i < markers.length; i++) {
-            var candidate = html.indexOf(markers[i], start);
-            if (candidate !== -1 && (end === -1 || candidate < end)) {
-                end = candidate;
-                markerLength = markers[i].length;
-            }
-        }
-        if (end === -1) break;
-
-        blocks.push(html.substring(start, end + markerLength));
-        pos = end + markerLength;
-    }
-    return blocks;
-}
-
-/** Extract the HLS playlist from a kwik player page. */
-function findM3u8(html) {
-    var blocks = extractPackedBlocks(html);
-
-    for (var i = 0; i < blocks.length; i++) {
-        var code = unpackPackedBlock(blocks[i]);
-        if (!code) continue;
-
-        var m = code.match(/https?:\/\/[^\s'"\\<>]+?\.m3u8[^\s'"\\<>]*/);
-        if (m) return m[0];
-
-        var rel = code.match(/\/\/[^\s'"\\<>]+?\.m3u8[^\s'"\\<>]*/);
-        if (rel) return "https:" + rel[0];
-    }
-
-    // Last resort: the playlist may be present in the raw page.
-    var raw = html.match(/https?:\/\/[^\s'"\\<>]+?\.m3u8[^\s'"\\<>]*/);
-    return raw ? raw[0] : null;
-}
-
 /** Fetch a kwik page. kwik rate-limits hard: back-to-back episodes routinely
  *  answer 429, so wait it out instead of dropping the episode. */
 async function kwikGet(url, headers) {
@@ -377,19 +233,6 @@ async function kwikGet(url, headers) {
 
 function kwikPageHeaders() {
     return Object.assign({}, AP_HEADERS, { Accept: "*/*", Referer: BASE_URL + "/" });
-}
-
-/** Resolve a kwik.cx embed page to a playable m3u8 + required headers. */
-async function resolveKwik(kwikUrl) {
-    var html = await kwikGet(kwikUrl, kwikPageHeaders());
-    if (!html) return null;
-
-    var m3u8 = findM3u8(html);
-    if (!m3u8) {
-        console.error("[AnimePahe] no m3u8 in kwik page: " + kwikUrl);
-        return null;
-    }
-    return { url: m3u8, headers: Object.assign({}, PLAYBACK_HEADERS), type: "m3u8" };
 }
 
 /** The kwik "download" page for the same file an /e/ embed URL points at. */
@@ -906,12 +749,14 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             seenUrls[chosen[i].url] = true;
 
             try {
-                // Prefer the direct MP4 download: the HLS playlist cannot seek
-                // or resume in the player. HLS is the fallback when kwik has no
-                // download for this release (or the download form changed).
+                // Direct MP4 download only: the HLS playlist cannot seek or
+                // resume in the player, so a release without a download is
+                // reported as no stream rather than downgraded.
                 var stream = await resolveKwikDownload(chosen[i].url);
-                if (!stream) stream = await resolveKwik(chosen[i].url);
-                if (!stream) continue;
+                if (!stream) {
+                    console.error("[AnimePahe] no download source for " + chosen[i].url);
+                    continue;
+                }
                 console.log("[AnimePahe] source=" + stream.type + " " + stream.url);
 
                 var language = audioToLanguage(chosen[i].audio);

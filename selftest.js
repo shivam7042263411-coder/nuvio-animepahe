@@ -129,15 +129,7 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     check("release pages fetched once, then cached", [afterFirst - before, fetchCalls - afterFirst], [2, 0]);
     sandbox.responseCache = null;
 
-    // --- kwik 429 retry ------------------------------------------------------
-    const page = "https://cdn.example/x.m3u8";
-    let attempt = 0;
-    routes = { "kwik.cx": () => (++attempt < 3 ? { status: 429, body: "" } : { status: 200, body: page }) };
-    const stream = await sandbox.resolveKwik("https://kwik.cx/e/test");
-    check("kwik 429 retried twice then succeeds", [stream && stream.url, attempt], [page, 3]);
-    check("kwik HLS result is typed m3u8", stream && stream.type, "m3u8");
-
-    // --- kwik download: direct MP4 (seekable) preferred over HLS -------------
+    // --- kwik download: the only source (HLS is not offered) ----------------
     check(
         "kwik download url swaps /e/ for /d/",
         sandbox.kwikDownloadUrl("https://kwik.cx/e/abc123"),
@@ -158,14 +150,30 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     check("kwik download yields a direct mp4", [dl && dl.url, dl && dl.type], ["https://cdn.example/ep1.mp4", "mp4"]);
     check("kwik download posts its token", postBody, "_token=tok123");
 
-    // No token (no download offered, or the form changed) -> null so the
-    // caller falls back to the HLS playlist.
+    // No token (no download offered, or the form changed) -> null, so the
+    // episode is reported as having no stream rather than downgraded to HLS.
     routes = { "kwik.cx/d/": () => ({ status: 200, body: "<html>no form</html>" }) };
     check("missing download token returns null", await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"), null);
 
+    // --- kwik 429 retry (the download page is the first request) -------------
+    let attempt = 0;
+    routes = {
+        "kwik.cx/d/": (url, options) => {
+            if (options && options.method === "POST") {
+                return { status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) };
+            }
+            attempt++;
+            return attempt < 3
+                ? { status: 429, body: "" }
+                : { status: 200, body: '<input name="_token" value="ck">' };
+        },
+    };
+    const dl429 = await sandbox.resolveKwikDownload("https://kwik.cx/e/rate");
+    check("429 retried twice then succeeds", [dl429 && dl429.url, attempt], ["https://cdn.example/ep1.mp4", 3]);
+
     attempt = 0;
-    routes = { "kwik.cx": () => { attempt++; return { status: 429, body: "" }; } };
-    check("gives up after 3 attempts", [await sandbox.resolveKwik("https://kwik.cx/e/dead"), attempt], [null, 3]);
+    routes = { "kwik.cx/d/": () => { attempt++; return { status: 429, body: "" }; } };
+    check("gives up after 3 attempts", [await sandbox.resolveKwikDownload("https://kwik.cx/e/dead"), attempt], [null, 3]);
 
     // --- apGet: one retry after the host rate-limits (429) -------------------
     let apAttempt = 0;
@@ -425,7 +433,6 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
                 '<div id="resolutionMenu"><button data-src="https://kwik.cx/e/ep1" ' +
                 'data-resolution="1080" data-audio="jpn"></button></div>',
         }),
-        "kwik.cx/e/ep1": () => ({ status: 200, body: "https://cdn.example/ep1.m3u8" }),
     };
     routes = Object.assign({}, playable, {
         "kwik.cx/d/ep1": (url, options) =>
@@ -440,16 +447,12 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         [1, "https://cdn.example/ep1.mp4", "mp4"]
     );
 
-    // Download unavailable -> the HLS playlist keeps the episode playable.
+    // Download unavailable -> no stream at all; HLS is never returned.
     routes = Object.assign({}, playable, {
         "kwik.cx/d/ep1": () => ({ status: 200, body: "<html>no form</html>" }),
     });
     out = await sandbox.getStreams(900, "tv", 1, 1, 1);
-    check(
-        "getStreams falls back to HLS when there is no download",
-        [out.length, out[0] && out[0].url, out[0] && out[0].type],
-        [1, "https://cdn.example/ep1.m3u8", "m3u8"]
-    );
+    check("getStreams never returns HLS", [out.length], [0]);
 
     console.log(failures.length ? `\n${failures.length} FAILED` : "\nALL PASS");
     console.log(`fetch calls: ${fetchCalls}`);
