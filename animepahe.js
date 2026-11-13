@@ -221,7 +221,13 @@ async function kwikGet(url, headers) {
         if (attempt < 3) await sleep(2000 + attempt * 1000);
     }
     if (!res.ok) {
-        console.error("[AnimePahe] kwik HTTP " + res.status + " " + url);
+        // cf-mitigated=challenge means Cloudflare, not the origin, answered:
+        // the kwik session has no usable clearance (or none was attached).
+        var mitigated = res.headers && res.headers.get ? res.headers.get("cf-mitigated") : null;
+        console.error(
+            "[AnimePahe] kwik HTTP " + res.status +
+            (mitigated ? " (cf-mitigated=" + mitigated + ")" : "") + " " + url
+        );
         return null;
     }
     var html = await res.text();
@@ -233,7 +239,9 @@ async function kwikGet(url, headers) {
 }
 
 function kwikPageHeaders() {
-    return Object.assign({}, AP_HEADERS, { Accept: "*/*", Referer: BASE_URL + "/" });
+    // A kwik request must carry a kwik referer: the CDN rejects a foreign-host
+    // one, and this matches the referer already used for the media file.
+    return Object.assign({}, AP_HEADERS, { Accept: "*/*", Referer: "https://kwik.cx/" });
 }
 
 /** The kwik FILE page for the same shortlink an /e/ embed URL points at. Only
