@@ -68,6 +68,33 @@ const release = (from, to) => {
 };
 const search = (list) => () => ({ status: 200, body: JSON.stringify({ data: list }) });
 
+// Minimal Dean Edwards packer, matching the exact shape kwik ships
+// (`}('...',62,N,'a|b|...'.split('|'))`), so the unpacker is tested for real.
+const pack = (payload, radix = 62) => {
+    const words = [];
+    const index = {};
+    const enc = (n) => {
+        let out = "";
+        do {
+            const d = n % radix;
+            out = (d > 35 ? String.fromCharCode(d + 29) : d.toString(36)) + out;
+            n = Math.floor(n / radix);
+        } while (n > 0);
+        return out;
+    };
+    const body = payload.replace(/\b\w+\b/g, (w) => {
+        if (!(w in index)) index[w] = words.push(w) - 1;
+        return enc(index[w]);
+    });
+    return (
+        "eval(function(p,a,c,k,e,d){e=function(c){return(c<a?'':e(parseInt(c/a)))+" +
+        "((c=c%a)>35?String.fromCharCode(c+29):c.toString(36))};while(c--){d[e(c)]=k[c]||e(c)}" +
+        "k=[function(e){return d[e]}];e=function(){return'\\\\w+'};c=1};while(c--){if(k[c]){" +
+        "p=p.replace(new RegExp('\\\\b'+e(c)+'\\\\b','g'),k[c])}}return p}('" + body + "'," +
+        radix + "," + words.length + ",'" + words.join("|") + "'.split('|'),0,{}))"
+    );
+};
+
 // --- pickPlayButtons: 1080p sub wins, one result only -----------------------
 const buttons = [
     { url: "u1", quality: "360p", audio: "jpn" },
@@ -133,64 +160,51 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     check("release pages fetched once, then cached", [afterFirst - before, fetchCalls - afterFirst], [2, 0]);
     sandbox.responseCache = null;
 
-    // --- kwik download: the only source (HLS is not offered) ----------------
-    // The /e/ embed URL maps to the /f/ file page, whose form POSTs to /d/ and
-    // answers 302 with the media file in Location.
-    check(
-        "kwik file url swaps /e/ for /f/",
-        sandbox.kwikDownloadUrl("https://kwik.cx/e/abc123"),
-        "https://kwik.cx/f/abc123"
-    );
+    // --- kwik /e/ embed page: unpack the packed source, derive the MP4 ------
+    // The embed page hides the signed stream URL inside a packed script; the
+    // sibling MP4 (same path under /mp4/, minus the last segment) is one
+    // progressive, seekable file and is the only source offered.
+    const KWIK_M3U8 = "https://vault-9.owocdn.top/stream/aa/bb/hash123/uwu.m3u8";
+    const KWIK_MP4 =
+        "https://vault-9.owocdn.top/mp4/aa/bb/hash123?file=Show_-_01_BD_1080p.mp4";
+    const embedPage = (src) =>
+        "<html><head><title>Show_-_01_BD_1080p</title></head><body>" +
+        "<script>" + pack("var app=1") + "</script>" +
+        "<script>" + pack("player.setup({source='" + src + "'})") + "</script>" +
+        "</body></html>";
 
-    const filePage =
-        '<form method="POST" action="https://kwik.cx/d/abc123">' +
-        '<input type="hidden" name="_token" value="tok123"></form>';
+    check("unpacks a packed kwik source", sandbox.findKwikSource(embedPage(KWIK_M3U8)).m3u8, KWIK_M3U8);
 
-    let postBody = null;
-    let postRedirect = null;
+    let getUrl = null;
     routes = {
-        "kwik.cx/f/": () => ({ status: 200, body: filePage }),
-        "kwik.cx/d/": (url, options) => {
-            postBody = options && options.body;
-            postRedirect = options && options.redirect;
-            return { status: 302, body: "", headers: { location: "https://cdn.example/ep1.mp4" } };
+        "kwik.cx/e/ep1": (url) => {
+            getUrl = url;
+            return { status: 200, body: embedPage(KWIK_M3U8) };
         },
     };
-    const dl = await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123");
-    check("kwik download yields a direct mp4", [dl && dl.url, dl && dl.type], ["https://cdn.example/ep1.mp4", "mp4"]);
-    check("kwik download posts its token", postBody, "_token=tok123");
-    check("kwik download does not auto-follow the redirect", postRedirect, "manual");
+    const dl = await sandbox.resolveKwikDownload("https://kwik.cx/e/ep1");
+    check("kwik embed yields the sibling mp4", [dl && dl.url, dl && dl.type], [KWIK_MP4, "mp4"]);
+    check("kwik embed is fetched directly (no /f/ swap)", getUrl, "https://kwik.cx/e/ep1");
+    check("mp4 keeps the kwik referer", dl && dl.headers && dl.headers.Referer, "https://kwik.cx/");
 
-    // A JSON body answer is also accepted (older kwik builds).
-    routes = {
-        "kwik.cx/f/": () => ({ status: 200, body: filePage }),
-        "kwik.cx/d/": () => ({ status: 200, body: JSON.stringify({ url: "https://cdn.example/ep1.mp4" }) }),
-    };
-    check(
-        "kwik download accepts a JSON body",
-        (await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"))?.url,
-        "https://cdn.example/ep1.mp4"
-    );
+    // No packed source (no download offered, or the page changed) -> null, so
+    // the episode is reported as having no stream rather than downgraded.
+    routes = { "kwik.cx/e/ep1": () => ({ status: 200, body: "<html>no script</html>" }) };
+    check("page without a packed source returns null", await sandbox.resolveKwikDownload("https://kwik.cx/e/ep1"), null);
 
-    // No form (no download offered, or the page changed) -> null, so the
-    // episode is reported as having no stream rather than downgraded to HLS.
-    routes = { "kwik.cx/f/": () => ({ status: 200, body: "<html>no form</html>" }) };
-    check("missing download form returns null", await sandbox.resolveKwikDownload("https://kwik.cx/e/abc123"), null);
-
-    // --- kwik 429 retry (the file page is the first request) -----------------
+    // --- kwik 429 retry (the embed page is the first request) ---------------
     let attempt = 0;
     routes = {
-        "kwik.cx/f/": () => {
+        "kwik.cx/e/rate": () => {
             attempt++;
-            return attempt < 3 ? { status: 429, body: "" } : { status: 200, body: filePage };
+            return attempt < 3 ? { status: 429, body: "" } : { status: 200, body: embedPage(KWIK_M3U8) };
         },
-        "kwik.cx/d/": () => ({ status: 302, body: "", headers: { location: "https://cdn.example/ep1.mp4" } }),
     };
     const dl429 = await sandbox.resolveKwikDownload("https://kwik.cx/e/rate");
-    check("429 retried twice then succeeds", [dl429 && dl429.url, attempt], ["https://cdn.example/ep1.mp4", 3]);
+    check("429 retried twice then succeeds", [dl429 && dl429.url, attempt], [KWIK_MP4, 3]);
 
     attempt = 0;
-    routes = { "kwik.cx/f/": () => { attempt++; return { status: 429, body: "" }; } };
+    routes = { "kwik.cx/e/dead": () => { attempt++; return { status: 429, body: "" }; } };
     check("gives up after 3 attempts", [await sandbox.resolveKwikDownload("https://kwik.cx/e/dead"), attempt], [null, 3]);
 
     // --- apGet: one retry after the host rate-limits (429) -------------------
@@ -453,22 +467,18 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         }),
     };
     routes = Object.assign({}, playable, {
-        "kwik.cx/f/ep1": () => ({
-            status: 200,
-            body: '<form action="https://kwik.cx/d/ep1"><input name="_token" value="t1"></form>',
-        }),
-        "kwik.cx/d/ep1": () => ({ status: 302, body: "", headers: { location: "https://cdn.example/ep1.mp4" } }),
+        "kwik.cx/e/ep1": () => ({ status: 200, body: embedPage(KWIK_M3U8) }),
     });
     let out = await sandbox.getStreams(900, "tv", 1, 1, 1);
     check(
         "getStreams returns the seekable download mp4",
         [out.length, out[0] && out[0].url, out[0] && out[0].type],
-        [1, "https://cdn.example/ep1.mp4", "mp4"]
+        [1, KWIK_MP4, "mp4"]
     );
 
     // Download unavailable -> no stream at all; HLS is never returned.
     routes = Object.assign({}, playable, {
-        "kwik.cx/f/ep1": () => ({ status: 200, body: "<html>no form</html>" }),
+        "kwik.cx/e/ep1": () => ({ status: 200, body: "<html>no script</html>" }),
     });
     out = await sandbox.getStreams(900, "tv", 1, 1, 1);
     check("getStreams never returns HLS", [out.length], [0]);

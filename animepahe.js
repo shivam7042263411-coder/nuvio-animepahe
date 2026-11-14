@@ -7,15 +7,16 @@
 //     -> season/part aware episode selection
 //     -> release list (/api?m=release) -> episode session
 //     -> play page (/play/<animeSession>/<episodeSession>)
-//     -> kwik.cx /f/ file page -> POST its form -> 302 Location = direct .mp4
-//        (seeks/resumes). The /e/ HLS playlist is deliberately not offered:
-//        it cannot seek or resume.
+//     -> kwik.cx /e/ embed page -> unpack its packed script -> the signed
+//        stream URL -> its sibling /mp4/ file on the CDN = one progressive
+//        .mp4 (seeks/resumes). The HLS playlist is never offered: it cannot
+//        seek or resume.
 //
 // AnimePahe is reached directly first (that is how the site is meant to be
 // used and it works from residential/mobile networks). The configured
 // Cloudflare-bypass proxy is only used as a fallback for animepahe URLs,
 // because the proxy rejects every host that does not contain "animepahe".
-// kwik.cx and uwucdn.top are always fetched directly.
+// kwik.cx and the owocdn CDN are always fetched directly.
 // =============================================================================
 
 var PROXY_URL = "https://animepaheproxy.phisheranimepahe.workers.dev/?url=";
@@ -244,91 +245,98 @@ function kwikPageHeaders() {
     return Object.assign({}, AP_HEADERS, { Accept: "*/*", Referer: "https://kwik.cx/" });
 }
 
-/** The kwik FILE page for the same shortlink an /e/ embed URL points at. Only
- *  /f/ carries the download form; /d/ is POST-only (GET answers 405). */
-function kwikDownloadUrl(embedUrl) {
-    return String(embedUrl).replace("/e/", "/f/");
+// The embed page hides the media in a Dean Edwards packed script. Unpacking it
+// yields the signed HLS playlist; the same asset is also served as ONE
+// progressive MP4 on the CDN by swapping /stream/ for /mp4/ and dropping the
+// last path segment. That file answers Range requests, so the player can seek
+// and resume. The playlist cannot, which is why it is never returned.
+var KWIK_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/** Base-N encoding of an index in the packer's alphabet (n < 36 -> 0-9a-z,
+ *  higher digits -> A-Z, matching `c%a>35 ? chr(c%a+29)`). */
+function kwikBaseN(n, radix) {
+    var out = "";
+    do {
+        var d = n % radix;
+        out = (d > 35 ? String.fromCharCode(d + 29) : d.toString(36)) + out;
+        n = Math.floor(n / radix);
+    } while (n > 0);
+    return out;
 }
 
-/** kwik's download form: the CSRF `_token` and the /d/ URL it posts to. */
-function findKwikDownloadForm(html) {
-    var token = null;
-    var inputs = html.match(/<input\b[^>]*>/gi) || [];
-    for (var i = 0; i < inputs.length; i++) {
-        if (!/name\s*=\s*["']?_token["']?/i.test(inputs[i])) continue;
-        var value = attr(inputs[i], "value");
-        if (value) {
-            token = decodeEntities(value);
-            break;
-        }
-    }
-    if (!token) return null;
+/** Unpack one packed block into plain JS, or null if the shape is unknown. */
+function kwikUnpack(block) {
+    var head = block.match(
+        /\}\((['"])([\s\S]*?)\1\s*,\s*(\d+|\[[\s\S]*?\])\s*,\s*(\d+)\s*,\s*(['"])([\s\S]*?)\5\.split\((['"])\|\7\)/
+    );
+    if (!head) return null;
 
-    var fa = html.match(/action\s*=\s*["']([^"']*\/d\/[^"']+)["']/i);
-    if (!fa) return null;
-    var action = decodeEntities(fa[1]);
-    if (action.indexOf("//") === 0) action = "https:" + action;
-    else if (action.indexOf("/") === 0) action = "https://kwik.cx" + action;
-    else if (action.indexOf("http") !== 0) action = null;
-    return action ? { token: token, action: action } : null;
+    var payload = head[2].replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+    var radix = head[3].charAt(0) === "[" ? 62 : parseInt(head[3], 10);
+    var count = parseInt(head[4], 10);
+    var words = head[6].split("|");
+    if (!radix || !count) return null;
+
+    var dict = {};
+    for (var i = 0; i < count; i++) {
+        var key = kwikBaseN(i, radix);
+        dict[key] = i < words.length && words[i] ? words[i] : key;
+    }
+    return payload.replace(/\b\w+\b/g, function (word) {
+        return dict[word] === undefined ? word : dict[word];
+    });
 }
 
-/** Resolve a kwik embed URL to a direct MP4. Unlike the HLS playlist this is a
- *  plain progressive file, so the player can seek, resume and buffer normally.
- *  The /f/ form is POSTed manually (not followed) because kwik answers with a
- *  302 whose Location is the media file. */
-async function resolveKwikDownload(embedUrl) {
-    var fileUrl = kwikDownloadUrl(embedUrl);
-    var html = await kwikGet(fileUrl, kwikPageHeaders());
-    if (!html) return null;
+/** The signed stream URL and page title from a kwik /e/ page, or null. */
+function findKwikSource(html) {
+    var scripts = html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || [];
+    for (var i = 0; i < scripts.length; i++) {
+        var script = scripts[i];
+        if (script.indexOf("eval(function(p,a,c,k,e,d)") === -1) continue;
 
-    var form = findKwikDownloadForm(html);
-    if (!form) {
-        console.error(
-            "[AnimePahe] no download form on " + fileUrl +
-            " (action=" + (html.indexOf("action=") !== -1) + " token=" + (html.indexOf("_token") !== -1) + ")"
-        );
-        return null;
-    }
+        var pos = 0;
+        while (true) {
+            var start = script.indexOf("eval(function(p,a,c,k,e,d)", pos);
+            if (start === -1) break;
+            var split = script.indexOf(".split('|')", start);
+            if (split === -1) break;
+            var close = script.indexOf("))", split);
+            if (close === -1) break;
+            pos = close + 2;
 
-    try {
-        var res = await fetch(form.action, {
-            method: "POST",
-            redirect: "manual",
-            headers: {
-                "User-Agent": UA,
-                Accept: "application/json, text/plain, */*",
-                "Content-Type": "application/x-www-form-urlencoded",
-                "X-Requested-With": "XMLHttpRequest",
-                Referer: fileUrl,
-                Origin: "https://kwik.cx"
-            },
-            body: "_token=" + encodeURIComponent(form.token)
-        });
-
-        var mp4 = res.headers && res.headers.get ? res.headers.get("location") : null;
-        if (!mp4) {
-            var body = await res.text();
-            try {
-                var json = JSON.parse(body);
-                mp4 = json && json.url;
-            } catch (e) {
-                var m = body.match(/https?:\/\/[^\s'"<>]+?\.(?:mp4|mkv)[^\s'"<>]*/);
-                mp4 = m ? m[0] : null;
+            var plain = kwikUnpack(script.substring(start, pos));
+            if (!plain) continue;
+            var m =
+                plain.match(/source\s*=\s*'([^']+\.m3u8[^']*)'/) ||
+                plain.match(/source\s*=\s*"([^"]+\.m3u8[^"]*)"/);
+            if (m) {
+                var title = html.match(/<title>([\s\S]*?)<\/title>/);
+                return { m3u8: m[1], title: title ? title[1].trim() : "video" };
             }
         }
-        if (!mp4) {
-            // 419 is Laravel rejecting the CSRF token, i.e. the session cookie
-            // for kwik.cx was not attached.
-            console.error("[AnimePahe] kwik download HTTP " + res.status + " " + form.action);
-            return null;
-        }
-        if (mp4.indexOf("//") === 0) mp4 = "https:" + mp4;
-        return { url: mp4, headers: Object.assign({}, PLAYBACK_HEADERS), type: "mp4" };
-    } catch (e) {
-        console.error("[AnimePahe] kwik download failed: " + (e && e.message));
+    }
+    return null;
+}
+
+/** Resolve a kwik /e/ embed URL to a direct, seekable MP4. Returns null when
+ *  the page offers no downloadable stream, so the episode is reported as
+ *  having no stream rather than downgraded to an unseekable playlist. */
+async function resolveKwikDownload(embedUrl) {
+    var url = String(embedUrl);
+    var html = await kwikGet(url, kwikPageHeaders());
+    if (!html) return null;
+
+    var found = findKwikSource(html);
+    if (!found) {
+        console.error("[AnimePahe] no packed source on " + url);
         return null;
     }
+
+    var parts = found.m3u8.replace("/stream/", "/mp4/").split("/");
+    parts.pop();
+    var name = /\.mp4$/i.test(found.title) ? found.title : found.title + ".mp4";
+    var mp4 = parts.join("/") + "?file=" + encodeURIComponent(name);
+    return { url: mp4, headers: PLAYBACK_HEADERS, type: "mp4" };
 }
 
 // ---------------------------------------------------------------------------
