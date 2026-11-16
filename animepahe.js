@@ -162,6 +162,9 @@ async function apGet(url, extraHeaders) {
             var res = await fetch(url, { headers: headers });
             var text = await res.text();
             directStatus = res.status;
+            if (res.status === 0 && res.statusText) {
+                console.error("[AnimePahe] direct transport failure (" + res.statusText + ") " + url);
+            }
             if (res.ok && !isCloudflareBlock(text)) return remember(url, text);
             if (res.status === 429 && attempt < 2) {
                 console.error("[AnimePahe] rate limited (429), retrying once: " + url);
@@ -207,7 +210,13 @@ async function tmdbJson(path) {
         encodeURIComponent(key) +
         "&language=en-US";
     var res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error("TMDB HTTP " + res.status);
+    if (!res.ok) {
+        // The runtime reports DNS/connect/TLS failures as a status-0 response
+        // with the reason in statusText instead of rejecting the promise, so
+        // "HTTP 0" alone would hide the cause.
+        var why = res.status === 0 && res.statusText ? " (" + res.statusText + ")" : "";
+        throw new Error("TMDB HTTP " + res.status + why);
+    }
     return await res.json();
 }
 
