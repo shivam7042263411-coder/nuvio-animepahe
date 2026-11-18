@@ -218,7 +218,10 @@ export function harvestScript(show) {
   // size decides which season an entry is, not the entry's name.
   const tmdbSeasons = ${JSON.stringify(show.seasons || null)};
 
-  const s = await fetch('/api?m=search&l=8&q=' + encodeURIComponent(term))
+  // 15 results, the same as the plugin asks for: a show with many seasons
+  // (MHA has eight) does not fit in 8, and a season that is never seen can
+  // never be filed. Extra hits only append, so the automatic pick is unmoved.
+  const s = await fetch('/api?m=search&l=15&q=' + encodeURIComponent(term))
     .then((r) => r.json())
     .catch(() => null);
   if (!s) return { error: 'challenge' };
