@@ -5,6 +5,7 @@
 //                                     [--all-seasons] [--force] [--port 9334]
 //                                     [--profile tools/.chrome-profile]
 //
+// --dry-run plans and counts only: no play pages, no ids, nothing written.
 // --profile keeps Chrome's session, so a Cloudflare solve covers many runs.
 // --max-eps 0 means "every episode the entry has".
 // --all-seasons fills every season the site labels ("2nd Season", "Part 2")
@@ -82,6 +83,9 @@ const FORCE = args.includes('--force');
 // Fill every season the site labels ("2nd Season", "Part 2") instead of the
 // one entry a line names. Unlabelled sequels are skipped, never guessed.
 const ALL_SEASONS = args.includes('--all-seasons');
+// Plan and count only: no play pages, no ids, nothing written. Needs no TMDB
+// key and touches the site far less, so it is the safe way to check a list.
+const DRY_RUN = args.includes('--dry-run');
 const PORT = Number(option('--port', 9334));
 // A kept profile reuses the Cloudflare clearance between runs, so one solve
 // covers many runs instead of one. Omitted: a fresh temp profile per run.
@@ -301,8 +305,10 @@ for (const show of shows) {
     ...show,
     allSeasons: ALL_SEASONS,
     // Every stored row, no matter the season: an all-seasons run revisits each.
-    haveEps: (already ? already.data.rows : []).map((r) => `${r.s}/${r.e}`),
+    // A dry run ignores them so it reports what the site has, not what is kept.
+    haveEps: DRY_RUN ? [] : (already ? already.data.rows : []).map((r) => `${r.s}/${r.e}`),
     force: FORCE,
+    dryRun: DRY_RUN,
     // The app counts episodes in TMDB's seasons, so TMDB decides what "season
     // 3" is; a season's name on the site then no longer matters.
     seasons: ALL_SEASONS ? await seasonsFor(show.catalogueTitle || show.term) : null,
@@ -365,7 +371,17 @@ for (const show of shows) {
     );
   }
   if (result.plans) {
-    console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title).join(' | ')}`);
+    console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title +
+      (DRY_RUN && p.episodes != null ? ' (' + p.episodes + ')' : '')).join(' | ')}`);
+  }
+  if (DRY_RUN) {
+    const counts = Object.keys(result.seasons || {})
+      .sort((a, b) => Number(a) - Number(b))
+      .map((k) => 'S' + k + ': ' + result.seasons[k] + ' ep')
+      .join(', ');
+    console.log(`  dry run: ${counts} - would write ${slug(target)}.json, nothing saved`);
+    done++;
+    continue;
   }
   // A season can hide in a differently-named entry ("Jujutsu Kaisen: Culling
   // Game"); naming it here is the difference between a visible gap and a

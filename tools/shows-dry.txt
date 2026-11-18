@@ -1,0 +1,17 @@
+# Dry-run list: plan the seasons, count episodes, save nothing.
+# Run: node tools/harvest-batch.mjs --file tools/shows-dry.txt --all-seasons --max-eps 0 --dry-run --wait-challenge 300
+#
+# No play pages are opened, so no kwik ids are fetched and no file is written.
+# Compare each show's "dry run:" line with what the app shows for that series.
+#
+# Fullmetal Alchemist is two different shows (2003 and Brotherhood), so both
+# lines are here; each has its own TMDB entry.
+#
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+Mushoku Tensei | 0 | 1 | 0
+Re:Zero | 0 | 1 | 0
+Attack on Titan | 0 | 1 | 0
+Demon Slayer | 0 | 1 | 0
+One Piece | 0 | 1 | 0
+Fullmetal Alchemist | 0 | 1 | 0
+Fullmetal Alchemist: Brotherhood | 0 | 1 | 0

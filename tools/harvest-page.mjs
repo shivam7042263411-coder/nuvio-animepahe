@@ -212,6 +212,9 @@ export function harvestScript(show) {
   const season = ${show.season};
   const offset = ${show.offset == null ? 'null' : Number(show.offset)};
   const allSeasons = ${show.allSeasons ? 'true' : 'false'};
+  // Test mode: plan the seasons and count episodes, but never fetch a play
+  // page and never keep a row, so nothing can be saved.
+  const dryRun = ${show.dryRun ? 'true' : 'false'};
   const have = ${JSON.stringify(show.haveEps || [])};
   const force = ${show.force ? 'true' : 'false'};
   const rank = ${rankHits.toString()};
@@ -304,20 +307,22 @@ export function harvestScript(show) {
           skipped++;
           continue;
         }
-        const pr = await fetchLimited('/play/' + plan.session + '/' + e.session);
-        if (!pr) return { error: 'throttled' };
-        const html = await pr.text();
-        // One challenge is the signal to stop the whole batch, not skip a show.
-        if (/just a moment|attention required|cf-error-details/i.test(html)) return { error: 'challenge' };
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        doc.querySelectorAll('#resolutionMenu button').forEach((b) => {
-          const id = (b.dataset.src || '').match(/\\/e\\/([A-Za-z0-9]+)/);
-          if (!id) return;
-          const q = Number((b.textContent.match(/(\\d{3,4})p/) || [])[1] || 0);
-          const a = /eng|dub/i.test((b.dataset.audio || '') + b.textContent) ? 'dub' : 'sub';
-          rows.push({ s: plan.season, e: appEp, q, a, id: id[1] });
-        });
-        await sleep(600);
+        if (!dryRun) {
+          const pr = await fetchLimited('/play/' + plan.session + '/' + e.session);
+          if (!pr) return { error: 'throttled' };
+          const html = await pr.text();
+          // One challenge is the signal to stop the whole batch, not skip a show.
+          if (/just a moment|attention required|cf-error-details/i.test(html)) return { error: 'challenge' };
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          doc.querySelectorAll('#resolutionMenu button').forEach((b) => {
+            const id = (b.dataset.src || '').match(/\\/e\\/([A-Za-z0-9]+)/);
+            if (!id) return;
+            const q = Number((b.textContent.match(/(\\d{3,4})p/) || [])[1] || 0);
+            const a = /eng|dub/i.test((b.dataset.audio || '') + b.textContent) ? 'dub' : 'sub';
+            rows.push({ s: plan.season, e: appEp, q, a, id: id[1] });
+          });
+          await sleep(600);
+        }
       }
       if (maxEps > 0 && seenHere.size >= maxEps) break;
       if (page >= (j.last_page || 1)) break;
@@ -335,9 +340,10 @@ export function harvestScript(show) {
   return {
     show: { title: first.title, session: first.session, year: first.year, episodes: first.episodes },
     seasons: seasonCounts,
-    plans: plans.map((p) => ({ season: p.season, title: p.title })),
+    plans: plans.map((p) => ({ season: p.season, title: p.title, episodes: p.episodes })),
     fallback,
     sized,
+    dryRun,
     skipped,
     ignored,
     rows,

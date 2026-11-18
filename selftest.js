@@ -826,6 +826,21 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         throttled.error,
         "throttled"
     );
+    let playFetches = 0;
+    const countingFetch = async (url) => {
+        if (url.includes("/play/")) playFetches++;
+        return fakeFetch(url);
+    };
+    const dry = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Jujutsu Kaisen", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, seasons: [{ n: 1, episodes: 59, year: "2020" }],
+        dryRun: true,
+    }))(countingFetch, FakeDom, (fn) => fn());
+    check(
+        "a dry run counts episodes without fetching a play page",
+        [dry.rows.length, dry.seasons["1"], playFetches],
+        [0, 59, 0]
+    );
     check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({

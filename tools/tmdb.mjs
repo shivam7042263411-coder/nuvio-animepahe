@@ -42,6 +42,14 @@ async function get(path, key) {
   throw lastError || new Error('TMDB unreachable');
 }
 
+/** Latin-only, so a Japanese title that happens to contain the English name
+ *  ("鋼の錬金術師 FULLMETAL ALCHEMIST") cannot answer a search for the other
+ *  show: the 2003 series and Brotherhood are different shows. */
+const latinOnly = (v) => {
+  const s = String(v || '');
+  return s && !/[^\x00-\x7F]/.test(s);
+};
+
 /** The TMDB show behind a list term, or null when nothing matches exactly.
  *  Loose matching would file one show's episodes under another. */
 export async function tmdbShow(term, key) {
@@ -52,11 +60,18 @@ export async function tmdbShow(term, key) {
   // An exact name wins. Failing that, a unique title that starts with the term:
   // the list says "Demon Slayer", TMDB says "Demon Slayer: Kimetsu no Yaiba".
   // Two candidates means a spin-off is in play, so refuse rather than pick.
-  let hit = hits.find((h) => fold(h.name) === want || fold(h.original_name) === want);
+  let hit = hits.find(
+    (h) =>
+      fold(h.name) === want ||
+      (latinOnly(h.original_name) && fold(h.original_name) === want)
+  );
   if (!hit) {
     const prefixed = hits.filter((h) => {
       const n = fold(h.name);
-      return n.indexOf(want + ' ') === 0 || fold(h.original_name).indexOf(want + ' ') === 0;
+      return (
+        n.indexOf(want + ' ') === 0 ||
+        (latinOnly(h.original_name) && fold(h.original_name).indexOf(want + ' ') === 0)
+      );
     });
     if (prefixed.length === 1) hit = prefixed[0];
   }
