@@ -79,21 +79,27 @@ Harvest behaviour worth knowing:
   12-episode shows take ~45s; 156 shows are ~25-30 minutes. `kwik.cx` is never
   touched, so the page throttle does not apply.
 
-### Daily run without a laptop
+### Why there is no daily job on GitHub
 
-`.github/workflows/catalogue.yml` runs the same top-up on a GitHub runner every
-day and commits the result. Push it once, then **Actions → catalogue → Run
-workflow** to try it.
+A `catalogue.yml` workflow was tried on 2026-11-18 and deleted again: on a
+GitHub runner its Chromium sat on Cloudflare's interstitial for the full 180s
+wait, then quit with `challenge did not clear within 180s`. Datacenter ranges
+(Azure, where runners live) are refused outright, so this is not a scripting
+problem — only a connection Cloudflare trusts gets in, which means a residential
+one.
 
-It is a gamble on one thing: AnimePahe's Cloudflare reads the runner's address
-and may refuse it, since runner IPs are datacenter ranges. A run that dies at
-`challenge did not clear within 180s` means the site said no — nothing in the
-code can change that, and the fix is a residential connection (a home machine
-or the phone), not a better script. A run that reaches `solved:` will keep
-working on its own.
+Ways to fill it unattended that are actually viable:
 
-It maintains the shows in `tools/shows-bulk.txt`; it does not discover new
-anime.
+- `--wait-challenge 300` on the laptop: a challenge pauses the run for up to
+  five minutes while you tick the box, then finishes the whole list.
+- An always-on machine on your own internet (an old PC, a Pi, a spare phone):
+  the same command on a cron, and the catalogue is then never stale.
+- Nothing at all, if you only watch on the TV: a missed episode still plays
+  because the plugin scrapes it live. The catalogue removes the Cloudflare step
+  from repeat plays; it is not what makes playback work.
+
+Either way it maintains the shows in `tools/shows-bulk.txt`; it does not
+discover new anime.
 
 ### Limits worth knowing
 
@@ -121,7 +127,6 @@ anime.
 | `selftest.js` | Node self-check for the non-trivial logic (`node selftest.js`) |
 | `catalogue/` | Static kwik-id data (see `catalogue/README.md`) |
 | `tools/` | Laptop-side writers for `catalogue/` |
-| `.github/workflows/catalogue.yml` | Daily top-up on a GitHub runner (no laptop) |
 
 ## Notes
 
