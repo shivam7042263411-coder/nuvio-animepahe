@@ -1,0 +1,22 @@
+# Test list - a few shows that exercise the size-based season mapping.
+# Run: node tools/harvest-batch.mjs --file tools/shows-test.txt --all-seasons --max-eps 0 --wait-challenge 300
+#
+# What each line should prove:
+#   Jujutsu Kaisen      TMDB has one 59-episode season; "Culling Game" has no
+#                       season in its name and must still be filed (S1, 59 eps).
+#   Demon Slayer        S2-S5 are arc-named ("Mugen Train Arc", "Entertainment
+#                       District Arc", ...), never "Season 4".
+#   Attack on Titan     labelled seasons plus "The Final Season Part 2".
+#   Spy x Family        split cours ("Part 2") inside one season.
+#   One Punch Man       S2 holds specials; only the 12 real episodes belong.
+#   My Hero Academia    eight seasons - proves the search returns enough hits.
+#   Frieren             control: one season, nothing to split.
+#
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+Jujutsu Kaisen | 0 | 1 | 0
+Demon Slayer | 0 | 1 | 0
+Attack on Titan | 0 | 1 | 0
+Spy x Family | 0 | 1 | 0
+One Punch Man | 0 | 1 | 0
+My Hero Academia | 0 | 1 | 0
+Frieren | 0 | 1 | 0
