@@ -86,6 +86,18 @@ only, which is why an arc-named season used to go missing.
 
 Harvest behaviour worth knowing:
 
+- **Adding shows in bulk** is one line per show in a list file. Run it with
+  `--dry-run` first: it prints the seasons it would fill and how many episodes
+  each would have, opens no play pages and writes nothing. Then run the same
+  command without `--dry-run`; finished shows are skipped and half-done ones are
+  topped up, so it is safe to interrupt.
+- **A film is not a season.** TMDB has it as its own title and the app asks for
+  it at `S1E1`, so it gets its own file and its own line, with the app's title
+  in the last column:
+  `Demon Slayer: Infinity Castle | 1 | 1 | 0 | -1 | Demon Slayer: Kimetsu no Yaiba Infinity Castle`.
+  A film that appears in a show's search results is never folded into a season;
+  the run prints `film not filed: "..."` so it can be added.
+
 - The search hit is picked by **title relevance first, episode count second**:
   an exact (case/punctuation/doubled-letter folded) title wins, then a title
   that starts with the term, then the longest run. Sorting by episode count

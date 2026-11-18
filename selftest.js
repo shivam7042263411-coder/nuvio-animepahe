@@ -776,6 +776,7 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         { title: "Jujutsu Kaisen", session: "a", year: 2020, episodes: 24 },
         { title: "Jujutsu Kaisen Season 2", session: "b", year: 2023, episodes: 23 },
         { title: "Jujutsu Kaisen: Culling Game", session: "c", year: 2026, episodes: 12 },
+        { title: "Jujutsu Kaisen 0", session: "m", year: 2021, episodes: 1 },
     ];
     const fakeFetch = async (url) => {
         if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: fakePool }) };
@@ -810,6 +811,11 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "an arc-named season is filed by size, every row under the app's season",
         [sized.sized, sized.rows.length, sized.rows[58].s + "/" + sized.rows[58].e, sized.ignored.length],
         [true, 59, "1/59", 0]
+    );
+    check(
+        "a film in the pool is named, not planned as a season",
+        [sized.plans.length, sized.films.map((f) => f.title)],
+        [3, ["Jujutsu Kaisen 0"]]
     );
     const mismatched = await run([{ n: 1, episodes: 30, year: "2020" }]);
     check(

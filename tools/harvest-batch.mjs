@@ -392,6 +392,15 @@ for (const show of shows) {
         `a season under another name: add "${h.title} | 0 | <season> | 0 | -1 | ${target}"`
     );
   }
+  // A film is its own TMDB title and its own catalogue file (the app asks for
+  // it at S1E1), so it is never part of the show's seasons. Name it, because a
+  // sequel film that quietly goes missing is exactly what nobody notices.
+  for (const h of result.films || []) {
+    console.log(
+      `  film not filed: "${h.title}" (${h.year || '?'}) - add its own line: ` +
+        `"${h.title} | 1 | 1 | 0 | -1 | <the app's title for this film>"`
+    );
+  }
   if ((show.maxEps === 0 || show.maxEps > 1) && Number(result.show.episodes) === 1) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);
   }

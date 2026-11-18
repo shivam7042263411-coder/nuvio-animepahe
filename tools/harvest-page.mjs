@@ -183,6 +183,29 @@ export function partOf(title) {
   return 1;
 }
 
+/** Films and one-episode specials in the franchise that the season plan dropped.
+ *  A film is not a season: TMDB has it as its own title and the app asks for it
+ *  at S1E1, so it needs its own catalogue file and its own list line. Silently
+ *  dropping it is how a sequel film goes missing. */
+export function filmsOf(term, pool, plans) {
+  const used = new Set();
+  for (const plan of plans) {
+    for (const part of plan.parts || [plan]) used.add(fold(part.title));
+  }
+  const base = fold(term);
+  return pool
+    .filter((h) => {
+      const hk = fold(h.title);
+      return (
+        hk &&
+        !used.has(hk) &&
+        (hk === base || hk.indexOf(base + ' ') === 0) &&
+        Number(h.episodes) === 1
+      );
+    })
+    .map((h) => ({ title: h.title, year: h.year }));
+}
+
 /** The site may number a later season continuously: S2E1 listed as episode 26.
  *  An explicit offset always wins; otherwise an entry whose lowest episode is
  *  above 1 is treated as continuous, so its first episode becomes e=1. */
@@ -227,6 +250,7 @@ export function harvestScript(show) {
   const planSeasons = ${planSeasons.toString()};
   const franchiseOf = ${franchiseOf.toString()};
   const unfiledHits = ${unfiledHits.toString()};
+  const filmsOf = ${filmsOf.toString()};
   const inferOffset = ${inferOffset.toString()};
   // The app counts episodes by TMDB's seasons; when the caller supplied them,
   // size decides which season an entry is, not the entry's name.
@@ -278,6 +302,7 @@ export function harvestScript(show) {
   const seasonBase = {};
   const seasonCounts = {};
   const ignored = allSeasons ? unfiledHits(term, pool, plans) : [];
+  const films = allSeasons ? filmsOf(term, pool, plans) : [];
   let skipped = 0;
   for (const plan of plans) {
     const seenHere = new Set();
@@ -346,6 +371,7 @@ export function harvestScript(show) {
     dryRun,
     skipped,
     ignored,
+    films,
     rows,
   };
 })()`;
