@@ -196,6 +196,12 @@ ws.onmessage = (ev) => {
     pending.delete(m.id);
   }
 };
+// The tab or window closing used to leave the run waiting on a promise that
+// never settles. Say what happened and stop; finished shows are already saved.
+ws.onclose = () => {
+  console.error('chrome window closed: stopping (re-run resumes where this left off)');
+  process.exit(3);
+};
 const send = (method, params = {}) =>
   new Promise((res) => {
     const id = ++msgId;
@@ -208,7 +214,7 @@ async function evaluate(expression) {
     expression,
     awaitPromise: true,
     returnByValue: true,
-    timeout: 180_000,
+    timeout: 300_000,
   });
   if (r.result?.exceptionDetails) {
     throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 400));
@@ -311,6 +317,13 @@ for (const show of shows) {
   if (!result || result.error) {
     if (result && result.error === 'challenge') {
       console.error('  challenge appeared mid-run: stopping so the clearance is not burned');
+      break;
+    }
+    if (result && result.error === 'throttled') {
+      console.error(
+        '  429 too many requests: the site is rate-limiting this connection - stopping.\n' +
+          '  wait ~15 minutes, then run the same command again (finished shows are kept)'
+      );
       break;
     }
     console.error(`  failed: ${result ? result.error : 'no result'}`);

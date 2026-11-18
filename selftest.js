@@ -778,14 +778,18 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         { title: "Jujutsu Kaisen: Culling Game", session: "c", year: 2026, episodes: 12 },
     ];
     const fakeFetch = async (url) => {
-        if (url.includes("m=search")) return { json: async () => ({ data: fakePool }) };
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: fakePool }) };
         if (url.includes("m=release")) {
             const n = { a: 24, b: 23, c: 12 }[url.match(/id=([abc])/)[1]];
             const data = [];
             for (let i = 1; i <= n; i++) data.push({ episode: String(i), session: "s" + i });
-            return { json: async () => ({ data, last_page: 1 }) };
+            return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
         }
-        return { text: async () => '<button data-src="/e/AA1080" data-audio="jpn">1080p</button>' };
+        return {
+            status: 200,
+            ok: true,
+            text: async () => '<button data-src="/e/AA1080" data-audio="jpn">1080p</button>',
+        };
     };
     class FakeDom {
         parseFromString() {
@@ -812,6 +816,15 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "a TMDB season that does not add up falls back to names, flagged",
         [mismatched.sized, mismatched.plans.length > 0, mismatched.ignored.length],
         [false, true, 1]
+    );
+    const throttled = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Jujutsu Kaisen", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, seasons: [{ n: 1, episodes: 59, year: "2020" }],
+    }))(async () => ({ status: 429, ok: false }), FakeDom, (fn) => fn());
+    check(
+        "a rate-limited page stops the run instead of writing a short file",
+        throttled.error,
+        "throttled"
     );
     check(
         "harvester script is valid browser JS",

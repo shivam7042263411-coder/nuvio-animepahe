@@ -195,6 +195,17 @@ export function inferOffset(offset, episodes) {
 export function harvestScript(show) {
   return `(async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // The site rate-limits by IP (HTTP 429). A limited page is not an empty
+  // season: wait for the limit to lift, then give up loudly so the run stops
+  // instead of writing a show that is missing episodes.
+  const fetchLimited = async (url) => {
+    for (let attempt = 0; ; attempt++) {
+      const r = await fetch(url);
+      if (r.status !== 429) return r;
+      if (attempt >= 2) return null;
+      await sleep(15000);
+    }
+  };
   const term = ${JSON.stringify(show.term)};
   const maxEps = ${show.maxEps};
   const resultIndex = ${show.resultIndex};
@@ -221,9 +232,9 @@ export function harvestScript(show) {
   // 15 results, the same as the plugin asks for: a show with many seasons
   // (MHA has eight) does not fit in 8, and a season that is never seen can
   // never be filed. Extra hits only append, so the automatic pick is unmoved.
-  const s = await fetch('/api?m=search&l=15&q=' + encodeURIComponent(term))
-    .then((r) => r.json())
-    .catch(() => null);
+  const sr = await fetchLimited('/api?m=search&l=15&q=' + encodeURIComponent(term));
+  if (!sr) return { error: 'throttled' };
+  const s = sr.ok ? await sr.json().catch(() => null) : null;
   if (!s) return { error: 'challenge' };
   const pool = s.data || [];
 
@@ -269,9 +280,9 @@ export function harvestScript(show) {
     const seenHere = new Set();
     let off = offset;
     for (let page = 1; page <= 60; page++) {
-      const j = await fetch('/api?m=release&id=' + plan.session + '&sort=episode_asc&page=' + page)
-        .then((r) => r.json())
-        .catch(() => null);
+      const rr = await fetchLimited('/api?m=release&id=' + plan.session + '&sort=episode_asc&page=' + page);
+      if (!rr) return { error: 'throttled' };
+      const j = rr.ok ? await rr.json().catch(() => null) : null;
       if (!j) return { error: 'challenge' };
       const list = j.data || [];
       // Single-entry mode keeps the site's own numbering (gaps stay gaps);
@@ -293,7 +304,9 @@ export function harvestScript(show) {
           skipped++;
           continue;
         }
-        const html = await fetch('/play/' + plan.session + '/' + e.session).then((r) => r.text());
+        const pr = await fetchLimited('/play/' + plan.session + '/' + e.session);
+        if (!pr) return { error: 'throttled' };
+        const html = await pr.text();
         // One challenge is the signal to stop the whole batch, not skip a show.
         if (/just a moment|attention required|cf-error-details/i.test(html)) return { error: 'challenge' };
         const doc = new DOMParser().parseFromString(html, 'text/html');
