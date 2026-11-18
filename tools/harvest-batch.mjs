@@ -1,14 +1,24 @@
 // Bulk kwik-id harvester: one real Chrome window, one Cloudflare solve, then a
 // paced pass over a title list. Writes catalogue/*.json directly.
 //
-// usage: node tools/harvest-batch.mjs [--file tools/shows.txt] [--max-eps 12]
-//                                     [--force] [--port 9334]
+// usage: node tools/harvest-batch.mjs [--file tools/shows.txt] [--max-eps 12|0]
+//                                     [--all-seasons] [--force] [--port 9334]
+//
+// --max-eps 0 means "every episode the entry has".
+// --all-seasons fills every season the site labels ("2nd Season", "Part 2")
+// instead of the single entry a line names. A sequel with no season label
+// ("X: will+Dress", "X The Final Season") is skipped: a miss is safe, a wrong
+// season is not.
 //
 // shows.txt, one per line:
-//   term | maxEpisodes | appSeason | episodeOffset | resultIndex
-//   Horimiya | 12 | 1 | 0 | 0
+//   term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+//   Horimiya | 12 | 1 | 0 | 0 | Horimiya
 // Anything after `|` is optional. `episodeOffset` is for shows whose AnimePahe
-// numbering continues across seasons: S2E1 stored as pahe ep 13 -> offset 12.
+// numbering continues across seasons (S2E1 stored as pahe ep 13 -> offset 12);
+// it is worked out automatically from the entry's first episode, so only set it
+// to override a wrong guess.
+// `appTitle` files a season-specific entry into the app's show, so one file can
+// hold every season: "Attack on Titan 2nd Season | 12 | 2 | 0 | -1 | Attack on Titan".
 //
 // cost: ~1 request per episode (~0.6s each) plus one search. 200 shows x 12 eps
 // is roughly 30-45 minutes in one sitting; stop whenever, re-run to resume.
@@ -39,6 +49,9 @@ function option(name, fallback) {
 const SHOWS = resolve(option('--file', join(HERE, 'shows.txt')));
 const MAX_EPS = Number(option('--max-eps', 12));
 const FORCE = args.includes('--force');
+// Fill every season the site labels ("2nd Season", "Part 2") instead of the
+// one entry a line names. Unlabelled sequels are skipped, never guessed.
+const ALL_SEASONS = args.includes('--all-seasons');
 const PORT = Number(option('--port', 9334));
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const BASE = 'https://animepahe.pw';
@@ -51,14 +64,21 @@ function parseShows(path) {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'))
     .map((line) => {
-      const [term, eps, season, offset, result] = line.split('|').map((s) => (s || '').trim());
+      const [term, eps, season, offset, result, catTitle] = line
+        .split('|')
+        .map((s) => (s || '').trim());
       return {
         term,
-        maxEps: Number(eps) || MAX_EPS,
+        // 0 = every episode the entry has; blank = the --max-eps default.
+        maxEps: eps === '0' ? 0 : Number(eps) || MAX_EPS,
         season: Number(season) || 1,
-        offset: Number(offset) || 0,
+        offset: Number(offset) || null,
         // -1 = pick the series automatically (see harvestScript); >= 0 = force.
         resultIndex: result ? Number(result) : -1,
+        // The app's show name, when the site's entry is season-specific
+        // ("Attack on Titan 2nd Season" -> "Attack on Titan"). Rows still land
+        // in the one file for that show, keyed by season.
+        catalogueTitle: catTitle || null,
       };
     });
 }
@@ -175,19 +195,42 @@ if (!solved) {
 let done = 0;
 let failed = 0;
 for (const show of shows) {
-  if (!FORCE) {
-    const already = readCatalogue().find(
-      (s) => s.data.search && titleKey(s.data.search) === titleKey(show.term)
-    );
-    if (already) {
-      console.log(`skip   ${show.term} (already in ${already.file}; --force to redo)`);
-      continue;
-    }
+  // A season line files into the app's show, not the site's season-specific
+  // entry ("Attack on Titan 2nd Season" -> attack-on-titan.json).
+  const target = show.catalogueTitle || show.term;
+  const already = FORCE ? null : findShow(target);
+  const storedEps = already
+    ? new Set(already.data.rows.filter((r) => Number(r.s) === Number(show.season)).map((r) => Number(r.e)))
+    : new Set();
+  // Top up rather than skip: a higher --max-eps must reach a show that is
+  // already stored, or raising the cap would silently do nothing. The total is
+  // per season, so a second season cannot make the first look complete.
+  // All-seasons runs never skip: which seasons exist is only known after the
+  // search, and stored episodes cost no request anyway.
+  const wanted = already
+    ? Math.min(show.maxEps, Number((already.data.seasonEpisodes || {})[show.season]) || Infinity)
+    : 0;
+  if (!ALL_SEASONS && already && storedEps.size >= wanted) {
+    console.log(`skip   ${show.term} (${storedEps.size} episode(s) stored; --force to redo)`);
+    continue;
   }
-  console.log(`fetch  ${show.term} (up to ${show.maxEps} episode(s))...`);
+  if (storedEps.size) {
+    console.log(`top up ${show.term} (${storedEps.size} stored, asking for ${show.maxEps || 'all'})`);
+  }
+  const plan = {
+    ...show,
+    allSeasons: ALL_SEASONS,
+    // Every stored row, no matter the season: an all-seasons run revisits each.
+    haveEps: (already ? already.data.rows : []).map((r) => `${r.s}/${r.e}`),
+    force: FORCE,
+  };
+  console.log(
+    `fetch  ${show.term} (${ALL_SEASONS ? 'all seasons' : 'season ' + show.season}, ` +
+      `${show.maxEps ? 'up to ' + show.maxEps : 'all'} episode(s))...`
+  );
   let result;
   try {
-    result = await evaluate(harvestScript(show));
+    result = await evaluate(harvestScript(plan));
   } catch (e) {
     console.error(`  failed: ${e.message}`);
     failed++;
@@ -203,35 +246,60 @@ for (const show of shows) {
     continue;
   }
   if (!result.rows.length) {
+    if (result.skipped) {
+      console.log(`  already stored (${result.skipped} episode(s), nothing fetched)`);
+      done++;
+      continue;
+    }
     console.error(`  no ids found (challenge block or empty play pages)`);
     failed++;
     continue;
   }
-  if (show.maxEps > 1 && Number(result.show.episodes) === 1) {
+  if (result.fallback) {
+    console.error(`  warning: no season-labelled entry for "${show.term}" - filed the best hit as season 1`);
+  }
+  if (result.plans) {
+    console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title).join(' | ')}`);
+  }
+  if ((show.maxEps === 0 || show.maxEps > 1) && Number(result.show.episodes) === 1) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);
   }
-  const existing = findShow(result.show.title);
-  const file = existing ? existing.file : `${show.term.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
-  const data = existing
-    ? existing.data
+  const file = already ? already.file : `${target.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+  const data = already
+    ? already.data
     : {
-        title: result.show.title,
+        title: target,
         aliases: [],
         season: show.season,
         year: result.show.year || null,
         source: 'animepahe',
         search: show.term,
       };
+  // The site's own name for this entry ("Attack on Titan 2nd Season") must not
+  // be lost: a later line for that season looks the file up by it.
+  if (titleKey(result.show.title) !== titleKey(target)) {
+    data.aliases = data.aliases || [];
+    if (!data.aliases.some((a) => titleKey(a) === titleKey(result.show.title))) {
+      data.aliases.push(result.show.title);
+    }
+  }
+  // The list term is the user's best guess at the app's title, but it is not a
+  // site name: aliasing it would let a fallback guess (a sequel filed as S1)
+  // match the app. Keep only names the site itself uses.
   data.session = result.show.session || data.session;
   if (result.show.episodes != null) data.episodes = result.show.episodes;
+  if (result.seasons) {
+    data.seasonEpisodes = { ...(data.seasonEpisodes || {}), ...result.seasons };
+  }
+  if (ALL_SEASONS) data.allSeasons = true;
   data.search = data.search || show.term;
-  const wanted = result.rows.filter((r) => Number(r.q) === 1080 && r.a === 'sub' && r.e >= 1);
-  if (!wanted.length) {
+  const rows1080 = result.rows.filter((r) => Number(r.q) === 1080 && r.a === 'sub' && r.e >= 1);
+  if (!rows1080.length) {
     console.error('  no 1080p sub for this show');
     failed++;
     continue;
   }
-  mergeRows(data, wanted);
+  mergeRows(data, rows1080);
   writeShow(file, data);
   // Rebuild every time: an interrupted run must still leave a matching index.
   rebuildIndex();

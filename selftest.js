@@ -534,6 +534,16 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         null
     );
     check("catalogue never crosses episodes", sandbox.catalogueRow(catFile, 1, 3), null);
+    // One file holds every season: S2E1 and S1E1 must never be confused.
+    const multiSeason = {
+        rows: [
+            { s: 1, e: 1, q: 1080, a: "sub", id: "s1e1" },
+            { s: 2, e: 1, q: 1080, a: "sub", id: "s2e1" },
+        ],
+    };
+    check("catalogue serves S1 from a multi-season file", sandbox.catalogueRow(multiSeason, 1, 1).id, "s1e1");
+    check("catalogue serves S2 from the same file", sandbox.catalogueRow(multiSeason, 2, 1).id, "s2e1");
+    check("catalogue keeps seasons apart", sandbox.catalogueRow(multiSeason, 2, 3), null);
 
     // --- getStreams: a catalogue hit skips AnimePahe entirely ---------------
     const catRoutes = {
@@ -654,12 +664,60 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "t"
     );
     check(
+        "offset inferred when the site numbers continuously",
+        pageMod.inferOffset(null, [26, 27, 28]),
+        25
+    );
+    check("no offset when the entry starts at episode 1", pageMod.inferOffset(null, [1, 2]), 0);
+    check("explicit offset wins over inference", pageMod.inferOffset(12, [26]), 12);
+
+    // --- which app season a search hit belongs to --------------------------
+    const show = (title, episodes = 10) => ({ title, episodes, session: title });
+    const filed = (term, titles) =>
+        pageMod.classifyHits(term, titles.map((t) => show(t))).map((p) => p.season + ":" + p.title);
+    check(
+        "a labelled sequel is filed under its own season",
+        filed("My Hero Academia", ["My Hero Academia Season 2", "My Hero Academia"]),
+        ["1:My Hero Academia", "2:My Hero Academia Season 2"]
+    );
+    check(
+        "split cours stay in one season, in part order",
+        pageMod.classifyHits("Attack on Titan", [
+            show("Attack on Titan 3rd Season Part 2"),
+            show("Attack on Titan 3rd Season"),
+        ]).map((p) => p.season + "p" + p.part),
+        ["3p1", "3p2"]
+    );
+    check(
+        "a markerless part joins the season before it",
+        filed("Spy x Family", ["Spy x Family", "Spy x Family Part 2"]),
+        ["1:Spy x Family", "1:Spy x Family Part 2"]
+    );
+    check(
+        "an unlabelled sequel is skipped, never filed as season 1",
+        filed("Attack on Titan", ["Attack on Titan", "Attack on Titan The Final Season"]),
+        ["1:Attack on Titan"]
+    );
+    check(
+        "a spin-off is skipped",
+        filed("KonoSuba", ["KonoSuba: An Explosion on This Wonderful World!"]),
+        []
+    );
+    check(
+        "the site's order breaks a relevance tie",
+        pageMod.rankHits("KonoSuba", [
+            show("KonoSuba: God's Blessing on This Wonderful World!"),
+            show("KonoSuba: An Explosion on This Wonderful World!"),
+        ])[0].title,
+        "KonoSuba: God's Blessing on This Wonderful World!"
+    );
+    check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({
             term: "Naruto",
             maxEps: 12,
             season: 1,
-            offset: 0,
+            offset: null,
             resultIndex: -1,
         })),
         "function"

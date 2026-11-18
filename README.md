@@ -45,6 +45,7 @@ node tools/build-catalogue.mjs
 # 2. bulk: one Chrome window, one Cloudflare solve, a list of shows
 node tools/harvest-batch.mjs                            # tools/shows.txt (4 shows)
 node tools/harvest-batch.mjs --file tools/shows-bulk.txt # 156 shows/films
+node tools/harvest-batch.mjs --all-seasons --max-eps 0   # every season, every episode
 node tools/harvest-batch.mjs --force                    # redo shows already stored
 
 # 3. from a device log (the scrape prints one `kwik-id {...}` per tier)
@@ -55,8 +56,22 @@ Then commit `catalogue/`. `index.json` is generated - never hand-edit it.
 
 Harvest behaviour worth knowing:
 
-- The search hit with the **most episodes** wins, so a movie or special can
-  never answer a season request. Force a hit with `resultIndex` in the list.
+- The search hit is picked by **title relevance first, episode count second**:
+  an exact (case/punctuation/doubled-letter folded) title wins, then a title
+  that starts with the term, then the longest run. Sorting by episode count
+  alone once picked *Naruto Shippuden* for "Naruto". Force a hit with
+  `resultIndex` in the list.
+- **One line = one season** by default: the harvester takes one AnimePahe entry
+  and its first `maxEpisodes`. `--all-seasons` instead fills every season the
+  site labels ("2nd Season", "Season 2", "Part 2"), all in the one file, each
+  keyed by the app's season. `--max-eps 0` takes every episode.
+- A sequel or spin-off with **no season label** in its title ("X: will+Dress",
+  "X The Final Season") needs its own line with an `appSeason`: guessing would
+  file it as season 1, and a wrong season is worse than a miss.
+- A mis-picked entry is safe: the index is keyed on the **site's** title, so
+  rows that belong to another show never match and play falls back to a scrape.
+- `--max-eps` above what is stored **tops up only the missing episodes**; it
+  does not re-fetch what is already there. No `--force` needed.
 - The first Cloudflare challenge **stops the whole run** instead of retrying;
   shows already written stay written, and re-running resumes.
 - Measured pacing: ~0.7s per episode (600ms sleep + one play page). Four
@@ -66,9 +81,11 @@ Harvest behaviour worth knowing:
 ### Limits worth knowing
 
 - **Numbering.** Rows are keyed by the app's own season/episode, because that
-  is the only numbering available without resolving the episode. A season
-  whose AnimePahe numbering continues across cours needs `episodeOffset` in
-  `tools/shows.txt`. A wrong key is a miss, never a wrong episode.
+  is the only numbering available without resolving the episode. A season the
+  site numbers continuously (S2E1 listed as episode 26) is shifted
+  automatically: `inferOffset` maps the entry's first episode to e=1. An
+  explicit `episodeOffset` in the list overrides it. A wrong key is a miss,
+  never a wrong episode.
 - **`kwik.cx/e/<id>` throttles**, ~10 page loads in a couple of minutes, then
   ~1 minute of 403. The CDN does not throttle (8 rapid range requests: all
   206). Normal watching is far below the limit; a burst reveal is not.

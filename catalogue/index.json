@@ -3,11 +3,116 @@
   "updated": "2026-11-18",
   "shows": [
     {
+      "file": "oshi-no-ko.json",
+      "title": "[Oshi No Ko]",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "ace-of-diamond.json",
+      "title": "Ace of Diamond",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
+      "file": "akame-ga-kill.json",
+      "title": "Akame ga Kill!",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
+      "file": "angel-beats.json",
+      "title": "Angel Beats!",
+      "aliases": [],
+      "season": 1,
+      "year": 2010
+    },
+    {
+      "file": "anohana.json",
+      "title": "Anohana: The Flower We Saw That Day",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
+    },
+    {
+      "file": "another.json",
+      "title": "Another",
+      "aliases": [],
+      "season": 1,
+      "year": 2012
+    },
+    {
       "file": "attack-on-titan.json",
       "title": "Attack on Titan",
       "aliases": [],
       "season": 1,
       "year": 2013
+    },
+    {
+      "file": "beastars.json",
+      "title": "Beastars",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "berserk.json",
+      "title": "Berserk",
+      "aliases": [],
+      "season": 1,
+      "year": 1997
+    },
+    {
+      "file": "black-clover.json",
+      "title": "Black Clover",
+      "aliases": [],
+      "season": 1,
+      "year": 2017
+    },
+    {
+      "file": "bleach.json",
+      "title": "Bleach",
+      "aliases": [],
+      "season": 1,
+      "year": 2004
+    },
+    {
+      "file": "blue-exorcist.json",
+      "title": "Blue Exorcist",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
+    },
+    {
+      "file": "blue-lock.json",
+      "title": "Blue Lock",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "bocchi-the-rock.json",
+      "title": "Bocchi the Rock!",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "dress-up-darling.json",
+      "title": "Cardfight!! Vanguard: will+Dress",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "cells-at-work.json",
+      "title": "Cells at Work!",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
     },
     {
       "file": "chainsaw-man.json",
@@ -17,11 +122,46 @@
       "year": 2022
     },
     {
+      "file": "clannad.json",
+      "title": "Clannad",
+      "aliases": [],
+      "season": 1,
+      "year": 2007
+    },
+    {
+      "file": "claymore.json",
+      "title": "Claymore",
+      "aliases": [],
+      "season": 1,
+      "year": 2007
+    },
+    {
       "file": "code-geass.json",
       "title": "Code Geass: Lelouch of the Rebellion",
       "aliases": [],
       "season": 1,
       "year": 2006
+    },
+    {
+      "file": "cowboy-bebop.json",
+      "title": "Cowboy Bebop",
+      "aliases": [],
+      "season": 1,
+      "year": 1998
+    },
+    {
+      "file": "dandadan.json",
+      "title": "Dan Da Dan",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "deadman-wonderland.json",
+      "title": "Deadman Wonderland",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
     },
     {
       "file": "death-note.json",
@@ -38,6 +178,62 @@
       "year": 2019
     },
     {
+      "file": "dorohedoro.json",
+      "title": "Dorohedoro",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
+    },
+    {
+      "file": "dr-stone.json",
+      "title": "Dr.STONE",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "dragon-ball-z.json",
+      "title": "Dragon Ball Z",
+      "aliases": [],
+      "season": 1,
+      "year": 1989
+    },
+    {
+      "file": "elfen-lied.json",
+      "title": "Elfen Lied",
+      "aliases": [],
+      "season": 1,
+      "year": 2004
+    },
+    {
+      "file": "erased.json",
+      "title": "ERASED",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
+      "file": "fairy-tail.json",
+      "title": "Fairy Tail",
+      "aliases": [],
+      "season": 1,
+      "year": 2009
+    },
+    {
+      "file": "fire-force.json",
+      "title": "Fire Force",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "food-wars.json",
+      "title": "Food Wars! Shokugeki no Soma",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
+    },
+    {
       "file": "frieren-beyond-journey-s-end.json",
       "title": "Frieren: Beyond Journey's End",
       "aliases": [],
@@ -52,11 +248,39 @@
       "year": 2009
     },
     {
+      "file": "gintama.json",
+      "title": "Gintama",
+      "aliases": [],
+      "season": 1,
+      "year": 2006
+    },
+    {
+      "file": "gurren-lagann.json",
+      "title": "Gurren Lagann",
+      "aliases": [],
+      "season": 1,
+      "year": 2007
+    },
+    {
       "file": "haikyu.json",
       "title": "Haikyu!!",
       "aliases": [],
       "season": 1,
       "year": 2014
+    },
+    {
+      "file": "hell-s-paradise.json",
+      "title": "Hell's Paradise",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "higurashi.json",
+      "title": "Higurashi: When They Cry",
+      "aliases": [],
+      "season": 1,
+      "year": 2006
     },
     {
       "file": "horimiya.json",
@@ -80,6 +304,69 @@
       "year": 2020
     },
     {
+      "file": "k-on.json",
+      "title": "K-ON!",
+      "aliases": [],
+      "season": 1,
+      "year": 2009
+    },
+    {
+      "file": "kaguya-sama-love-is-war.json",
+      "title": "Kaguya-sama: Love is War",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "kaiju-no-8.json",
+      "title": "Kaiju No. 8",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "komi-can-t-communicate.json",
+      "title": "Komi Can't Communicate",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "konosuba.json",
+      "title": "KonoSuba: An Explosion on This Wonderful World!",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "kuroko-no-basket.json",
+      "title": "Kuroko's Basketball",
+      "aliases": [],
+      "season": 1,
+      "year": 2012
+    },
+    {
+      "file": "lycoris-recoil.json",
+      "title": "Lycoris Recoil",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "made-in-abyss.json",
+      "title": "Made in Abyss",
+      "aliases": [],
+      "season": 1,
+      "year": 2017
+    },
+    {
+      "file": "mashle.json",
+      "title": "Mashle: Magic and Muscles",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
       "file": "one-punch-man.json",
       "title": "May I Ask for One Final Thing?",
       "aliases": [],
@@ -87,11 +374,46 @@
       "year": 2025
     },
     {
-      "file": "my-hero-academia.json",
-      "title": "My Hero Academia Season 2",
+      "file": "mob-psycho-100.json",
+      "title": "Mob Psycho 100",
       "aliases": [],
       "season": 1,
-      "year": 2017
+      "year": 2016
+    },
+    {
+      "file": "monster.json",
+      "title": "Monster",
+      "aliases": [],
+      "season": 1,
+      "year": 2004
+    },
+    {
+      "file": "oregairu.json",
+      "title": "My Teen Romantic Comedy SNAFU",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
+      "file": "neon-genesis-evangelion.json",
+      "title": "Neon Genesis Evangelion",
+      "aliases": [],
+      "season": 1,
+      "year": 1995
+    },
+    {
+      "file": "no-game-no-life.json",
+      "title": "No Game No Life",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
+      "file": "noragami.json",
+      "title": "Noragami",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
     },
     {
       "file": "odd-taxi.json",
@@ -101,11 +423,109 @@
       "year": 2021
     },
     {
-      "file": "spy-x-family.json",
-      "title": "Spy x Family Part 2",
+      "file": "one-piece.json",
+      "title": "One Piece",
       "aliases": [],
       "season": 1,
-      "year": 2022
+      "year": 1999
+    },
+    {
+      "file": "overlord.json",
+      "title": "Overlord",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
+    },
+    {
+      "file": "parasyte.json",
+      "title": "Parasyte: The Maxim",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
+      "file": "psycho-pass.json",
+      "title": "Psycho-Pass",
+      "aliases": [],
+      "season": 1,
+      "year": 2012
+    },
+    {
+      "file": "ranking-of-kings.json",
+      "title": "Ranking of Kings",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "re-zero.json",
+      "title": "Re:ZERO -Starting Life in Another World-",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
+      "file": "rent-a-girlfriend.json",
+      "title": "Rent-a-Girlfriend",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
+    },
+    {
+      "file": "rurouni-kenshin.json",
+      "title": "Rurouni Kenshin",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "sakamoto-days.json",
+      "title": "Sakamoto Days",
+      "aliases": [],
+      "season": 1,
+      "year": 2025
+    },
+    {
+      "file": "samurai-champloo.json",
+      "title": "Samurai Champloo",
+      "aliases": [],
+      "season": 1,
+      "year": 2004
+    },
+    {
+      "file": "shangri-la-frontier.json",
+      "title": "Shangri-La Frontier",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "slam-dunk.json",
+      "title": "Slam Dunk",
+      "aliases": [],
+      "season": 1,
+      "year": 1993
+    },
+    {
+      "file": "solo-leveling.json",
+      "title": "Solo Leveling",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "soul-eater.json",
+      "title": "Soul Eater",
+      "aliases": [],
+      "season": 1,
+      "year": 2008
+    },
+    {
+      "file": "hibike-euphonium.json",
+      "title": "Sound! Euphonium",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
     },
     {
       "file": "steins-gate.json",
@@ -115,11 +535,130 @@
       "year": 2011
     },
     {
+      "file": "sword-art-online.json",
+      "title": "Sword Art Online",
+      "aliases": [],
+      "season": 1,
+      "year": 2012
+    },
+    {
+      "file": "that-time-i-got-reincarnated-as-a-slime.json",
+      "title": "That Time I Got Reincarnated as a Slime",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
+    },
+    {
+      "file": "apothecary-diaries.json",
+      "title": "The Apothecary Diaries",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "eminence-in-shadow.json",
+      "title": "The Eminence in Shadow",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "mirai-nikki.json",
+      "title": "The Future Diary",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
+    },
+    {
+      "file": "promised-neverland.json",
+      "title": "The Promised Neverland",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "bunny-girl-senpai.json",
+      "title": "Tiger & Bunny",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
+    },
+    {
+      "file": "tokyo-ghoul.json",
+      "title": "Tokyo Ghoul",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
       "file": "tokyo-revengers.json",
       "title": "Tokyo Revengers",
       "aliases": [],
       "season": 1,
       "year": 2021
+    },
+    {
+      "file": "toradora.json",
+      "title": "Toradora!",
+      "aliases": [],
+      "season": 1,
+      "year": 2008
+    },
+    {
+      "file": "undead-unluck.json",
+      "title": "Undead Unluck",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "vinland-saga.json",
+      "title": "Vinland Saga",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "violet-evergarden.json",
+      "title": "Violet Evergarden",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
+    },
+    {
+      "file": "wind-breaker.json",
+      "title": "Wind Breaker",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "your-lie-in-april.json",
+      "title": "Your Lie in April",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
+      "file": "yuri-on-ice.json",
+      "title": "Yuri!!! On ICE",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
+      "file": "yu-yu-hakusho.json",
+      "title": "Yuu☆Yuu☆Hakusho",
+      "aliases": [],
+      "season": 1,
+      "year": 1992
+    },
+    {
+      "file": "zom-100.json",
+      "title": "Zom 100: Bucket List of the Dead",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
     }
   ]
 }

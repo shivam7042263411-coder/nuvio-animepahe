@@ -223,7 +223,7 @@ async function tmdbJson(path) {
         // with the reason in statusText instead of rejecting the promise, so
         // "HTTP 0" alone would hide the cause.
         var why = res.status === 0 && res.statusText ? " (" + res.statusText + ")" : "";
-        throw new Error("TMDB HTTP " + res.status + why);
+        throw new Error("TMDB HTTP " + res.status + why + " for " + path);
     }
     return await res.json();
 }

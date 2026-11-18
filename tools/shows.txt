@@ -1,9 +1,16 @@
 # Bulk harvest list. One show per line:
-#   search term | maxEpisodes | appSeason | episodeOffset | resultIndex
-# Everything after `|` is optional. `episodeOffset` is for shows whose
-# AnimePahe numbering continues across seasons (S2E1 stored at pahe ep 13 -> 12).
-# `resultIndex` (0-based) forces one search hit; leave it out and the hit with
-# the most episodes wins, so a movie/special never answers a season request.
+#   search term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+# Everything after `|` is optional. `episodeOffset` is worked out automatically
+# from the entry's first episode (a season listed as 26-51 becomes e=1-26); set
+# it only to override a wrong guess.
+# `resultIndex` (0-based) forces one search hit; leave it out and the best title
+# match wins (relevance first, then episode count).
+# `appTitle` files a season-specific site entry into the app's show, so one file
+# can hold several seasons, each keyed by `appSeason`:
+#   Attack on Titan 2nd Season | 12 | 2 | 0 | -1 | Attack on Titan
+#
+# `--all-seasons` does that automatically for every season the site labels, and
+# `--max-eps 0` means "every episode". A line then covers the whole franchise.
 #
 # Run: node tools/harvest-batch.mjs      (resumes: finished shows are skipped)
 Horimiya | 12 | 1 | 0 | 0

@@ -1,5 +1,7 @@
 # Bulk list - series take the first 12 episodes, films are one row each.
-# term | maxEpisodes | appSeason | episodeOffset | resultIndex
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+# Add a title to a later season by adding one line per season, e.g.
+#   Attack on Titan 2nd Season | 12 | 2 | 0 | -1 | Attack on Titan
 #
 # --- series ---
 Attack on Titan | 12 | 1 | 0

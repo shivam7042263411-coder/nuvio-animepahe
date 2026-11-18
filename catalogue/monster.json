@@ -1,0 +1,97 @@
+{
+  "title": "Monster",
+  "aliases": [],
+  "season": 1,
+  "year": 2004,
+  "source": "animepahe",
+  "search": "Monster",
+  "session": "db6bb219-65a0-abe8-6931-f548bbd8b042",
+  "episodes": 74,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "NATYkwSytJwV"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "BvPb4ZQelKCM"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "ZxA8lzqMrzr9"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "5Nnlj8JjbLNu"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "4MrpD9ShHe5J"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "YH3aMjSYtqEB"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "mvWnBykXuTi6"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "5qfDVSdNsHlX"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "kWttGlVF5wBU"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "T7fRDPtzHI4f"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "SocfMJtRMGxC"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "YfmZE5VMnoJo"
+    }
+  ],
+  "updated": "2026-11-18"
+}
