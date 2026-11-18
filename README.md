@@ -54,6 +54,18 @@ adb logcat -d | node tools/merge-log.mjs -
 
 Then commit `catalogue/`. `index.json` is generated - never hand-edit it.
 
+`--profile` keeps Chrome's cookies between runs, so one Cloudflare solve covers
+many runs instead of one:
+
+```bash
+node tools/harvest-batch.mjs --profile tools/.chrome-profile --all-seasons --max-eps 0
+```
+
+It still has to run from a connection the site trusts - a home line. GitHub
+Actions and datacenter hosts get the challenge or a refusal, and the clearance
+cookie is bound to the IP that solved it, so it cannot be solved at home and
+used on a runner.
+
 Season names are not what decides a season. With a TMDB key present the
 harvester asks TMDB how many episodes each season has - the same numbering the
 app shows - and files entries by their size, in release order:

@@ -3,7 +3,9 @@
 //
 // usage: node tools/harvest-batch.mjs [--file tools/shows.txt] [--max-eps 12|0]
 //                                     [--all-seasons] [--force] [--port 9334]
+//                                     [--profile tools/.chrome-profile]
 //
+// --profile keeps Chrome's session, so a Cloudflare solve covers many runs.
 // --max-eps 0 means "every episode the entry has".
 // --all-seasons fills every season the site labels ("2nd Season", "Part 2")
 // instead of the single entry a line names. A sequel with no season label
@@ -23,7 +25,7 @@
 // cost: ~1 request per episode (~0.6s each) plus one search. 200 shows x 12 eps
 // is roughly 30-45 minutes in one sitting; stop whenever, re-run to resume.
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, unlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -81,6 +83,9 @@ const FORCE = args.includes('--force');
 // one entry a line names. Unlabelled sequels are skipped, never guessed.
 const ALL_SEASONS = args.includes('--all-seasons');
 const PORT = Number(option('--port', 9334));
+// A kept profile reuses the Cloudflare clearance between runs, so one solve
+// covers many runs instead of one. Omitted: a fresh temp profile per run.
+const PROFILE = option('--profile', null);
 // A CI job dies hard at its own timeout and never reaches the commit step, so
 // the run stops itself first and leaves a clean catalogue behind.
 const MAX_MINUTES = Number(option('--max-minutes', 0));
@@ -151,7 +156,11 @@ for (const { file, data } of readCatalogue()) {
   }
 }
 
-const profile = mkdtempSync(join(tmpdir(), 'kwik-batch-'));
+const profile = PROFILE ? resolve(PROFILE) : mkdtempSync(join(tmpdir(), 'kwik-batch-'));
+if (PROFILE) mkdirSync(profile, { recursive: true });
+console.log(
+  `chrome profile: ${profile}${PROFILE ? ' (session kept between runs)' : ' (fresh)'}`
+);
 const chrome = spawn(
   CHROME,
   [
@@ -168,13 +177,19 @@ const chrome = spawn(
 );
 
 let page = null;
-for (let i = 0; i < 80 && !page; i++) {
+let anyPage = null;
+for (let i = 0; i < 80; i++) {
   try {
     const res = await fetch(`http://127.0.0.1:${PORT}/json/list`);
-    page = (await res.json()).find((t) => t.type === 'page') || null;
+    const pages = (await res.json()).filter((t) => t.type === 'page');
+    // A kept profile may restore old tabs; the harvester must drive its own.
+    anyPage = anyPage || pages[0] || null;
+    page = pages.find((t) => String(t.url || '').startsWith(BASE)) || null;
   } catch {}
-  if (!page) await sleep(500);
+  if (page) break;
+  await sleep(500);
 }
+page = page || anyPage;
 if (!page) {
   console.error('chrome did not expose a debug target');
   chrome.kill();
