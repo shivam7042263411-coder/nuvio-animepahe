@@ -48,8 +48,12 @@ export function readCatalogue() {
 
 export function findShow(title) {
   const key = titleKey(title);
+  // The harvester names a file after the list term, so a show the site titles
+  // differently ("Demon Slayer: Kimetsu no Yaiba") is still the same file.
+  const file = `${slug(title)}.json`;
   return readCatalogue().find(
     (s) =>
+      s.file === file ||
       titleKey(s.data.title) === key ||
       (s.data.aliases || []).some((a) => titleKey(a) === key)
   );

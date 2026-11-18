@@ -173,7 +173,9 @@
     {
       "file": "demon-slayer.json",
       "title": "Demon Slayer: Kimetsu no Yaiba",
-      "aliases": [],
+      "aliases": [
+        "Demon Slayer: Kimetsu no Yaiba"
+      ],
       "season": 1,
       "year": 2019
     },
@@ -388,6 +390,13 @@
       "year": 2004
     },
     {
+      "file": "my-hero-academia.json",
+      "title": "My Hero Academia",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
       "file": "oregairu.json",
       "title": "My Teen Romantic Comedy SNAFU",
       "aliases": [],
@@ -526,6 +535,13 @@
       "aliases": [],
       "season": 1,
       "year": 2015
+    },
+    {
+      "file": "spy-x-family.json",
+      "title": "Spy x Family",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
     },
     {
       "file": "steins-gate.json",

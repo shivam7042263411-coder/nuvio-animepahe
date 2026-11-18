@@ -711,6 +711,12 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ])[0].title,
         "KonoSuba: God's Blessing on This Wonderful World!"
     );
+    const lib = await import("./tools/catalogue-lib.mjs");
+    check(
+        "a list term finds the file the harvester would write",
+        lib.findShow("Demon Slayer") && lib.findShow("Demon Slayer").file,
+        "demon-slayer.json"
+    );
     check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({

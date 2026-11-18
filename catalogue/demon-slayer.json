@@ -1,6 +1,8 @@
 {
   "title": "Demon Slayer: Kimetsu no Yaiba",
-  "aliases": [],
+  "aliases": [
+    "Demon Slayer: Kimetsu no Yaiba"
+  ],
   "season": 1,
   "year": 2019,
   "source": "animepahe",
@@ -91,7 +93,109 @@
       "q": 1080,
       "a": "sub",
       "id": "zJ3it2Fzpg1e"
+    },
+    {
+      "s": 1,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "OZ0FbVv2soIY"
+    },
+    {
+      "s": 1,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "3Vj8kNzMQc3z"
+    },
+    {
+      "s": 1,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "XkcVd6suKViO"
+    },
+    {
+      "s": 1,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "koOTopOnKsMD"
+    },
+    {
+      "s": 1,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "nICoEidxpggC"
+    },
+    {
+      "s": 1,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "Pee9QlIsSMZt"
+    },
+    {
+      "s": 1,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "lbLIZEwyAnWu"
+    },
+    {
+      "s": 1,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "h4Ij9BA72Cug"
+    },
+    {
+      "s": 1,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "FCn2GwSfkCcX"
+    },
+    {
+      "s": 1,
+      "e": 22,
+      "q": 1080,
+      "a": "sub",
+      "id": "xVCdxRqaxUMB"
+    },
+    {
+      "s": 1,
+      "e": 23,
+      "q": 1080,
+      "a": "sub",
+      "id": "BhxzCOhp7aut"
+    },
+    {
+      "s": 1,
+      "e": 24,
+      "q": 1080,
+      "a": "sub",
+      "id": "J6pku1kJW5HA"
+    },
+    {
+      "s": 1,
+      "e": 25,
+      "q": 1080,
+      "a": "sub",
+      "id": "CLEC0zLdy16o"
+    },
+    {
+      "s": 1,
+      "e": 26,
+      "q": 1080,
+      "a": "sub",
+      "id": "8p6qGjR7IW66"
     }
   ],
-  "updated": "2026-11-18"
+  "updated": "2026-11-18",
+  "seasonEpisodes": {
+    "1": 26
+  },
+  "allSeasons": true
 }

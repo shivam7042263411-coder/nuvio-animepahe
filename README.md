@@ -64,7 +64,8 @@ Harvest behaviour worth knowing:
 - **One line = one season** by default: the harvester takes one AnimePahe entry
   and its first `maxEpisodes`. `--all-seasons` instead fills every season the
   site labels ("2nd Season", "Season 2", "Part 2"), all in the one file, each
-  keyed by the app's season. `--max-eps 0` takes every episode.
+  keyed by the app's season. `--max-eps 0` takes every episode, and a
+  `--max-eps` on the command line overrides the list's `maxEpisodes` column.
 - A sequel or spin-off with **no season label** in its title ("X: will+Dress",
   "X The Final Season") needs its own line with an `appSeason`: guessing would
   file it as season 1, and a wrong season is worse than a miss.
@@ -77,6 +78,22 @@ Harvest behaviour worth knowing:
 - Measured pacing: ~0.7s per episode (600ms sleep + one play page). Four
   12-episode shows take ~45s; 156 shows are ~25-30 minutes. `kwik.cx` is never
   touched, so the page throttle does not apply.
+
+### Daily run without a laptop
+
+`.github/workflows/catalogue.yml` runs the same top-up on a GitHub runner every
+day and commits the result. Push it once, then **Actions → catalogue → Run
+workflow** to try it.
+
+It is a gamble on one thing: AnimePahe's Cloudflare reads the runner's address
+and may refuse it, since runner IPs are datacenter ranges. A run that dies at
+`challenge did not clear within 180s` means the site said no — nothing in the
+code can change that, and the fix is a residential connection (a home machine
+or the phone), not a better script. A run that reaches `solved:` will keep
+working on its own.
+
+It maintains the shows in `tools/shows-bulk.txt`; it does not discover new
+anime.
 
 ### Limits worth knowing
 
@@ -104,6 +121,7 @@ Harvest behaviour worth knowing:
 | `selftest.js` | Node self-check for the non-trivial logic (`node selftest.js`) |
 | `catalogue/` | Static kwik-id data (see `catalogue/README.md`) |
 | `tools/` | Laptop-side writers for `catalogue/` |
+| `.github/workflows/catalogue.yml` | Daily top-up on a GitHub runner (no laptop) |
 
 ## Notes
 

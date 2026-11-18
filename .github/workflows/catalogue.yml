@@ -1,0 +1,56 @@
+# Daily catalogue top-up with no laptop: a GitHub runner harvests whatever is
+# new and commits it back. AnimePahe sits behind Cloudflare and runner IPs are
+# datacenter ranges, so a red run at the "waiting for the challenge" step means
+# the site refused the runner - not that the harvest is broken.
+name: catalogue
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # daily, 03:17 UTC
+  workflow_dispatch: # the Run workflow button
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalogue
+  cancel-in-progress: false
+
+jobs:
+  top-up:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # a GitHub job dies at 6h; stay under it
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: browser
+        run: |
+          npx --yes playwright@1 install --with-deps chromium >/dev/null
+          # The full Chromium, not the headless shell: a headed window under
+          # Xvfb is the closest thing to a real user the runner can offer.
+          echo "CHROME_BIN=$(find "$HOME/.cache/ms-playwright" -type f -name chrome | head -1)" >> "$GITHUB_ENV"
+          if ! command -v xvfb-run >/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y xvfb
+          fi
+
+      - name: top up
+        run: |
+          xvfb-run -a -s "-screen 0 1280x900x24" \
+            node tools/harvest-batch.mjs \
+              --file tools/shows-bulk.txt \
+              --all-seasons --max-eps 0 --max-minutes 300 \
+              --chrome "$CHROME_BIN" --no-sandbox
+
+      # A challenge stops the run on purpose; keep what it already wrote.
+      - name: commit
+        if: always()
+        run: |
+          git config user.name "catalogue"
+          git config user.email "catalogue@users.noreply.github.com"
+          git add catalogue
+          git diff --cached --quiet || git commit -m "catalogue: daily top-up"
+          git push

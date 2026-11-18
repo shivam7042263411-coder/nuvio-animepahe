@@ -1,4 +1,6 @@
 # Bulk list - series take the first 12 episodes, films are one row each.
+# Passing --max-eps N on the command line overrides the maxEpisodes column
+# (--max-eps 0 = every episode of every entry here).
 # term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
 # Add a title to a later season by adding one line per season, e.g.
 #   Attack on Titan 2nd Season | 12 | 2 | 0 | -1 | Attack on Titan

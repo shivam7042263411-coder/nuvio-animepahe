@@ -34,6 +34,7 @@ import {
   mergeRows,
   readCatalogue,
   rebuildIndex,
+  slug,
   titleKey,
   writeShow,
 } from './catalogue-lib.mjs';
@@ -53,12 +54,23 @@ const FORCE = args.includes('--force');
 // one entry a line names. Unlabelled sequels are skipped, never guessed.
 const ALL_SEASONS = args.includes('--all-seasons');
 const PORT = Number(option('--port', 9334));
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// A CI job dies hard at its own timeout and never reaches the commit step, so
+// the run stops itself first and leaves a clean catalogue behind.
+const MAX_MINUTES = Number(option('--max-minutes', 0));
+const STARTED = Date.now();
+const CHROME = option(
+  '--chrome',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+);
+// A container has no user-namespace sandbox and a tiny /dev/shm; a desktop
+// browser needs neither flag.
+const NO_SANDBOX = args.includes('--no-sandbox');
 const BASE = 'https://animepahe.pw';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function parseShows(path) {
+  const hasMaxEps = args.includes('--max-eps');
   return readFileSync(path, 'utf8')
     .split('\n')
     .map((l) => l.trim())
@@ -70,7 +82,13 @@ function parseShows(path) {
       return {
         term,
         // 0 = every episode the entry has; blank = the --max-eps default.
-        maxEps: eps === '0' ? 0 : Number(eps) || MAX_EPS,
+        // A --max-eps on the command line wins over the column, so one flag
+        // can lift a whole list to "everything" without editing 150 lines.
+        maxEps: hasMaxEps
+          ? MAX_EPS
+          : eps === '0'
+            ? 0
+            : Number(eps) || MAX_EPS,
         season: Number(season) || 1,
         offset: Number(offset) || null,
         // -1 = pick the series automatically (see harvestScript); >= 0 = force.
@@ -113,6 +131,7 @@ const chrome = spawn(
     '--no-first-run',
     '--no-default-browser-check',
     '--window-size=1280,900',
+    ...(NO_SANDBOX ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
     `${BASE}/`,
   ],
   { stdio: 'ignore' }
@@ -195,6 +214,10 @@ if (!solved) {
 let done = 0;
 let failed = 0;
 for (const show of shows) {
+  if (MAX_MINUTES && (Date.now() - STARTED) / 60000 > MAX_MINUTES) {
+    console.log(`\nstopping: ${MAX_MINUTES} minute budget reached (re-run continues)`);
+    break;
+  }
   // A season line files into the app's show, not the site's season-specific
   // entry ("Attack on Titan 2nd Season" -> attack-on-titan.json).
   const target = show.catalogueTitle || show.term;
@@ -207,9 +230,15 @@ for (const show of shows) {
   // per season, so a second season cannot make the first look complete.
   // All-seasons runs never skip: which seasons exist is only known after the
   // search, and stored episodes cost no request anyway.
-  const wanted = already
-    ? Math.min(show.maxEps, Number((already.data.seasonEpisodes || {})[show.season]) || Infinity)
-    : 0;
+  // 0 = every episode the site has, which the stored count cannot prove, so it
+  // never counts as complete.
+  const wanted =
+    !already || show.maxEps === 0
+      ? Infinity
+      : Math.min(
+          show.maxEps,
+          Number((already.data.seasonEpisodes || {})[show.season]) || Infinity
+        );
   if (!ALL_SEASONS && already && storedEps.size >= wanted) {
     console.log(`skip   ${show.term} (${storedEps.size} episode(s) stored; --force to redo)`);
     continue;
@@ -264,7 +293,7 @@ for (const show of shows) {
   if ((show.maxEps === 0 || show.maxEps > 1) && Number(result.show.episodes) === 1) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);
   }
-  const file = already ? already.file : `${target.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+  const file = already ? already.file : `${slug(target)}.json`;
   const data = already
     ? already.data
     : {

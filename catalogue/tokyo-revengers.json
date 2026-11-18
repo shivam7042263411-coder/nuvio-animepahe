@@ -91,7 +91,95 @@
       "q": 1080,
       "a": "sub",
       "id": "l3YL4fq3qZT1"
+    },
+    {
+      "s": 1,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "XPC9gzyExSfg"
+    },
+    {
+      "s": 1,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "JRfofeNdSo9g"
+    },
+    {
+      "s": 1,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "gp5fARlT13cE"
+    },
+    {
+      "s": 1,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "YFeKD5u3Z4hq"
+    },
+    {
+      "s": 1,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "7CkAcGf1c3wx"
+    },
+    {
+      "s": 1,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "jfmPEpI3zPFQ"
+    },
+    {
+      "s": 1,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "KRKfKnOBdWmP"
+    },
+    {
+      "s": 1,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "maw98gZmOpyM"
+    },
+    {
+      "s": 1,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "CIdlDOzLqjnI"
+    },
+    {
+      "s": 1,
+      "e": 22,
+      "q": 1080,
+      "a": "sub",
+      "id": "yADCQpZXaOJx"
+    },
+    {
+      "s": 1,
+      "e": 23,
+      "q": 1080,
+      "a": "sub",
+      "id": "zP9tQpPBA3as"
+    },
+    {
+      "s": 1,
+      "e": 24,
+      "q": 1080,
+      "a": "sub",
+      "id": "4vli6SqbifNW"
     }
   ],
-  "updated": "2026-11-18"
+  "updated": "2026-11-18",
+  "seasonEpisodes": {
+    "1": 24
+  },
+  "allSeasons": true
 }

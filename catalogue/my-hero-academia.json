@@ -1,96 +1,459 @@
 {
-  "title": "My Hero Academia Season 2",
+  "title": "My Hero Academia",
   "aliases": [],
   "season": 1,
-  "year": 2017,
+  "year": 2016,
   "source": "animepahe",
   "search": "My Hero Academia",
-  "session": "2e96e6bd-18d6-9913-8c76-2c27918f70d8",
-  "episodes": 25,
+  "session": "2f10a7a4-3806-8189-6bc2-c64ad173f850",
+  "episodes": 13,
+  "seasonEpisodes": {
+    "1": 13,
+    "2": 25,
+    "3": 25
+  },
+  "allSeasons": true,
   "rows": [
     {
       "s": 1,
-      "e": 14,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "PcHtoaXniSGA"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "4JRRYRl4jTtH"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "tNEqCQpo6dVE"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "XORdUPIK5Md2"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "os8aZbQLMPH5"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "AW2OfDGYNX7s"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "uRwdh7GMusQj"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "4I4uJuLhcPAd"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "vIXMpma1DzXR"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "StFCtxW6ra4s"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "8I2tKkapWe5p"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "667AHjNL7aPY"
+    },
+    {
+      "s": 1,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "sRmt673qokCU"
+    },
+    {
+      "s": 2,
+      "e": 1,
       "q": 1080,
       "a": "sub",
       "id": "z3H2md5h0Brz"
     },
     {
-      "s": 1,
-      "e": 15,
+      "s": 2,
+      "e": 2,
       "q": 1080,
       "a": "sub",
       "id": "3C4bxFduKktm"
     },
     {
-      "s": 1,
-      "e": 16,
+      "s": 2,
+      "e": 3,
       "q": 1080,
       "a": "sub",
       "id": "uyh5puFXghvf"
     },
     {
-      "s": 1,
-      "e": 17,
+      "s": 2,
+      "e": 4,
       "q": 1080,
       "a": "sub",
       "id": "A45m0nSqanTU"
     },
     {
-      "s": 1,
-      "e": 18,
+      "s": 2,
+      "e": 5,
       "q": 1080,
       "a": "sub",
       "id": "ZaqkboXCryMu"
     },
     {
-      "s": 1,
-      "e": 19,
+      "s": 2,
+      "e": 6,
       "q": 1080,
       "a": "sub",
       "id": "6k29ikFMIQoL"
     },
     {
-      "s": 1,
-      "e": 20,
+      "s": 2,
+      "e": 7,
       "q": 1080,
       "a": "sub",
       "id": "Q2yTXZDTly8x"
     },
     {
-      "s": 1,
-      "e": 21,
+      "s": 2,
+      "e": 8,
       "q": 1080,
       "a": "sub",
       "id": "WyGthlal5Nse"
     },
     {
-      "s": 1,
-      "e": 22,
+      "s": 2,
+      "e": 9,
       "q": 1080,
       "a": "sub",
       "id": "pFdfT3EHsVRx"
     },
     {
-      "s": 1,
-      "e": 23,
+      "s": 2,
+      "e": 10,
       "q": 1080,
       "a": "sub",
       "id": "07dWGpUZz1lV"
     },
     {
-      "s": 1,
-      "e": 24,
+      "s": 2,
+      "e": 11,
       "q": 1080,
       "a": "sub",
       "id": "b5xZaSJ59HfV"
     },
     {
-      "s": 1,
-      "e": 25,
+      "s": 2,
+      "e": 12,
       "q": 1080,
       "a": "sub",
       "id": "ywlxiK9UgHCp"
+    },
+    {
+      "s": 2,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "ROTQ1c7ZCUqE"
+    },
+    {
+      "s": 2,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "goPSnIl8BzRK"
+    },
+    {
+      "s": 2,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "os7p3Q1QWWn5"
+    },
+    {
+      "s": 2,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "AMycMRWRUiFy"
+    },
+    {
+      "s": 2,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "A7k8MMbV6ORw"
+    },
+    {
+      "s": 2,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "RVefbiJsulUT"
+    },
+    {
+      "s": 2,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "lCevHXcP1Uyg"
+    },
+    {
+      "s": 2,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "GENfphggBMpK"
+    },
+    {
+      "s": 2,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "OSo4ROvgcy8u"
+    },
+    {
+      "s": 2,
+      "e": 22,
+      "q": 1080,
+      "a": "sub",
+      "id": "ccKBRHbUfebd"
+    },
+    {
+      "s": 2,
+      "e": 23,
+      "q": 1080,
+      "a": "sub",
+      "id": "PCoIYzthjfO2"
+    },
+    {
+      "s": 2,
+      "e": 24,
+      "q": 1080,
+      "a": "sub",
+      "id": "bn4X6wa5agwB"
+    },
+    {
+      "s": 2,
+      "e": 25,
+      "q": 1080,
+      "a": "sub",
+      "id": "pRlBoeOWMbSV"
+    },
+    {
+      "s": 3,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "4DnzKdt6hKSv"
+    },
+    {
+      "s": 3,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "a7BXKakMj8CA"
+    },
+    {
+      "s": 3,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "lkUteFBHdX6I"
+    },
+    {
+      "s": 3,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "JA2JbUQzKyuY"
+    },
+    {
+      "s": 3,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "57jdMBYOaA8x"
+    },
+    {
+      "s": 3,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "Dfm00PC1ZLyy"
+    },
+    {
+      "s": 3,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "sa5oKUEYiOfA"
+    },
+    {
+      "s": 3,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "dbFhiFIfjtEo"
+    },
+    {
+      "s": 3,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "BHKCjFavbieK"
+    },
+    {
+      "s": 3,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "7ljeKkWMpsnN"
+    },
+    {
+      "s": 3,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "30AsuWCQlQnZ"
+    },
+    {
+      "s": 3,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "4gj1veGfN7ez"
+    },
+    {
+      "s": 3,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "CcuCbjTnmluR"
+    },
+    {
+      "s": 3,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "Lsd2sBmb0AA6"
+    },
+    {
+      "s": 3,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "5rQTqhodtguI"
+    },
+    {
+      "s": 3,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "IGUrFX7YtBhT"
+    },
+    {
+      "s": 3,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "glIFQPGPHyz0"
+    },
+    {
+      "s": 3,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "NedEkyeqqg0L"
+    },
+    {
+      "s": 3,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "iOt93ZfUqoTD"
+    },
+    {
+      "s": 3,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "sdhmfMm6pmtw"
+    },
+    {
+      "s": 3,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "xWe8kmMZpA6K"
+    },
+    {
+      "s": 3,
+      "e": 22,
+      "q": 1080,
+      "a": "sub",
+      "id": "n2OD57q6El8F"
+    },
+    {
+      "s": 3,
+      "e": 23,
+      "q": 1080,
+      "a": "sub",
+      "id": "0qHvuFsQ58pj"
+    },
+    {
+      "s": 3,
+      "e": 24,
+      "q": 1080,
+      "a": "sub",
+      "id": "aJLHJeLiiLgS"
+    },
+    {
+      "s": 3,
+      "e": 25,
+      "q": 1080,
+      "a": "sub",
+      "id": "yQN2H4MyU0L8"
     }
   ],
   "updated": "2026-11-18"
