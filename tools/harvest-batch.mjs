@@ -39,6 +39,33 @@ import {
   writeShow,
 } from './catalogue-lib.mjs';
 import { harvestScript } from './harvest-page.mjs';
+import { tmdbKey, tmdbShow } from './tmdb.mjs';
+
+const TMDB_KEY = tmdbKey();
+if (!TMDB_KEY) {
+  console.error(
+    'no TMDB key: seasons are matched by name only.\n' +
+      'put one in tools/.tmdb-key (or export TMDB_API_KEY) and a season called\n' +
+      '"Culling Game" is filed by its size instead of being skipped.'
+  );
+}
+const showCache = new Map();
+/** TMDB's seasons for a show, or null when it cannot be identified. Cached per
+ *  run: several lines can name the same show. */
+async function seasonsFor(term) {
+  if (!TMDB_KEY) return null;
+  if (showCache.has(term)) return showCache.get(term);
+  let seasons = null;
+  try {
+    const show = await tmdbShow(term, TMDB_KEY);
+    seasons = show ? show.seasons : null;
+    if (!show) console.error(`  tmdb: no exact show for "${term}" - matching by name`);
+  } catch (e) {
+    console.error(`  tmdb: ${e.message} - matching by name`);
+  }
+  showCache.set(term, seasons);
+  return seasons;
+}
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -255,6 +282,9 @@ for (const show of shows) {
     // Every stored row, no matter the season: an all-seasons run revisits each.
     haveEps: (already ? already.data.rows : []).map((r) => `${r.s}/${r.e}`),
     force: FORCE,
+    // The app counts episodes in TMDB's seasons, so TMDB decides what "season
+    // 3" is; a season's name on the site then no longer matters.
+    seasons: ALL_SEASONS ? await seasonsFor(show.catalogueTitle || show.term) : null,
   };
   console.log(
     `fetch  ${show.term} (${ALL_SEASONS ? 'all seasons' : 'season ' + show.season}, ` +
@@ -302,6 +332,15 @@ for (const show of shows) {
   }
   if (result.plans) {
     console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title).join(' | ')}`);
+  }
+  // A season can hide in a differently-named entry ("Jujutsu Kaisen: Culling
+  // Game"); naming it here is the difference between a visible gap and a
+  // silently missing season.
+  for (const h of result.ignored || []) {
+    console.log(
+      `  not filed: "${h.title}" (${h.year || '?'}, ${h.episodes || '?'} ep) - ` +
+        `a season under another name: add "${h.title} | 0 | <season> | 0 | -1 | ${target}"`
+    );
   }
   if ((show.maxEps === 0 || show.maxEps > 1) && Number(result.show.episodes) === 1) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);

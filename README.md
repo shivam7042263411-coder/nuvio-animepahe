@@ -54,6 +54,22 @@ adb logcat -d | node tools/merge-log.mjs -
 
 Then commit `catalogue/`. `index.json` is generated - never hand-edit it.
 
+Season names are not what decides a season. With a TMDB key present the
+harvester asks TMDB how many episodes each season has - the same numbering the
+app shows - and files entries by their size, in release order:
+
+- `Jujutsu Kaisen: Culling Game` has no "season" in its name, but 24 + 23 + 12
+  episodes add up to TMDB's one 59-episode season, so all of it lands in S1 and
+  every episode is playable.
+- `Demon Slayer: Mugen Train Arc`, `Entertainment District Arc` and the rest
+  fill S2–S5 the same way.
+- A season whose episodes do not add up exactly is **left out and named in the
+  log**, never guessed - a misfiled season plays the wrong episode forever.
+
+The key is read from `tools/.tmdb-key` (one line, gitignored) or the
+`TMDB_API_KEY` environment variable. Without it, seasons are matched by name
+only, which is why an arc-named season used to go missing.
+
 Harvest behaviour worth knowing:
 
 - The search hit is picked by **title relevance first, episode count second**:
@@ -62,19 +78,22 @@ Harvest behaviour worth knowing:
   alone once picked *Naruto Shippuden* for "Naruto". Force a hit with
   `resultIndex` in the list.
 - **One line = one season** by default: the harvester takes one AnimePahe entry
-  and its first `maxEpisodes`. `--all-seasons` instead fills every season the
-  site labels ("2nd Season", "Season 2", "Part 2"), all in the one file, each
-  keyed by the app's season. `--max-eps 0` takes every episode, and a
-  `--max-eps` on the command line overrides the list's `maxEpisodes` column.
-- A sequel or spin-off with **no season label** in its title ("X: will+Dress",
-  "X The Final Season") needs its own line with an `appSeason`: guessing would
-  file it as season 1, and a wrong season is worse than a miss.
+  and its first `maxEpisodes`. `--all-seasons` instead fills every season TMDB
+  defines, all in the one file, each keyed by the app's season. `--max-eps 0`
+  takes every episode, and a `--max-eps` on the command line overrides the
+  list's `maxEpisodes` column.
+- An entry **named after an arc** ("X: Culling Game", "X: Mugen Train Arc") is
+  filed by size, so it no longer needs a line of its own. A sequel that is a
+  different TMDB show (a spin-off) is not - it has its own `appTitle` line or
+  it is skipped.
 - A mis-picked entry is safe: the index is keyed on the **site's** title, so
   rows that belong to another show never match and play falls back to a scrape.
 - `--max-eps` above what is stored **tops up only the missing episodes**; it
   does not re-fetch what is already there. No `--force` needed.
 - The first Cloudflare challenge **stops the whole run** instead of retrying;
   shows already written stay written, and re-running resumes.
+  `--wait-challenge 300` instead waits up to five minutes for you to tick the
+  box, which is the difference between ten shows a sitting and all of them.
 - Measured pacing: ~0.7s per episode (600ms sleep + one play page). Four
   12-episode shows take ~45s; 156 shows are ~25-30 minutes. `kwik.cx` is never
   touched, so the page throttle does not apply.

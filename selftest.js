@@ -718,6 +718,50 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "demon-slayer.json"
     );
     check(
+        "an arc-named season is filed by size, not by name",
+        pageMod
+            .planSeasons(
+                [
+                    { title: "Jujutsu Kaisen", episodes: 24, year: 2020 },
+                    { title: "Jujutsu Kaisen Season 2", episodes: 23, year: 2023 },
+                    { title: "Jujutsu Kaisen: Culling Game", episodes: 12, year: 2026 },
+                ],
+                [{ n: 1, episodes: 59, year: "2020" }]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.map((x) => x.title).join("+"))
+            .join(" "),
+        "S1:Jujutsu Kaisen+Jujutsu Kaisen Season 2+Jujutsu Kaisen: Culling Game"
+    );
+    check(
+        "labelled seasons still split where TMDB splits them",
+        pageMod
+            .planSeasons(
+                [
+                    { title: "Attack on Titan", episodes: 25, year: 2013 },
+                    { title: "Attack on Titan Season 2", episodes: 12, year: 2017 },
+                ],
+                [
+                    { n: 1, episodes: 25, year: "2013" },
+                    { n: 2, episodes: 12, year: "2017" },
+                ]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.map((x) => x.title).join("+"))
+            .join(" "),
+        "S1:Attack on Titan S2:Attack on Titan Season 2"
+    );
+    check(
+        "a season that does not add up is reported, not guessed",
+        pageMod.unfiledHits(
+            "Jujutsu Kaisen",
+            [
+                { title: "Jujutsu Kaisen", episodes: 24, year: 2020 },
+                { title: "Jujutsu Kaisen: Culling Game", episodes: 12, year: 2026 },
+            ],
+            []
+        ).map((h) => h.title).join(" | "),
+        "Jujutsu Kaisen | Jujutsu Kaisen: Culling Game"
+    );
+    check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({
             term: "Naruto",
