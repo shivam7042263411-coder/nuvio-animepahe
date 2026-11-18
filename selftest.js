@@ -712,11 +712,19 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "KonoSuba: God's Blessing on This Wonderful World!"
     );
     const lib = await import("./tools/catalogue-lib.mjs");
-    check(
-        "a list term finds the file the harvester would write",
-        lib.findShow("Demon Slayer") && lib.findShow("Demon Slayer").file,
-        "demon-slayer.json"
-    );
+    // A temp file whose title differs from the list term: this is the filename
+    // fallback, and it must hold whether or not the catalogue has been filled.
+    const tempFile = path.join(__dirname, "catalogue", "selftest-show.json");
+    fs.writeFileSync(tempFile, JSON.stringify({ title: "Selftest Show: The Real Title", rows: [] }));
+    try {
+        check(
+            "a list term finds the file the harvester would write",
+            lib.findShow("Selftest Show") && lib.findShow("Selftest Show").file,
+            "selftest-show.json"
+        );
+    } finally {
+        fs.unlinkSync(tempFile);
+    }
     check(
         "an arc-named season is filed by size, not by name",
         pageMod
