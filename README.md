@@ -63,8 +63,10 @@ app shows - and files entries by their size, in release order:
   every episode is playable.
 - `Demon Slayer: Mugen Train Arc`, `Entertainment District Arc` and the rest
   fill S2–S5 the same way.
-- A season whose episodes do not add up exactly is **left out and named in the
-  log**, never guessed - a misfiled season plays the wrong episode forever.
+- A season whose episodes do not add up exactly is **left out and named** in
+  the log (`not filed: "..."`). When sizing fails for the whole show, the run
+  prints `warning: TMDB's season sizes do not add up ...` and falls back to the
+  season in each entry's name, exactly as a keyless run does.
 
 The key is read from `tools/.tmdb-key` (one line, gitignored) or the
 `TMDB_API_KEY` environment variable. Without it, seasons are matched by name

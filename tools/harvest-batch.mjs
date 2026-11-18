@@ -330,6 +330,12 @@ for (const show of shows) {
   if (result.fallback) {
     console.error(`  warning: no season-labelled entry for "${show.term}" - filed the best hit as season 1`);
   }
+  if (ALL_SEASONS && (plan.seasons || []).length && !result.sized && (result.plans || []).length) {
+    console.error(
+      `  warning: TMDB's season sizes do not add up to the site's entries for "${show.term}" - ` +
+        `filed by the season in each entry's name instead; check the seasons below`
+    );
+  }
   if (result.plans) {
     console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title).join(' | ')}`);
   }

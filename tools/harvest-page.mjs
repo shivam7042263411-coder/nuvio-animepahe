@@ -226,6 +226,7 @@ export function harvestScript(show) {
 
   let plans;
   let fallback = false;
+  let sized = false;
   if (allSeasons) {
     plans = [];
     if (tmdbSeasons && tmdbSeasons.length) {
@@ -235,7 +236,11 @@ export function harvestScript(show) {
         for (const part of p.parts) plans.push({ ...part, season: p.season });
       }
       plans.sort((a, b) => a.season - b.season || a.part - b.part);
+      sized = plans.length > 0;
     }
+    // TMDB's seasons and the site's entries disagree: fall back to the label in
+    // the entry's name, the way a keyless run does. The caller says so in the
+    // log, because here the names are the only thing left to trust.
     if (!plans.length) plans = classify(term, pool);
     // No labelled entry: fall back to the best hit as season 1, the same guess
     // a one-line harvest makes. Warn so a wrong guess is visible in the log.
@@ -316,6 +321,7 @@ export function harvestScript(show) {
     seasons: seasonCounts,
     plans: plans.map((p) => ({ season: p.season, title: p.title })),
     fallback,
+    sized,
     skipped,
     ignored,
     rows,

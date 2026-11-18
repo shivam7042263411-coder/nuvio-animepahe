@@ -761,6 +761,50 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ).map((h) => h.title).join(" | "),
         "Jujutsu Kaisen | Jujutsu Kaisen: Culling Game"
     );
+    // The harvester's sizing path, end to end: an entry whose name never says
+    // "season 3" is filed by TMDB's sizes, and a season that does not add up
+    // falls back to names with the flag set so the log can say so.
+    const fakePool = [
+        { title: "Jujutsu Kaisen", session: "a", year: 2020, episodes: 24 },
+        { title: "Jujutsu Kaisen Season 2", session: "b", year: 2023, episodes: 23 },
+        { title: "Jujutsu Kaisen: Culling Game", session: "c", year: 2026, episodes: 12 },
+    ];
+    const fakeFetch = async (url) => {
+        if (url.includes("m=search")) return { json: async () => ({ data: fakePool }) };
+        if (url.includes("m=release")) {
+            const n = { a: 24, b: 23, c: 12 }[url.match(/id=([abc])/)[1]];
+            const data = [];
+            for (let i = 1; i <= n; i++) data.push({ episode: String(i), session: "s" + i });
+            return { json: async () => ({ data, last_page: 1 }) };
+        }
+        return { text: async () => '<button data-src="/e/AA1080" data-audio="jpn">1080p</button>' };
+    };
+    class FakeDom {
+        parseFromString() {
+            return {
+                querySelectorAll: () => [
+                    { dataset: { src: "/e/AA1080", audio: "jpn" }, textContent: "1080p" },
+                ],
+            };
+        }
+    }
+    const run = (seasons) =>
+        new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+            term: "Jujutsu Kaisen", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+            allSeasons: true, haveEps: [], force: false, seasons,
+        }))(fakeFetch, FakeDom, (fn) => fn());
+    const sized = await run([{ n: 1, episodes: 59, year: "2020" }]);
+    check(
+        "an arc-named season is filed by size, every row under the app's season",
+        [sized.sized, sized.rows.length, sized.rows[58].s + "/" + sized.rows[58].e, sized.ignored.length],
+        [true, 59, "1/59", 0]
+    );
+    const mismatched = await run([{ n: 1, episodes: 30, year: "2020" }]);
+    check(
+        "a TMDB season that does not add up falls back to names, flagged",
+        [mismatched.sized, mismatched.plans.length > 0, mismatched.ignored.length],
+        [false, true, 1]
+    );
     check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({
