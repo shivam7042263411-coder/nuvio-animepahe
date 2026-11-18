@@ -58,6 +58,9 @@ const PORT = Number(option('--port', 9334));
 // the run stops itself first and leaves a clean catalogue behind.
 const MAX_MINUTES = Number(option('--max-minutes', 0));
 const STARTED = Date.now();
+// At the laptop a challenge is a checkbox to click; the run can wait for it
+// instead of ending. CI has nobody to click, so it stays 0 there.
+const WAIT_CHALLENGE = Number(option('--wait-challenge', 0)) * 1000;
 const CHROME = option(
   '--chrome',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -265,6 +268,16 @@ for (const show of shows) {
     failed++;
     continue;
   }
+  // A challenge mid-show is usually one checkbox away: wait for it when the
+  // caller asked for that, and only give up when it never clears.
+  const waitUntil = Date.now() + WAIT_CHALLENGE;
+  while (result && result.error === 'challenge' && Date.now() < waitUntil) {
+    console.log('  challenge: finish it in the Chrome window, retrying in 30s...');
+    await sleep(30_000);
+    try {
+      result = await evaluate(harvestScript(plan));
+    } catch {}
+  }
   if (!result || result.error) {
     if (result && result.error === 'challenge') {
       console.error('  challenge appeared mid-run: stopping so the clearance is not burned');
@@ -294,16 +307,27 @@ for (const show of shows) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);
   }
   const file = already ? already.file : `${slug(target)}.json`;
-  const data = already
+  // A file that was filled from a mis-picked entry carries that show's name and
+  // its ids: renaming it would make the app play the wrong show's episode. When
+  // the line finally picks the entry it asked for, the old rows are not this
+  // show's, so start the file over under the site's name.
+  const retitle =
+    already &&
+    titleKey(result.show.title) === titleKey(target) &&
+    titleKey(already.data.title) !== titleKey(target);
+  const data = already && !retitle
     ? already.data
     : {
-        title: target,
+        title: retitle ? result.show.title : target,
         aliases: [],
         season: show.season,
         year: result.show.year || null,
         source: 'animepahe',
         search: show.term,
       };
+  if (retitle) {
+    console.log(`  retitle: "${already.data.title}" -> "${result.show.title}" (old rows dropped)`);
+  }
   // The site's own name for this entry ("Attack on Titan 2nd Season") must not
   // be lost: a later line for that season looks the file up by it.
   if (titleKey(result.show.title) !== titleKey(target)) {
