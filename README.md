@@ -91,6 +91,14 @@ Harvest behaviour worth knowing:
   each would have, opens no play pages and writes nothing. Then run the same
   command without `--dry-run`; finished shows are skipped and half-done ones are
   topped up, so it is safe to interrupt.
+- **Building the list** is `node tools/build-show-list.mjs [maxShows] [outFile]`.
+  It asks TMDB for Japanese animation that clears a quality gate (200+ votes at
+  6.5, or 50+ at 7.0 — popularity alone lets a 10/10 from three people through),
+  groups it by genre and writes `shows-curated.txt` in the harvester's format.
+  That gate yields about 1,400 titles; `--include-tail` adds the 20-vote tail to
+  reach 2,000. Delete any line you do not want. Films are written as one row
+  each (`| 1 | 1 | 0`) and grouped last. TMDB has no Romance genre for TV, so
+  romance anime sit under Comedy and Drama.
 - **A film is not a season.** TMDB has it as its own title and the app asks for
   it at `S1E1`, so it gets its own file and its own line, with the app's title
   in the last column:
