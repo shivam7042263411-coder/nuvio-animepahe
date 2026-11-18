@@ -758,6 +758,35 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "S1:Attack on Titan S2:Attack on Titan Season 2"
     );
     check(
+        "a season whose site list ends early is filed as still airing",
+        pageMod
+            .planSeasons(
+                [
+                    { title: "Some Show", episodes: 12, year: 2024 },
+                    { title: "Some Show Season 2", episodes: 5, year: 2026 },
+                ],
+                [
+                    { n: 1, episodes: 12, year: "2024" },
+                    { n: 2, episodes: 12, year: "2026" },
+                ]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.map((x) => x.title).join("+") +
+                (p.partial ? "!" + p.size : ""))
+            .join(" "),
+        "S1:Some Show S2:Some Show Season 2!12"
+    );
+    check(
+        "entries left over after a short season are not filed at all",
+        pageMod.planSeasons(
+            [
+                { title: "Some Show", episodes: 5, year: 2024 },
+                { title: "Some Show Season 2", episodes: 12, year: 2026 },
+            ],
+            [{ n: 1, episodes: 12, year: "2024" }]
+        ).length,
+        0
+    );
+    check(
         "a season that does not add up is reported, not guessed",
         pageMod.unfiledHits(
             "Jujutsu Kaisen",

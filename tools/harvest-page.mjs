@@ -117,7 +117,19 @@ export function planSeasons(entries, seasons) {
     }
 
     if (room === 0 && parts.length) {
-      plans.push({ season: Number(season.n), year: season.year, parts });
+      plans.push({ season: Number(season.n), year: season.year, parts, size: Number(season.episodes) });
+    } else if (parts.length && i >= entries.length) {
+      // The site's list ends inside this season: it is still airing. File what
+      // exists and top it up next run. Only safe because the entries ran out -
+      // a season skipped in the middle still leaves entries after it, and those
+      // are never filed here.
+      plans.push({
+        season: Number(season.n),
+        year: season.year,
+        parts,
+        size: Number(season.episodes),
+        partial: true,
+      });
     } else {
       // Wrong shape: leave these entries for the next season to try. Nothing is
       // guessed, and the caller reports them as not filed.
@@ -274,7 +286,9 @@ export function harvestScript(show) {
       // File by season size. An entry whose title never says "season 3" lands
       // there anyway when the episodes add up.
       for (const p of planSeasons(franchiseOf(term, pool), tmdbSeasons)) {
-        for (const part of p.parts) plans.push({ ...part, season: p.season });
+        for (const part of p.parts) {
+          plans.push({ ...part, season: p.season, size: p.size, partial: !!p.partial });
+        }
       }
       plans.sort((a, b) => a.season - b.season || a.part - b.part);
       sized = plans.length > 0;
@@ -365,7 +379,13 @@ export function harvestScript(show) {
   return {
     show: { title: first.title, session: first.session, year: first.year, episodes: first.episodes },
     seasons: seasonCounts,
-    plans: plans.map((p) => ({ season: p.season, title: p.title, episodes: p.episodes })),
+    plans: plans.map((p) => ({
+      season: p.season,
+      title: p.title,
+      episodes: p.episodes,
+      size: p.size,
+      partial: !!p.partial,
+    })),
     fallback,
     sized,
     dryRun,

@@ -6,6 +6,8 @@
 //                                     [--profile tools/.chrome-profile]
 //
 // --dry-run plans and counts only: no play pages, no ids, nothing written.
+// --airing-only keeps just the shows TMDB has a next episode for: the weekly
+// top-up. Costs one TMDB lookup per show, no site request for the rest.
 // --profile keeps Chrome's session, so a Cloudflare solve covers many runs.
 // --max-eps 0 means "every episode the entry has".
 // --all-seasons fills every season the site labels ("2nd Season", "Part 2")
@@ -53,21 +55,47 @@ if (!TMDB_KEY) {
   );
 }
 const showCache = new Map();
-/** TMDB's seasons for a show, or null when it cannot be identified. Cached per
- *  run: several lines can name the same show. */
-async function seasonsFor(term) {
-  if (!TMDB_KEY) return null;
+/** The TMDB show behind a term, or null when it cannot be identified. Cached
+ *  per run: several lines can name the same show. */
+async function showFor(term) {
+  if (!TMDB_KEY) return undefined;
   if (showCache.has(term)) return showCache.get(term);
-  let seasons = null;
+  let show = null;
   try {
-    const show = await tmdbShow(term, TMDB_KEY);
-    seasons = show ? show.seasons : null;
+    show = await tmdbShow(term, TMDB_KEY);
     if (!show) console.error(`  tmdb: no exact show for "${term}" - matching by name`);
   } catch (e) {
     console.error(`  tmdb: ${e.message} - matching by name`);
   }
-  showCache.set(term, seasons);
-  return seasons;
+  showCache.set(term, show);
+  return show;
+}
+async function seasonsFor(term) {
+  const show = await showFor(term);
+  return show ? show.seasons : null;
+}
+/** A weekly run only wants shows TMDB has a next episode for. Without a key it
+ *  cannot tell, so it keeps them all rather than skipping the whole list. */
+async function airingFor(term) {
+  const show = await showFor(term);
+  // No key, or a term TMDB cannot place: harvest it anyway. Skipping a show
+  // because it could not be looked up is how a week of episodes goes missing.
+  return !show || show.airing;
+}
+/** One TMDB lookup per show takes ~0.5s, so 1,400 of them in the harvest loop
+ *  would cost ten minutes of waiting. Six at a time brings it to about two. */
+async function prefetchShows() {
+  const terms = [...new Set(shows.map((s) => s.term))];
+  let next = 0;
+  const worker = async () => {
+    while (next < terms.length) await showFor(terms[next++]);
+  };
+  await Promise.all([1, 2, 3, 4, 5, 6].map(worker));
+  const airing = terms.filter((t) => {
+    const show = showCache.get(t);
+    return !show || show.airing;
+  }).length;
+  console.log(`airing: ${airing} of ${terms.length} shows have a next episode (TMDB)`);
 }
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -83,6 +111,9 @@ const FORCE = args.includes('--force');
 // Fill every season the site labels ("2nd Season", "Part 2") instead of the
 // one entry a line names. Unlabelled sequels are skipped, never guessed.
 const ALL_SEASONS = args.includes('--all-seasons');
+// Weekly top-up: leave out every show TMDB has no next episode for. Finished
+// shows then cost one TMDB lookup and no site request.
+const AIRING_ONLY = args.includes('--airing-only');
 // Plan and count only: no play pages, no ids, nothing written. Needs no TMDB
 // key and touches the site far less, so it is the safe way to check a list.
 const DRY_RUN = args.includes('--dry-run');
@@ -266,6 +297,8 @@ if (!solved) {
 }
 
 
+if (AIRING_ONLY) await prefetchShows();
+
 let done = 0;
 let failed = 0;
 for (const show of shows) {
@@ -276,6 +309,7 @@ for (const show of shows) {
   // A season line files into the app's show, not the site's season-specific
   // entry ("Attack on Titan 2nd Season" -> attack-on-titan.json).
   const target = show.catalogueTitle || show.term;
+  if (AIRING_ONLY && !(await airingFor(show.term))) continue;
   const already = FORCE ? null : findShow(target);
   const storedEps = already
     ? new Set(already.data.rows.filter((r) => Number(r.s) === Number(show.season)).map((r) => Number(r.e)))
@@ -372,7 +406,10 @@ for (const show of shows) {
   }
   if (result.plans) {
     console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title +
-      (DRY_RUN && p.episodes != null ? ' (' + p.episodes + ')' : '')).join(' | ')}`);
+      (DRY_RUN && p.episodes != null ? ' (' + p.episodes + ')' : '') +
+      // A season whose site list ends before the TMDB size: still airing, so
+      // the run stores what exists and next week's run tops it up.
+      (p.partial ? ' [airing ' + p.episodes + '/' + (p.size || '?') + ']' : '')).join(' | ')}`);
   }
   if (DRY_RUN) {
     const counts = Object.keys(result.seasons || {})

@@ -132,6 +132,28 @@ Harvest behaviour worth knowing:
   12-episode shows take ~45s; 156 shows are ~25-30 minutes. `kwik.cx` is never
   touched, so the page throttle does not apply.
 
+### Weekly airing shows
+
+A season that is still airing is filed as it stands: the site's list ends
+mid-season, the rows go in for the episodes that exist, and the log marks the
+season `[airing 5/12]`. Next week's run finds the file, sees the stored
+episodes, and fetches only the new ones — no `--force`, no rewriting.
+
+`--airing-only` skips every show TMDB has no next episode for, so a weekly run
+over the whole list costs one TMDB lookup per show and site requests only for
+the ones that actually aired something:
+
+```bash
+node tools/harvest-batch.mjs --file tools/shows-curated.txt --all-seasons \
+  --max-eps 0 --airing-only --profile tools/.chrome-profile --wait-challenge 300
+```
+
+One command a week, about two minutes of TMDB lookups plus one request per new
+episode (~15s per airing show). A show TMDB cannot identify is harvested
+anyway, because skipping it on a failed lookup is how a week goes missing.
+No list to maintain: the curated list is the source and TMDB decides which of
+its shows are running.
+
 ### Why there is no daily job on GitHub
 
 A `catalogue.yml` workflow was tried on 2026-11-18 and deleted again: on a

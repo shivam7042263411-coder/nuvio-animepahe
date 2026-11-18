@@ -87,5 +87,7 @@ export async function tmdbShow(term, key) {
     }))
     .sort((a, b) => a.n - b.n);
   if (!seasons.length) return null;
-  return { id: hit.id, name: hit.name, seasons };
+  // next_episode_to_air is the only honest "is this show still running" signal:
+  // status alone says "Returning Series" for a show on a year-long break.
+  return { id: hit.id, name: hit.name, seasons, airing: Boolean(show.next_episode_to_air) };
 }
