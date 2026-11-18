@@ -23,6 +23,14 @@ var PROXY_URL = "https://animepaheproxy.phisheranimepahe.workers.dev/?url=";
 var BASE_URL = "https://animepahe.pw";
 var TMDB_BASE = "https://api.themoviedb.org/3";
 
+// Shared kwik-id catalogue: one static JSON per show plus an index, served by
+// raw.githubusercontent.com (public, no token). Read-only from the box - a
+// miss costs one index request and then today's scrape. See catalogue/README.
+var CATALOGUE_BASE =
+    "https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/catalogue/";
+var CATALOGUE_TTL_MS = 10 * 60 * 1000;
+var catalogueCache = null;
+
 // Per-run cache of AnimePahe responses (see apGet). Reset by getStreams.
 var responseCache = null;
 
@@ -346,6 +354,156 @@ async function resolveKwikDownload(embedUrl) {
     var name = /\.mp4$/i.test(found.title) ? found.title : found.title + ".mp4";
     var mp4 = parts.join("/") + "?file=" + encodeURIComponent(name);
     return { url: mp4, headers: PLAYBACK_HEADERS, type: "mp4" };
+}
+
+// ---------------------------------------------------------------------------
+// kwik-id catalogue
+//
+// Every episode's kwik id is stable across re-uploads of AnimePahe's front end
+// and needs no Cloudflare clearance: the CDN only wants the kwik referer that
+// PLAYBACK_HEADERS already carries. A hit therefore skips search, season
+// matching and the play page entirely.
+//
+// Rows are keyed by the app's own season/episode, because that is the only
+// numbering available without resolving the episode - the very work a hit
+// avoids. An unmatched row is a miss, never a guess: serving the wrong episode
+// silently is worse than one scrape.
+// ---------------------------------------------------------------------------
+
+async function catalogueJson(url) {
+    var res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    var text = await res.text();
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        return null;
+    }
+}
+
+/** The catalogue index, cached for this run and the next few plays. A failed
+ *  lookup is cached too: a blocked raw.githubusercontent.com must not add its
+ *  connect timeout to every play. */
+async function catalogueIndex() {
+    if (catalogueCache && Date.now() - catalogueCache.at < CATALOGUE_TTL_MS) {
+        return catalogueCache.index;
+    }
+    try {
+        var index = await catalogueJson(CATALOGUE_BASE + "index.json");
+        if (!index || !index.shows) index = null;
+        catalogueCache = { at: Date.now(), index: index };
+        return index;
+    } catch (e) {
+        catalogueCache = { at: Date.now(), index: null };
+        throw e;
+    }
+}
+
+/** Folded title key: lower-case, punctuation to spaces, doubled letters
+ *  squashed. "Haikyu!!" and AnimePahe's "Haikyuu!!" collapse to one key.
+ *  Matching is exact on purpose - a prefix match would let the "One Piece" TV
+ *  file answer a request for "One Piece Film: Red". Keep in step with
+ *  tools/catalogue-lib.mjs. */
+function catalogueKey(value) {
+    return normTitle(value).replace(/(.)\1+/g, "$1");
+}
+
+/** Best index entry for the app's known titles, or null. A season match breaks
+ *  a tie between two files of the same show ("Horimiya" vs a later cour). */
+function cataloguePick(index, titles, season) {
+    var best = null;
+    for (var i = 0; i < index.shows.length; i++) {
+        var entry = index.shows[i] || {};
+        var names = [entry.title].concat(entry.aliases || []);
+        for (var n = 0; n < names.length; n++) {
+            if (!names[n]) continue;
+            for (var t = 0; t < titles.length; t++) {
+                if (!catalogueKey(names[n]) || catalogueKey(names[n]) !== catalogueKey(titles[t])) continue;
+                var sameSeason = Number(entry.season) === Number(season);
+                if (!best || (sameSeason && !best.sameSeason)) best = { entry: entry, sameSeason: sameSeason };
+            }
+        }
+    }
+    return best ? best.entry : null;
+}
+
+/** The plugin's only tier, and therefore the only one the catalogue stores:
+ *  1080p sub. Any other row is a miss and falls back to a normal scrape. */
+function catalogueRow(file, season, episode) {
+    var rows = (file && file.rows) || [];
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i] || {};
+        if (
+            Number(row.s) === Number(season) &&
+            Number(row.e) === Number(episode) &&
+            Number(row.q) === 1080 &&
+            isSubAudio(row.a) &&
+            row.id
+        ) {
+            return row;
+        }
+    }
+    return null;
+}
+
+/** {title, row} for this episode, or null on any miss or fetch failure. */
+async function catalogueLookup(tmdb, season, episode) {
+    var index = await catalogueIndex();
+    if (!index) return null;
+    var entry = cataloguePick(index, tmdb.titles, season);
+    if (!entry || !entry.file) return null;
+    var file = await catalogueJson(CATALOGUE_BASE + entry.file);
+    var row = catalogueRow(file, season, episode);
+    if (!row) return null;
+    return { title: entry.title || (file && file.title) || tmdb.titles[0], row: row };
+}
+
+/** Machine-readable ids for the laptop merge (tools/merge-log.mjs). Only 1080p
+ *  sub is logged: it is the only tier the plugin serves, so it is the only one
+ *  the catalogue stores. */
+function logKwikIds(title, season, episode, buttons) {
+    var seen = {};
+    for (var i = 0; i < buttons.length; i++) {
+        if ((parseInt(buttons[i].quality, 10) || 0) !== 1080) continue;
+        if (!isSubAudio(buttons[i].audio)) continue;
+        var m = String(buttons[i].url).match(/kwik\.cx\/e\/([A-Za-z0-9]+)/);
+        if (!m || seen[m[1]]) continue;
+        seen[m[1]] = true;
+        console.log(
+            "kwik-id " +
+                JSON.stringify({
+                    title: title,
+                    s: season,
+                    e: episode,
+                    q: 1080,
+                    a: "sub",
+                    id: m[1]
+                })
+        );
+    }
+}
+
+/** One stream result, shared by the catalogue and the scrape path. */
+function makeResult(label, quality, language, fansub, stream) {
+    var nameParts = ["AnimePahe"];
+    if (quality) nameParts.push(quality);
+    nameParts.push(language);
+    if (fansub) nameParts.push(fansub);
+    return {
+        title: label,
+        name: nameParts.join(" · "),
+        url: stream.url,
+        quality: quality || null,
+        language: language,
+        provider: "AnimePahe",
+        type: stream.type,
+        headers: stream.headers,
+        subtitles: [],
+        size: null,
+        infoHash: null,
+        seeders: null,
+        peers: null
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -741,6 +899,40 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             return results;
         }
 
+        // Catalogue first: a known kwik id needs no search, no season match and
+        // no clearanced play page. Every miss falls through to the scrape below.
+        var cat = null;
+        try {
+            cat = await catalogueLookup(tmdb, isMovie ? 1 : season, isMovie ? 1 : episode);
+        } catch (e) {
+            console.error("[AnimePahe] catalogue unavailable: " + (e && e.message));
+        }
+        if (cat) {
+            console.log(
+                "[AnimePahe] catalogue hit '" + cat.title + "' S" + (isMovie ? 1 : season) +
+                "E" + (isMovie ? 1 : episode) + " q=" + cat.row.q + " a=" + cat.row.a
+            );
+            var catStream = await resolveKwikDownload("https://kwik.cx/e/" + cat.row.id);
+            if (catStream) {
+                console.log("[AnimePahe] source=" + catStream.type + " " + catStream.url);
+                results.push(
+                    makeResult(
+                        isMovie ? cat.title : cat.title + " - S" + season + "E" + episode,
+                        cat.row.q ? String(cat.row.q) + "p" : "",
+                        audioToLanguage(cat.row.a),
+                        "",
+                        catStream
+                    )
+                );
+                return results;
+            }
+            // A dead id (re-upload, takedown) is repaired by the scrape below;
+            // logKwikIds then hands the laptop the replacement.
+            console.error("[AnimePahe] catalogue id " + cat.row.id + " has no source; scraping");
+        } else {
+            console.log("[AnimePahe] catalogue miss S" + (isMovie ? 1 : season) + "E" + (isMovie ? 1 : episode));
+        }
+
         var plan = await resolveEpisode(tmdb, isMovie ? 1 : season, isMovie ? 1 : episode, isMovie ? null : absoluteEpisode);
         console.log(
             "[AnimePahe] plan=" + (plan ? "'" + plan.animeTitle + "' ep " + plan.episode : "null") +
@@ -769,6 +961,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         var playUrl = BASE_URL + "/play/" + plan.animeSession + "/" + ep.session;
         var playHtml = await apGet(playUrl);
         var buttons = parsePlayButtons(playHtml);
+        logKwikIds(plan.animeTitle, plan.season, plan.requestedEpisode, buttons);
 
         if (!buttons.length) {
             console.error("[AnimePahe] no kwik buttons on " + playUrl);
@@ -806,26 +999,9 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
 
                 var language = audioToLanguage(chosen[i].audio);
                 var quality = chosen[i].quality || "";
-                var nameParts = ["AnimePahe"];
-                if (quality) nameParts.push(quality);
-                nameParts.push(language);
-                if (chosen[i].fansub) nameParts.push(chosen[i].fansub);
-
-                results.push({
-                    title: label,
-                    name: nameParts.join(" · "),
-                    url: stream.url,
-                    quality: quality || null,
-                    language: language,
-                    provider: "AnimePahe",
-                    type: stream.type,
-                    headers: stream.headers,
-                    subtitles: [],
-                    size: null,
-                    infoHash: null,
-                    seeders: null,
-                    peers: null
-                });
+                results.push(
+                    makeResult(label, quality, language, chosen[i].fansub, stream)
+                );
             } catch (e) {
                 console.error("[AnimePahe] kwik resolve failed:", e && e.message);
             }

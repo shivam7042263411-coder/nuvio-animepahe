@@ -1,0 +1,12 @@
+# Bulk harvest list. One show per line:
+#   search term | maxEpisodes | appSeason | episodeOffset | resultIndex
+# Everything after `|` is optional. `episodeOffset` is for shows whose
+# AnimePahe numbering continues across seasons (S2E1 stored at pahe ep 13 -> 12).
+# `resultIndex` (0-based) forces one search hit; leave it out and the hit with
+# the most episodes wins, so a movie/special never answers a season request.
+#
+# Run: node tools/harvest-batch.mjs      (resumes: finished shows are skipped)
+Horimiya | 12 | 1 | 0 | 0
+Frieren | 12 | 1 | 0 | 0
+Odd Taxi | 12 | 1 | 0 | 0
+Haikyuu | 12 | 1 | 0 | 0

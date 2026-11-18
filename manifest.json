@@ -1,14 +1,14 @@
 {
   "name": "AnimePahe",
-  "version": "1.2.12",
-  "description": "AnimePahe source for NuvioTV. 1080p Sub only, sequential kwik resolve with 429 retry, app-aware season/split-cour matching.",
+  "version": "1.3.0",
+  "description": "AnimePahe source for NuvioTV. 1080p Sub only, sequential kwik resolve with 429 retry, app-aware season/split-cour matching, and a shared kwik-id catalogue so repeat plays skip AnimePahe and Cloudflare.",
   "author": "Nuvio Community",
   "scrapers": [
     {
       "id": "animepahe",
       "name": "AnimePahe",
-      "description": "Anime streams from animepahe.pw (1080p Sub)",
-      "version": "1.2.12",
+      "description": "Anime streams from animepahe.pw (1080p Sub), kwik-id catalogue first",
+      "version": "1.3.0",
       "filename": "animepahe.js",
       "supportedTypes": [
         "movie",

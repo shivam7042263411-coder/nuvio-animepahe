@@ -11,6 +11,7 @@ const source = fs
 
 let routes = {};
 let fetchCalls = 0;
+const logs = [];
 
 function route(url, options) {
     for (const key of Object.keys(routes)) {
@@ -20,7 +21,10 @@ function route(url, options) {
 }
 
 const sandbox = {
-    console: { log() {}, error() {} },
+    console: {
+        log: (...args) => logs.push(args.map(String).join(" ")),
+        error() {},
+    },
     Promise,
     Object,
     Array,
@@ -483,7 +487,185 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     out = await sandbox.getStreams(900, "tv", 1, 1, 1);
     check("getStreams never returns HLS", [out.length], [0]);
 
-    console.log(failures.length ? `\n${failures.length} FAILED` : "\nALL PASS");
+    // --- catalogue: folded titles, season tie-break, tier choice ------------
+    check(
+        "catalogue folds doubled letters",
+        sandbox.catalogueKey("Haikyu!!"),
+        sandbox.catalogueKey("Haikyuu!!")
+    );
+    check(
+        "catalogue does not prefix-match",
+        sandbox.catalogueKey("One Piece") === sandbox.catalogueKey("One Piece Film: Red"),
+        false
+    );
+
+    const catIndex = {
+        shows: [
+            { file: "a.json", title: "Horimiya", season: 1 },
+            { file: "b.json", title: "Horimiya", season: 2 },
+            { file: "c.json", title: "One Piece", season: 1 },
+        ],
+    };
+    check("catalogue picks the exact title", sandbox.cataloguePick(catIndex, ["Horimiya"], 1).file, "a.json");
+    check("catalogue season breaks a title tie", sandbox.cataloguePick(catIndex, ["Horimiya"], 2).file, "b.json");
+    check(
+        "catalogue ignores a longer title",
+        sandbox.cataloguePick(catIndex, ["One Piece Film: Red"], 1),
+        null
+    );
+
+    const catFile = {
+        rows: [
+            { s: 1, e: 1, q: 1080, a: "dub", id: "dub1080" },
+            { s: 1, e: 1, q: 720, a: "sub", id: "sub720" },
+            { s: 1, e: 1, q: 1080, a: "sub", id: "sub1080" },
+            { s: 1, e: 2, q: 1080, a: "sub", id: "ep2" },
+        ],
+    };
+    check("catalogue serves 1080p sub", sandbox.catalogueRow(catFile, 1, 1).id, "sub1080");
+    check(
+        "catalogue refuses 720p",
+        sandbox.catalogueRow({ rows: [{ s: 1, e: 1, q: 720, a: "sub", id: "x" }] }, 1, 1),
+        null
+    );
+    check(
+        "catalogue refuses dub",
+        sandbox.catalogueRow({ rows: [{ s: 1, e: 1, q: 1080, a: "dub", id: "x" }] }, 1, 1),
+        null
+    );
+    check("catalogue never crosses episodes", sandbox.catalogueRow(catFile, 1, 3), null);
+
+    // --- getStreams: a catalogue hit skips AnimePahe entirely ---------------
+    const catRoutes = {
+        "catalogue/index.json": () => ({
+            status: 200,
+            body: JSON.stringify({ shows: [{ file: "show.json", title: "Show", season: 1 }] }),
+        }),
+        "catalogue/show.json": () => ({
+            status: 200,
+            body: JSON.stringify({ title: "Show", rows: [{ s: 1, e: 1, q: 1080, a: "sub", id: "cat1" }] }),
+        }),
+    };
+    let searchHits = 0;
+    const countSearch = () => {
+        searchHits++;
+        return { status: 200, body: JSON.stringify({ data: [] }) };
+    };
+
+    sandbox.catalogueCache = null;
+    routes = Object.assign({}, catRoutes, {
+        "api.themoviedb.org/3/tv/901": (url) =>
+            url.indexOf("alternative_titles") !== -1
+                ? { status: 200, body: JSON.stringify({ results: [] }) }
+                : {
+                      status: 200,
+                      body: JSON.stringify({
+                          name: "Show",
+                          seasons: [{ season_number: 1, episode_count: 12 }],
+                      }),
+                  },
+        "kwik.cx/e/cat1": () => ({ status: 200, body: embedPage(KWIK_M3U8) }),
+        "m=search": countSearch,
+        "m=release": countSearch,
+        "/play/": countSearch,
+    });
+    out = await sandbox.getStreams(901, "tv", 1, 1, 1);
+    check("catalogue hit returns the mp4", [out.length, out[0] && out[0].url], [1, KWIK_MP4]);
+    check("catalogue hit never contacts AnimePahe", searchHits, 0);
+    check("catalogue hit keeps the kwik referer", out[0] && out[0].headers.Referer, "https://kwik.cx/");
+    check("catalogue hit labels the episode", out[0] && out[0].title, "Show - S1E1");
+
+    // A dead id (re-upload/takedown) must fall through to the scrape, not fail.
+    sandbox.catalogueCache = null;
+    routes = Object.assign({}, playable, catRoutes, {
+        "catalogue/show.json": () => ({
+            status: 200,
+            body: JSON.stringify({ title: "Show", rows: [{ s: 1, e: 1, q: 1080, a: "sub", id: "dead" }] }),
+        }),
+        "kwik.cx/e/dead": () => ({ status: 200, body: "<html>no script</html>" }),
+        "kwik.cx/e/ep1": () => ({ status: 200, body: embedPage(KWIK_M3U8) }),
+    });
+    out = await sandbox.getStreams(900, "tv", 1, 1, 1);
+    check(
+        "dead catalogue id falls back to the scrape",
+        [out.length, out[0] && out[0].url],
+        [1, KWIK_MP4]
+    );
+
+// A blocked catalogue host is cached too, so it costs one timeout, not one per play.
+    sandbox.catalogueCache = null;
+    let blockedFetches = 0;
+    routes = {
+        "catalogue/index.json": () => {
+            blockedFetches++;
+            throw new Error("blocked");
+        },
+    };
+    const blockedFirst = await sandbox.catalogueLookup({ titles: ["Show"] }, 1, 1).catch(() => "threw");
+    const blockedSecond = await sandbox.catalogueLookup({ titles: ["Show"] }, 1, 1);
+    check(
+        "blocked catalogue host is retried only once per window",
+        [blockedFirst, blockedSecond, blockedFetches],
+        ["threw", null, 1]
+    );
+
+    // --- the scrape hands the laptop one machine-readable line per tier -----
+    // The page carries 720p and a dub too; neither may reach the catalogue.
+    sandbox.catalogueCache = null;
+    logs.length = 0;
+    routes = Object.assign({}, playable, {
+        "/play/a1/": () => ({
+            status: 200,
+            body:
+                '<div id="resolutionMenu">' +
+                '<button data-src="https://kwik.cx/e/ep1" data-resolution="1080" data-audio="jpn"></button>' +
+                '<button data-src="https://kwik.cx/e/lower" data-resolution="720" data-audio="jpn"></button>' +
+                '<button data-src="https://kwik.cx/e/dub" data-resolution="1080" data-audio="eng"></button>' +
+                "</div>",
+        }),
+        "kwik.cx/e/ep1": () => ({ status: 200, body: embedPage(KWIK_M3U8) }),
+    });
+    await sandbox.getStreams(900, "tv", 1, 1, 1);
+    const idLines = logs.filter((l) => l.indexOf("kwik-id ") === 0);
+    check("scrape logs only the 1080p sub id", idLines.length, 1);
+    const logged = JSON.parse(idLines[0].slice("kwik-id ".length));
+    check(
+        "kwik-id line carries s/e/q/a/id",
+        [logged.s, logged.e, logged.q, logged.a, logged.id],
+        [1, 1, 1080, "sub", "ep1"]
+    );
+
+    // --- the bulk harvester's search-hit ranking ----------------------------
+    // Both failure modes seen in the real run: episode-count sorting picked a
+    // 500-episode sequel, index sorting picked a one-episode special.
+    const pageMod = await import("./tools/harvest-page.mjs");
+    const ranked = pageMod.rankHits("Naruto", [
+        { title: "Naruto Shippuden", episodes: 500, session: "a" },
+        { title: "Naruto", episodes: 220, session: "b" },
+        { title: "Naruto the Movie", episodes: 1, session: "c" },
+    ]);
+    check("harvester prefers the exact title", ranked[0].session, "b");
+    check(
+        "harvester prefers the series over a special",
+        pageMod.rankHits("Haikyuu", [
+            { title: "Haikyuu!! Special Feature! The Spring Tournament", episodes: 1, session: "s" },
+            { title: "Haikyuu!!", episodes: 25, session: "t" },
+        ])[0].session,
+        "t"
+    );
+    check(
+        "harvester script is valid browser JS",
+        typeof new Function("return " + pageMod.harvestScript({
+            term: "Naruto",
+            maxEps: 12,
+            season: 1,
+            offset: 0,
+            resultIndex: -1,
+        })),
+        "function"
+    );
+
+    console.log(failures.length ? `\n${failures.join("\n")}\n\n${failures.length} FAILED` : "\nALL PASS");
     console.log(`fetch calls: ${fetchCalls}`);
     process.exit(failures.length ? 1 : 0);
 })();

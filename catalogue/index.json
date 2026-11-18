@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "updated": "2026-11-18",
+  "shows": [
+    {
+      "file": "attack-on-titan.json",
+      "title": "Attack on Titan",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
+      "file": "chainsaw-man.json",
+      "title": "Chainsaw Man",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "code-geass.json",
+      "title": "Code Geass: Lelouch of the Rebellion",
+      "aliases": [],
+      "season": 1,
+      "year": 2006
+    },
+    {
+      "file": "death-note.json",
+      "title": "Death Note",
+      "aliases": [],
+      "season": 1,
+      "year": 2006
+    },
+    {
+      "file": "demon-slayer.json",
+      "title": "Demon Slayer: Kimetsu no Yaiba",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "frieren-beyond-journey-s-end.json",
+      "title": "Frieren: Beyond Journey's End",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "fullmetal-alchemist-brotherhood.json",
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "aliases": [],
+      "season": 1,
+      "year": 2009
+    },
+    {
+      "file": "haikyu.json",
+      "title": "Haikyu!!",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
+      "file": "horimiya.json",
+      "title": "Horimiya",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "hunter-x-hunter.json",
+      "title": "Hunter x Hunter (2011)",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
+    },
+    {
+      "file": "jujutsu-kaisen.json",
+      "title": "Jujutsu Kaisen",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
+    },
+    {
+      "file": "one-punch-man.json",
+      "title": "May I Ask for One Final Thing?",
+      "aliases": [],
+      "season": 1,
+      "year": 2025
+    },
+    {
+      "file": "my-hero-academia.json",
+      "title": "My Hero Academia Season 2",
+      "aliases": [],
+      "season": 1,
+      "year": 2017
+    },
+    {
+      "file": "odd-taxi.json",
+      "title": "Odd Taxi",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "spy-x-family.json",
+      "title": "Spy x Family Part 2",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
+      "file": "steins-gate.json",
+      "title": "Steins;Gate",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
+    },
+    {
+      "file": "tokyo-revengers.json",
+      "title": "Tokyo Revengers",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    }
+  ]
+}

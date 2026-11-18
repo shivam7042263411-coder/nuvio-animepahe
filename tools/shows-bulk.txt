@@ -1,0 +1,162 @@
+# Bulk list - series take the first 12 episodes, films are one row each.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex
+#
+# --- series ---
+Attack on Titan | 12 | 1 | 0
+Demon Slayer | 12 | 1 | 0
+Jujutsu Kaisen | 12 | 1 | 0
+My Hero Academia | 12 | 1 | 0
+One Punch Man | 12 | 1 | 0
+Chainsaw Man | 12 | 1 | 0
+Spy x Family | 12 | 1 | 0
+Tokyo Revengers | 12 | 1 | 0
+Death Note | 12 | 1 | 0
+Fullmetal Alchemist Brotherhood | 12 | 1 | 0
+Steins Gate | 12 | 1 | 0
+Code Geass | 12 | 1 | 0
+Hunter x Hunter | 12 | 1 | 0
+Naruto | 12 | 1 | 0
+Naruto Shippuuden | 12 | 1 | 0
+Bleach | 12 | 1 | 0
+One Piece | 12 | 1 | 0
+Dragon Ball Z | 12 | 1 | 0
+Dragon Ball Super | 12 | 1 | 0
+Black Clover | 12 | 1 | 0
+Fairy Tail | 12 | 1 | 0
+Sword Art Online | 12 | 1 | 0
+Re Zero | 12 | 1 | 0
+Konosuba | 12 | 1 | 0
+Overlord | 12 | 1 | 0
+That Time I Got Reincarnated as a Slime | 12 | 1 | 0
+Mushoku Tensei | 12 | 1 | 0
+No Game No Life | 12 | 1 | 0
+Violet Evergarden | 12 | 1 | 0
+Your Lie in April | 12 | 1 | 0
+Anohana | 12 | 1 | 0
+Clannad | 12 | 1 | 0
+Angel Beats | 12 | 1 | 0
+Toradora | 12 | 1 | 0
+Kaguya-sama Love is War | 12 | 1 | 0
+Rent a Girlfriend | 12 | 1 | 0
+Oregairu | 12 | 1 | 0
+Bunny Girl Senpai | 12 | 1 | 0
+Quintessential Quintuplets | 12 | 1 | 0
+Dress Up Darling | 12 | 1 | 0
+Komi Can't Communicate | 12 | 1 | 0
+K-On | 12 | 1 | 0
+Hibike Euphonium | 12 | 1 | 0
+Mob Psycho 100 | 12 | 1 | 0
+Vinland Saga | 12 | 1 | 0
+Berserk | 12 | 1 | 0
+Monster | 12 | 1 | 0
+Psycho Pass | 12 | 1 | 0
+Erased | 12 | 1 | 0
+Made in Abyss | 12 | 1 | 0
+Promised Neverland | 12 | 1 | 0
+Dr Stone | 12 | 1 | 0
+Fire Force | 12 | 1 | 0
+Blue Exorcist | 12 | 1 | 0
+Noragami | 12 | 1 | 0
+Akame ga Kill | 12 | 1 | 0
+Tokyo Ghoul | 12 | 1 | 0
+Parasyte | 12 | 1 | 0
+Deadman Wonderland | 12 | 1 | 0
+Mirai Nikki | 12 | 1 | 0
+Another | 12 | 1 | 0
+Higurashi | 12 | 1 | 0
+Elfen Lied | 12 | 1 | 0
+Claymore | 12 | 1 | 0
+Soul Eater | 12 | 1 | 0
+Gurren Lagann | 12 | 1 | 0
+Neon Genesis Evangelion | 12 | 1 | 0
+Cowboy Bebop | 12 | 1 | 0
+Samurai Champloo | 12 | 1 | 0
+Trigun | 12 | 1 | 0
+Yu Yu Hakusho | 12 | 1 | 0
+Rurouni Kenshin | 12 | 1 | 0
+Inuyasha | 12 | 1 | 0
+Gintama | 12 | 1 | 0
+Kuroko no Basket | 12 | 1 | 0
+Slam Dunk | 12 | 1 | 0
+Ace of Diamond | 12 | 1 | 0
+Blue Lock | 12 | 1 | 0
+Yuri on Ice | 12 | 1 | 0
+Food Wars | 12 | 1 | 0
+Cells at Work | 12 | 1 | 0
+Beastars | 12 | 1 | 0
+Dorohedoro | 12 | 1 | 0
+Hell's Paradise | 12 | 1 | 0
+Ranking of Kings | 12 | 1 | 0
+Lycoris Recoil | 12 | 1 | 0
+Bocchi the Rock | 12 | 1 | 0
+Oshi no Ko | 12 | 1 | 0
+Apothecary Diaries | 12 | 1 | 0
+Solo Leveling | 12 | 1 | 0
+Kaiju No 8 | 12 | 1 | 0
+Dandadan | 12 | 1 | 0
+Wind Breaker | 12 | 1 | 0
+Sakamoto Days | 12 | 1 | 0
+Delicious in Dungeon | 12 | 1 | 0
+Mashle | 12 | 1 | 0
+Zom 100 | 12 | 1 | 0
+Undead Unluck | 12 | 1 | 0
+Shangri-La Frontier | 12 | 1 | 0
+Eminence in Shadow | 12 | 1 | 0
+Classroom of the Elite | 12 | 1 | 0
+Tomodachi Game | 12 | 1 | 0
+Summertime Rendering | 12 | 1 | 0
+Cyberpunk Edgerunners | 12 | 1 | 0
+Great Pretender | 12 | 1 | 0
+Vivy Fluorite Eye's Song | 12 | 1 | 0
+86 Eighty Six | 12 | 1 | 0
+Log Horizon | 12 | 1 | 0
+Grimgar | 12 | 1 | 0
+DanMachi | 12 | 1 | 0
+Rising of the Shield Hero | 12 | 1 | 0
+Cautious Hero | 12 | 1 | 0
+Miss Kobayashi's Dragon Maid | 12 | 1 | 0
+Nichijou | 12 | 1 | 0
+Daily Lives of High School Boys | 12 | 1 | 0
+Grand Blue | 12 | 1 | 0
+Prison School | 12 | 1 | 0
+Ouran High School Host Club | 12 | 1 | 0
+Fruits Basket | 12 | 1 | 0
+Nana | 12 | 1 | 0
+Yona of the Dawn | 12 | 1 | 0
+Snow White with the Red Hair | 12 | 1 | 0
+Spice and Wolf | 12 | 1 | 0
+Golden Time | 12 | 1 | 0
+Charlotte | 12 | 1 | 0
+Plastic Memories | 12 | 1 | 0
+Guilty Crown | 12 | 1 | 0
+Aldnoah Zero | 12 | 1 | 0
+Darling in the Franxx | 12 | 1 | 0
+Kill la Kill | 12 | 1 | 0
+Akudama Drive | 12 | 1 | 0
+Deca-Dence | 12 | 1 | 0
+Baccano | 12 | 1 | 0
+Durarara | 12 | 1 | 0
+Mushishi | 12 | 1 | 0
+Natsume's Book of Friends | 12 | 1 | 0
+#
+# --- films (forced to search hit 0, one episode) ---
+Your Name | 1 | 1 | 0 | 0
+Weathering With You | 1 | 1 | 0 | 0
+Suzume | 1 | 1 | 0 | 0
+Spirited Away | 1 | 1 | 0 | 0
+Princess Mononoke | 1 | 1 | 0 | 0
+Howl's Moving Castle | 1 | 1 | 0 | 0
+My Neighbor Totoro | 1 | 1 | 0 | 0
+Grave of the Fireflies | 1 | 1 | 0 | 0
+The Boy and the Heron | 1 | 1 | 0 | 0
+A Silent Voice | 1 | 1 | 0 | 0
+The Girl Who Leapt Through Time | 1 | 1 | 0 | 0
+Wolf Children | 1 | 1 | 0 | 0
+Summer Wars | 1 | 1 | 0 | 0
+Perfect Blue | 1 | 1 | 0 | 0
+Paprika | 1 | 1 | 0 | 0
+Akira | 1 | 1 | 0 | 0
+Ghost in the Shell | 1 | 1 | 0 | 0
+Redline | 1 | 1 | 0 | 0
+Sword of the Stranger | 1 | 1 | 0 | 0
+Jujutsu Kaisen 0 | 1 | 1 | 0 | 0
