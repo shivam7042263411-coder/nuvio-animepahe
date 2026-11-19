@@ -8,6 +8,8 @@
 // --dry-run plans and counts only: no play pages, no ids, nothing written.
 // --airing-only keeps just the shows TMDB has a next episode for: the weekly
 // top-up. Costs one TMDB lookup per show, no site request for the rest.
+// --audit prints the site's whole search pool and the season plan, writes
+// nothing. Use it when a season lands somewhere unexpected.
 // --profile keeps Chrome's session, so a Cloudflare solve covers many runs.
 // --max-eps 0 means "every episode the entry has".
 // --all-seasons fills every season the site labels ("2nd Season", "Part 2")
@@ -43,7 +45,7 @@ import {
   titleKey,
   writeShow,
 } from './catalogue-lib.mjs';
-import { harvestScript } from './harvest-page.mjs';
+import { harvestScript, isSpecialTitle, seasonMarkerOf } from './harvest-page.mjs';
 import { tmdbKey, tmdbShow } from './tmdb.mjs';
 
 const TMDB_KEY = tmdbKey();
@@ -114,6 +116,9 @@ const ALL_SEASONS = args.includes('--all-seasons');
 // Weekly top-up: leave out every show TMDB has no next episode for. Finished
 // shows then cost one TMDB lookup and no site request.
 const AIRING_ONLY = args.includes('--airing-only');
+// Audit: print the site's whole search pool for each show and the season plan.
+// Nothing is fetched from play pages and nothing is written.
+const AUDIT = args.includes('--audit');
 // Plan and count only: no play pages, no ids, nothing written. Needs no TMDB
 // key and touches the site far less, so it is the safe way to check a list.
 const DRY_RUN = args.includes('--dry-run');
@@ -342,7 +347,8 @@ for (const show of shows) {
     // A dry run ignores them so it reports what the site has, not what is kept.
     haveEps: DRY_RUN ? [] : (already ? already.data.rows : []).map((r) => `${r.s}/${r.e}`),
     force: FORCE,
-    dryRun: DRY_RUN,
+    dryRun: DRY_RUN || AUDIT,
+    audit: AUDIT,
     // The app counts episodes in TMDB's seasons, so TMDB decides what "season
     // 3" is; a season's name on the site then no longer matters.
     seasons: ALL_SEASONS ? await seasonsFor(show.catalogueTitle || show.term) : null,
@@ -383,6 +389,23 @@ for (const show of shows) {
     }
     console.error(`  failed: ${result ? result.error : 'no result'}`);
     failed++;
+    continue;
+  }
+  if (result.audited) {
+    console.log(`  audit: ${result.audited.length} entries in the search pool`);
+    for (const h of result.audited) {
+      console.log(
+        `    ${h.title} (${h.year || '?'}, ${h.episodes || '?'} ep) ` +
+          `ep ${h.firstEp}..${h.lastEp}, ${h.pages} page(s)` +
+          (isSpecialTitle(h.title) ? ' [special]' : '') +
+          (seasonMarkerOf(h.title) != null ? ' [season ' + seasonMarkerOf(h.title) + ']' : '')
+      );
+    }
+    for (const h of result.raw || []) console.log('    raw: ' + JSON.stringify(h));
+    if (result.plans) {
+      console.log(`  plan: ${result.plans.map((p) => 'S' + p.season + ' ' + p.title).join(' | ') || 'nothing'}`);
+    }
+    done++;
     continue;
   }
   if (!result.rows.length && !DRY_RUN) {

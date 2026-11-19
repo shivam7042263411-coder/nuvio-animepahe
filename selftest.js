@@ -757,6 +757,33 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
             .join(" "),
         "S1:Attack on Titan S2:Attack on Titan Season 2"
     );
+    // Real output, 2026-11-19: Junior High fits season 2's twelve episodes
+    // exactly, so sizing alone filed the spin-off as Attack on Titan season 2.
+    check(
+        "a spin-off of the same length is not taken for the named season",
+        pageMod
+            .planSeasons(
+                [
+                    { title: "Attack on Titan", episodes: 25, year: 2013 },
+                    { title: "Attack on Titan OAD", episodes: 3, year: 2014 },
+                    { title: "Attack on Titan: No Regrets", episodes: 2, year: 2015 },
+                    { title: "Attack on Titan: Junior High", episodes: 12, year: 2015 },
+                    { title: "Attack on Titan Season 2", episodes: 12, year: 2017 },
+                    { title: "Attack on Titan: Lost Girls", episodes: 3, year: 2018 },
+                    { title: "Attack on Titan Season 3", episodes: 12, year: 2018 },
+                    { title: "Attack on Titan Season 3 Part 2", episodes: 10, year: 2019 },
+                ],
+                [
+                    { n: 1, episodes: 25, year: "2013" },
+                    { n: 2, episodes: 12, year: "2017" },
+                    { n: 3, episodes: 22, year: "2018" },
+                    { n: 4, episodes: 28, year: "2020" },
+                ]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.map((x) => x.title).join("+"))
+            .join(" "),
+        "S1:Attack on Titan S2:Attack on Titan Season 2 S3:Attack on Titan Season 3+Attack on Titan Season 3 Part 2"
+    );
     // Real output, 2026-11-19: the 2022 film and the "Episode 0" prologue both
     // sit inside the pool, and both used to make S2 and S3 unfillable.
     check(

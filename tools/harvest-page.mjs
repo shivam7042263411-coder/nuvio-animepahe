@@ -102,16 +102,18 @@ export function planSeasons(entries, seasons) {
   // episode long.
   const lone = (e) => isLoneEntry(e.title, e.episodes);
 
-  for (const season of seasons) {
+  // Consume entries from `from` until the season's episodes are met. Returns
+  // the parts and where the list got to, or null when this season cannot be
+  // built from there.
+  const scan = (from, season) => {
     let room = Number(season.episodes) || 0;
-    if (!room) continue;
+    if (!room) return null;
     const parts = [];
-    const from = i;
-
-    while (i < entries.length && room > 0) {
-      const e = entries[i];
+    let idx = from;
+    while (idx < entries.length && room > 0) {
+      const e = entries[idx];
       if (isSpecialTitle(e.title) || (room > 1 && lone(e))) {
-        i++;
+        idx++;
         continue;
       }
       // The entry's own season word is not a boundary: TMDB decides where the
@@ -121,28 +123,40 @@ export function planSeasons(entries, seasons) {
       if (!count || count > room) break;
       parts.push({ ...e, part: partOf(e.title) });
       room -= count;
-      i++;
+      idx++;
     }
+    if (room === 0 && parts.length) return { parts, end: idx };
+    // The site's list ends inside this season: it is still airing. File what
+    // exists and top it up next run. Only safe because the entries ran out - a
+    // season skipped in the middle still leaves entries after it.
+    if (parts.length && idx >= entries.length) return { parts, end: idx, partial: true };
+    return null;
+  };
 
-    if (room === 0 && parts.length) {
-      plans.push({ season: Number(season.n), year: season.year, parts, size: Number(season.episodes) });
-    } else if (parts.length && i >= entries.length) {
-      // The site's list ends inside this season: it is still airing. File what
-      // exists and top it up next run. Only safe because the entries ran out -
-      // a season skipped in the middle still leaves entries after it, and those
-      // are never filed here.
-      plans.push({
-        season: Number(season.n),
-        year: season.year,
-        parts,
-        size: Number(season.episodes),
-        partial: true,
-      });
-    } else {
+  for (const season of seasons) {
+    const n = Number(season.n);
+    // An entry that names this season wins over one that does not: "Attack on
+    // Titan: Junior High" fits season 2's twelve episodes as well as "Attack on
+    // Titan Season 2" does, and only the name says which one the app means.
+    let picked = null;
+    for (let j = i; j < entries.length && !picked; j++) {
+      if (seasonMarkerOf(entries[j].title) !== n) continue;
+      picked = scan(j, season);
+    }
+    if (!picked) picked = scan(i, season);
+    if (!picked) {
       // Wrong shape: leave these entries for the next season to try. Nothing is
       // guessed, and the caller reports them as not filed.
-      i = from;
+      continue;
     }
+    plans.push({
+      season: n,
+      year: season.year,
+      parts: picked.parts,
+      size: Number(season.episodes),
+      ...(picked.partial ? { partial: true } : {}),
+    });
+    i = picked.end;
   }
   return plans;
 }
@@ -270,6 +284,9 @@ export function harvestScript(show) {
   // Test mode: plan the seasons and count episodes, but never fetch a play
   // page and never keep a row, so nothing can be saved.
   const dryRun = ${show.dryRun ? 'true' : 'false'};
+  // Audit: list what the site's search actually returned, including entries the
+  // season plan threw away, and how each entry's episodes are numbered.
+  const audit = ${show.audit ? 'true' : 'false'};
   const have = ${JSON.stringify(show.haveEps || [])};
   const force = ${show.force ? 'true' : 'false'};
   const rank = ${rankHits.toString()};
@@ -331,6 +348,37 @@ export function harvestScript(show) {
     if (!hit) return { error: 'no search result for ' + term };
     const lab = classify(term, [hit])[0];
     plans = [{ session: hit.session, title: hit.title, year: hit.year, episodes: hit.episodes, season: lab ? lab.season : season, part: 1 }];
+  }
+
+  if (audit) {
+    const audited = [];
+    for (const h of pool) {
+      const row = { title: h.title, year: h.year, episodes: h.episodes, session: h.session };
+      const rr = await fetchLimited('/api?m=release&id=' + h.session + '&sort=episode_asc&page=1');
+      if (rr && rr.ok) {
+        const j = await rr.json().catch(() => null);
+        const eps = ((j && j.data) || []).map((e) => Number(e.episode)).filter(Number.isFinite);
+        row.firstEp = eps.length ? Math.min(...eps) : null;
+        row.lastEp = eps.length ? Math.max(...eps) : null;
+        row.pages = (j && j.last_page) || 1;
+      }
+      audited.push(row);
+      await sleep(200);
+    }
+    return {
+      show: { title: term, episodes: null },
+      seasons: {},
+      plans: plans.map((p) => ({ season: p.season, title: p.title, episodes: p.episodes })),
+      fallback,
+      sized,
+      dryRun: true,
+      skipped: 0,
+      ignored,
+      films,
+      audited,
+      raw: pool.slice(0, 2),
+      rows: [],
+    };
   }
 
   const rows = [];
