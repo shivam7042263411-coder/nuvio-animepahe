@@ -519,6 +519,22 @@ export function harvestScript(show) {
       }
       if (page >= (j.last_page || 1)) break;
     }
+    // A sliced entry is walked by position: its nth listed episode becomes the
+    // app's nth episode of the season. That is only sound when the list has no
+    // holes - a missing episode would shift every later one. One Piece is 1180
+    // episodes in a single entry, so this is exactly where a hole would hurt
+    // most. Refuse to slice a list with a gap rather than store wrong episodes.
+    if (parts.some((p) => p.from != null)) {
+      const nums = eps.map((e) => Number(e.episode));
+      const hole = nums.findIndex((n, i) => i > 0 && n !== nums[i - 1] + 1);
+      if (hole !== -1) {
+        return {
+          error:
+            'hole in the release list for "' + (parts[0].title || session) +
+            '" at episode ' + nums[hole] + '; refusing to slice it',
+        };
+      }
+    }
     for (const plan of parts) {
       // Single-entry mode keeps the site's own numbering (gaps stay gaps).
       let off = offset;

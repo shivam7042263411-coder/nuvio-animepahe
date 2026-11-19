@@ -1051,6 +1051,31 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [["S1", "Season 2", "Season 2 Part 2", "Season 3"], 66]
     );
+    // Real output risk: One Piece is 1180 episodes in one entry, sliced by
+    // position. A hole anywhere shifts every later episode, so a list with a
+    // hole must be refused rather than filed shifted.
+    const holeFetch = async (url) => {
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: longPool }) };
+        if (url.includes("m=release")) {
+            const data = [];
+            for (let i = 1; i <= 30; i++) {
+                if (i === 15) continue;
+                data.push({ episode: String(i), session: "x" + i });
+            }
+            return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+        }
+        return fakeFetch(url);
+    };
+    const holed = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "One Piece", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 12, year: "1999" }, { n: 2, episodes: 18, year: null }],
+    }))(holeFetch, FakeDom, (fn) => fn());
+    check(
+        "a sliced list with a hole is refused, not filed shifted",
+        [holed.error ? "refused" : "filed", (holed.rows || []).length],
+        ["refused", 0]
+    );
     // Real output, 2026-11-19: the search returns 8 hits a page and Attack on
     // Titan's Final Season (a whole season) is only on page 2. The site hands
     // back a next-page link; following it is the difference between a season
