@@ -350,6 +350,13 @@ export function harvestScript(show) {
     plans = [{ session: hit.session, title: hit.title, year: hit.year, episodes: hit.episodes, season: lab ? lab.season : season, part: 1 }];
   }
 
+
+  const rows = [];
+  const seasonBase = {};
+  const seasonCounts = {};
+  const ignored = allSeasons ? unfiledHits(term, pool, plans) : [];
+  const films = allSeasons ? filmsOf(term, pool, plans) : [];
+
   if (audit) {
     const audited = [];
     for (const h of pool) {
@@ -381,11 +388,6 @@ export function harvestScript(show) {
     };
   }
 
-  const rows = [];
-  const seasonBase = {};
-  const seasonCounts = {};
-  const ignored = allSeasons ? unfiledHits(term, pool, plans) : [];
-  const films = allSeasons ? filmsOf(term, pool, plans) : [];
   let skipped = 0;
   for (const plan of plans) {
     const seenHere = new Set();

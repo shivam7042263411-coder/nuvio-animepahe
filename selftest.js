@@ -882,7 +882,7 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     const fakeFetch = async (url) => {
         if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: fakePool }) };
         if (url.includes("m=release")) {
-            const n = { a: 24, b: 23, c: 12 }[url.match(/id=([abc])/)[1]];
+            const n = { a: 24, b: 23, c: 12 }[url.match(/id=([abc])/)?.[1]] || 0;
             const data = [];
             for (let i = 1; i <= n; i++) data.push({ episode: String(i), session: "s" + i });
             return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
@@ -943,6 +943,16 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         allSeasons: true, haveEps: [], force: false, seasons: [{ n: 1, episodes: 59, year: "2020" }],
         dryRun: true,
     }))(countingFetch, FakeDom, (fn) => fn());
+    const audited = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Jujutsu Kaisen", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, seasons: [{ n: 1, episodes: 59, year: "2020" }],
+        audit: true,
+    }))(countingFetch, FakeDom, (fn) => fn());
+    check(
+        "an audit reports the whole pool and writes nothing",
+        [audited.audited.length, audited.rows.length, audited.plans.length],
+        [fakePool.length, 0, 3]
+    );
     check(
         "a dry run counts episodes without fetching a play page",
         [dry.rows.length, dry.seasons["1"], playFetches],
