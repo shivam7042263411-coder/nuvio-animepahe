@@ -101,6 +101,10 @@ export function planSeasons(entries, seasons) {
   // only just started airing - and when the season being filled is itself one
   // episode long.
   const lone = (e) => isLoneEntry(e.title, e.episodes);
+  // The site labels every entry TV, Movie or Special. Only a TV entry can be a
+  // season: "Re:ZERO ~Starting Break Time From Zero~ Season 2" is a 25-episode
+  // spin-off short of the same franchise, and it used to fill season 2.
+  const offSeason = (e) => Boolean(e.type) && e.type !== 'TV';
 
   // Consume entries from `from` until the season's episodes are met. Returns
   // the parts and where the list got to, or null when this season cannot be
@@ -112,7 +116,7 @@ export function planSeasons(entries, seasons) {
     let idx = from;
     while (idx < entries.length && room > 0) {
       const e = entries[idx];
-      if (isSpecialTitle(e.title) || (room > 1 && lone(e))) {
+      if (isSpecialTitle(e.title) || offSeason(e) || (room > 1 && lone(e))) {
         idx++;
         continue;
       }
@@ -191,6 +195,7 @@ export function unfiledHits(term, pool, plans) {
   }
   return franchiseOf(term, pool)
     .filter((h) => !used.has(fold(h.title)) && !isLoneEntry(h.title, h.episodes))
+    .filter((h) => !h.type || h.type === 'TV')
     .map((h) => ({ title: h.title, year: h.year, episodes: h.episodes }));
 }
 
@@ -243,7 +248,7 @@ export function filmsOf(term, pool, plans) {
         hk &&
         !used.has(hk) &&
         (hk === base || hk.indexOf(base + ' ') === 0) &&
-        isLoneEntry(h.title, h.episodes) &&
+        (h.type === 'Movie' || isLoneEntry(h.title, h.episodes)) &&
         // "Show Season 2 - Episode 0": a prologue inside a season's numbering,
         // not a title the app can ask for on its own.
         !/\bepisode\b/.test(hk)
@@ -309,11 +314,26 @@ export function harvestScript(show) {
   // 15 results, the same as the plugin asks for: a show with many seasons
   // (MHA has eight) does not fit in 8, and a season that is never seen can
   // never be filed. Extra hits only append, so the automatic pick is unmoved.
-  const sr = await fetchLimited('/api?m=search&l=15&q=' + encodeURIComponent(term));
-  if (!sr) return { error: 'throttled' };
-  const s = sr.ok ? await sr.json().catch(() => null) : null;
-  if (!s) return { error: 'challenge' };
-  const pool = s.data || [];
+  // The site returns 8 hits a page, so a show with more seasons than that (or a
+  // lot of films in its name) has entries past page 1 - Attack on Titan's Final
+  // Season is one. Keep paging until a page brings nothing new.
+  const pool = [];
+  for (let page = 1; page <= 4; page++) {
+    const sr = await fetchLimited(
+      '/api?m=search&l=15&q=' + encodeURIComponent(term) + '&page=' + page
+    );
+    if (!sr) return { error: 'throttled' };
+    const s = sr.ok ? await sr.json().catch(() => null) : null;
+    if (!s) return { error: 'challenge' };
+    const rows = s.data || [];
+    let added = 0;
+    for (const h of rows) {
+      if (!h || !h.session || pool.some((p) => p.session === h.session)) continue;
+      pool.push(h);
+      added++;
+    }
+    if (!added) break;
+  }
 
   let plans;
   let fallback = false;
@@ -360,7 +380,7 @@ export function harvestScript(show) {
   if (audit) {
     const audited = [];
     for (const h of pool) {
-      const row = { title: h.title, year: h.year, episodes: h.episodes, session: h.session };
+      const row = { title: h.title, year: h.year, type: h.type || null, episodes: h.episodes, session: h.session };
       const rr = await fetchLimited('/api?m=release&id=' + h.session + '&sort=episode_asc&page=1');
       if (rr && rr.ok) {
         const j = await rr.json().catch(() => null);
@@ -463,6 +483,13 @@ export function harvestScript(show) {
     skipped,
     ignored,
     films,
+    pool: pool.map((h) => ({
+      title: h.title,
+      year: h.year,
+      type: h.type || null,
+      episodes: h.episodes,
+      marker: seasonMarkerOf(h.title),
+    })),
     rows,
   };
 })()`;

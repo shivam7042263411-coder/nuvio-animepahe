@@ -757,6 +757,27 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
             .join(" "),
         "S1:Attack on Titan S2:Attack on Titan Season 2"
     );
+    // Real output, 2026-11-19: Re:Zero's site entries are typed, and the
+    // 25-episode Break Time spin-off is a Special that used to fill season 2.
+    check(
+        "a Special-typed spin-off is never a season",
+        pageMod
+            .planSeasons(
+                [
+                    { title: "Re:ZERO -Starting Life in Another World-", type: "TV", episodes: 25, year: 2016 },
+                    { title: "Re:ZERO ~Starting Break Time From Zero~", type: "Special", episodes: 11, year: 2016 },
+                    { title: "Re:ZERO -Starting Life in Another World- Season 2", type: "TV", episodes: 13, year: 2020 },
+                    { title: "Re:ZERO ~Starting Break Time From Zero~ Season 2", type: "Special", episodes: 25, year: 2020 },
+                    { title: "Re:ZERO -Starting Life in Another World- Season 2 Part 2", type: "TV", episodes: 12, year: 2021 },
+                    { title: "Re:ZERO -Starting Life in Another World- Season 3", type: "TV", episodes: 16, year: 2024 },
+                ],
+                [{ n: 1, episodes: 85, year: "2016" }]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.map((x) => x.episodes).join("+") +
+                (p.partial ? "/" + p.size : ""))
+            .join(" "),
+        "S1:25+13+12+16/85"
+    );
     // Real output, 2026-11-19: Junior High fits season 2's twelve episodes
     // exactly, so sizing alone filed the spin-off as Attack on Titan season 2.
     check(

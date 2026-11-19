@@ -396,7 +396,7 @@ for (const show of shows) {
     for (const h of result.audited) {
       console.log(
         `    ${h.title} (${h.year || '?'}, ${h.episodes || '?'} ep) ` +
-          `ep ${h.firstEp}..${h.lastEp}, ${h.pages} page(s)` +
+          `[${h.type || '?'}] ep ${h.firstEp}..${h.lastEp}, ${h.pages} page(s)` +
           (isSpecialTitle(h.title) ? ' [special]' : '') +
           (seasonMarkerOf(h.title) != null ? ' [season ' + seasonMarkerOf(h.title) + ']' : '')
       );
@@ -426,6 +426,17 @@ for (const show of shows) {
       `  warning: TMDB's season sizes do not add up to the site's entries for "${show.term}" - ` +
         `filed by the season in each entry's name instead; check the seasons below`
     );
+  }
+  // Whatever was left over is the reason to look at the pool: it shows the type
+  // and the season marker of every entry the site offered.
+  if (DRY_RUN && ((result.ignored || []).length || (result.films || []).length)) {
+    for (const h of result.pool || []) {
+      console.log(
+        `    pool: ${h.title} (${h.year || '?'}, ${h.episodes || '?'} ep)` +
+          (h.type ? ' [' + h.type + ']' : '') +
+          (h.marker != null ? ' [season ' + h.marker + ']' : '')
+      );
+    }
   }
   if (result.plans) {
     console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title +
