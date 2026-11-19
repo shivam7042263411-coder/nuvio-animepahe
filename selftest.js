@@ -757,6 +757,51 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
             .join(" "),
         "S1:Attack on Titan S2:Attack on Titan Season 2"
     );
+    // Real output, 2026-11-19: the 2022 film and the "Episode 0" prologue both
+    // sit inside the pool, and both used to make S2 and S3 unfillable.
+    check(
+        "a film and a prologue in the pool do not break the seasons they sit in",
+        pageMod
+            .planSeasons(
+                [
+                    "Mushoku Tensei: Jobless Reincarnation|11|2021",
+                    "Mushoku Tensei: Jobless Reincarnation Part 2|12|2021",
+                    "Mushoku Tensei: Jobless Reincarnation - Eris the Goblin Slayer|1|2022",
+                    "Mushoku Tensei: Jobless Reincarnation Season 2|12|2023",
+                    'Mushoku Tensei: Jobless Reincarnation Season 2 - Episode 0 "Guardian Fitz"|1|2023',
+                    "Mushoku Tensei: Jobless Reincarnation Season 2 Part 2|12|2024",
+                    "Mushoku Tensei: Jobless Reincarnation Season 3|14|2026",
+                ].map((l) => {
+                    const [title, episodes, year] = l.split("|");
+                    return { title, episodes: Number(episodes), year: Number(year) };
+                }),
+                [
+                    { n: 1, episodes: 23, year: "2021" },
+                    { n: 2, episodes: 24, year: "2023" },
+                    { n: 3, episodes: 14, year: "2026" },
+                ]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.map((x) => x.episodes).join("+"))
+            .join(" "),
+        "S1:11+12 S2:12+12 S3:14"
+    );
+    check(
+        "a one-episode entry named as a season still starts that season",
+        pageMod
+            .planSeasons(
+                [
+                    { title: "Some Show", episodes: 12, year: 2024 },
+                    { title: "Some Show Season 2", episodes: 1, year: 2026 },
+                ],
+                [
+                    { n: 1, episodes: 12, year: "2024" },
+                    { n: 2, episodes: 12, year: "2026" },
+                ]
+            )
+            .map((p) => "S" + p.season + ":" + p.parts.length + (p.partial ? "!" : ""))
+            .join(" "),
+        "S1:1 S2:1!"
+    );
     check(
         "a season whose site list ends early is filed as still airing",
         pageMod

@@ -94,6 +94,16 @@ export function planSeasons(entries, seasons) {
   const plans = [];
   let i = 0;
 
+  // A film or a special in the pool is one episode and belongs to no season:
+  // counted, it throws off the sum for that season and every season after it
+  // (Mushoku Tensei loses S2 and S3 to an "Episode 0" prologue). It is kept
+  // when its name says which season it belongs to - that is a season which has
+  // only just started airing - and when the season being filled is itself one
+  // episode long.
+  const lone = (e) =>
+    Number(e.episodes) === 1 &&
+    (seasonMarkerOf(e.title) == null || /\bepisode\b/.test(fold(e.title)));
+
   for (const season of seasons) {
     let room = Number(season.episodes) || 0;
     if (!room) continue;
@@ -102,7 +112,7 @@ export function planSeasons(entries, seasons) {
 
     while (i < entries.length && room > 0) {
       const e = entries[i];
-      if (isSpecialTitle(e.title)) {
+      if (isSpecialTitle(e.title) || (room > 1 && lone(e))) {
         i++;
         continue;
       }
