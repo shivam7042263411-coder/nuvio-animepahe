@@ -439,11 +439,14 @@ for (const show of shows) {
     }
   }
   if (result.plans) {
-    console.log(`  ${result.plans.map((p) => 'S' + p.season + ' ' + p.title +
-      (DRY_RUN && p.episodes != null ? ' (' + p.episodes + ')' : '') +
-      // A season whose site list ends before the TMDB size: still airing, so
-      // the run stores what exists and next week's run tops it up.
-      (p.partial ? ' [airing ' + p.episodes + '/' + (p.size || '?') + ']' : '')).join(' | ')}`);
+    console.log(`  ${result.plans.map((p) => {
+      const n = p.slice != null ? p.slice : p.episodes;
+      return 'S' + p.season + ' ' + p.title +
+        (DRY_RUN && n != null ? ' (' + n + ')' : '') +
+        // A season whose site list ends before the TMDB size: still airing, so
+        // the run stores what exists and next week's run tops it up.
+        (p.partial ? ' [airing ' + n + '/' + (p.size || '?') + ']' : '');
+    }).join(' | ')}`);
   }
   // A season can hide in a differently-named entry ("Jujutsu Kaisen: Culling
   // Game"); naming it here is the difference between a visible gap and a

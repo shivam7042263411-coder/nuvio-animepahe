@@ -903,7 +903,7 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     const fakeFetch = async (url) => {
         if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: fakePool }) };
         if (url.includes("m=release")) {
-            const n = { a: 24, b: 23, c: 12 }[url.match(/id=([abc])/)?.[1]] || 0;
+            const n = { a: 24, b: 23, c: 12, long: 30 }[url.match(/id=([a-z]+)/)?.[1]] || 0;
             const data = [];
             for (let i = 1; i <= n; i++) data.push({ episode: String(i), session: "s" + i });
             return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
@@ -978,6 +978,41 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "a dry run counts episodes without fetching a play page",
         [dry.rows.length, dry.seasons["1"], playFetches],
         [0, 59, 0]
+    );
+    // One Piece in miniature: one entry of thirty episodes, TMDB splitting it
+    // into two seasons of twelve and eighteen.
+    const longPool = [{ title: "One Piece", session: "long", year: 1999, episodes: 0, type: "TV" }];
+    const longFetch = async (url) => {
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: longPool }) };
+        return fakeFetch(url);
+    };
+    const sliced = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "One Piece", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 12, year: "1999" }, { n: 2, episodes: 18, year: null }],
+    }))(longFetch, FakeDom, (fn) => fn());
+    check(
+        "one long entry is sliced across the seasons that add up to it",
+        [
+            sliced.plans.map((p) => "S" + p.season + ":" + p.slice).join(" "),
+            sliced.seasons["1"],
+            sliced.seasons["2"],
+        ],
+        ["S1:12 S2:18", 12, 18]
+    );
+    const slicedRows = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "One Piece", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false,
+        seasons: [{ n: 1, episodes: 12, year: "1999" }, { n: 2, episodes: 18, year: null }],
+    }))(longFetch, FakeDom, (fn) => fn());
+    check(
+        "every sliced episode keeps the app's season and episode",
+        [
+            slicedRows.rows.length,
+            slicedRows.rows.filter((r) => r.s === 1).map((r) => r.e).join(","),
+            slicedRows.rows.filter((r) => r.s === 2).map((r) => r.e).join(","),
+        ],
+        [30, "1,2,3,4,5,6,7,8,9,10,11,12", Array.from({ length: 18 }, (_, i) => i + 1).join(",")]
     );
     check(
         "harvester script is valid browser JS",

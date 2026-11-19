@@ -104,7 +104,65 @@ export function planSeasons(entries, seasons) {
   // The site labels every entry TV, Movie or Special. Only a TV entry can be a
   // season: "Re:ZERO ~Starting Break Time From Zero~ Season 2" is a 25-episode
   // spin-off short of the same franchise, and it used to fill season 2.
-  const offSeason = (e) => Boolean(e.type) && e.type !== 'TV';
+  const offSeason = (e) =>
+    isSpecialTitle(e.title) || (Boolean(e.type) && e.type !== 'TV') || lone(e);
+
+  // A long show is one site entry covering many seasons, and the site numbers
+  // those episodes in order (One Piece: one entry, 1180 episodes, and TMDB's 23
+  // sagas add up to the same 1180). When the TV entries in the pool add up to
+  // exactly what TMDB describes, each season is a slice of them in release order
+  // and nothing has to be guessed. Returns null when that cannot be verified.
+  const sliceSeasons = () => {
+    const line = entries.filter((e) => !offSeason(e));
+    if (!line.length) return null;
+    const known = line.every((e) => Number(e.episodes) > 0);
+    // One entry of unknown length (a show still airing says "0 episodes") can
+    // still be sliced: it just takes whatever each season asks for, in order.
+    if (!known && line.length !== 1) return null;
+    const total = line.reduce((n, e) => n + (Number(e.episodes) || 0), 0);
+    const wanted = seasons.reduce((n, s) => n + (Number(s.episodes) || 0), 0);
+    if (known && total !== wanted) return null;
+
+    const out = [];
+    let ci = 0;
+    let used = 0;
+    for (const season of seasons) {
+      const n = Number(season.n);
+      const size = Number(season.episodes) || 0;
+      if (!size) continue;
+      const parts = [];
+      let room = size;
+      while (ci < line.length && room > 0) {
+        const e = line[ci];
+        const count = Number(e.episodes) || 0;
+        const take = count ? Math.min(count - used, room) : room;
+        parts.push({ ...e, part: partOf(e.title), from: used + 1, to: used + take });
+        used += take;
+        room -= take;
+        if (count && used >= count) {
+          ci++;
+          used = 0;
+        }
+      }
+      // The site ran out before the season was filled: still airing.
+      if (!parts.length) continue;
+      out.push({ season: n, year: season.year, size, parts, ...(room > 0 ? { partial: true } : {}) });
+    }
+    if (!out.length) return null;
+    // A season that has a number in TMDB cannot be filled by an entry that names
+    // a different one: that is how a spin-off gets in.
+    const knownSeasons = new Set(seasons.map((s) => Number(s.n)));
+    for (const plan of out) {
+      for (const part of plan.parts) {
+        const m = seasonMarkerOf(part.title);
+        if (m != null && knownSeasons.has(m) && m !== plan.season) return null;
+      }
+    }
+    return out;
+  };
+
+  const sliced = sliceSeasons();
+  if (sliced) return sliced;
 
   // Consume entries from `from` until the season's episodes are met. Returns
   // the parts and where the list got to, or null when this season cannot be
@@ -116,7 +174,7 @@ export function planSeasons(entries, seasons) {
     let idx = from;
     while (idx < entries.length && room > 0) {
       const e = entries[idx];
-      if (isSpecialTitle(e.title) || offSeason(e) || (room > 1 && lone(e))) {
+      if (offSeason(e) || (room > 1 && lone(e))) {
         idx++;
         continue;
       }
@@ -409,36 +467,53 @@ export function harvestScript(show) {
   }
 
   let skipped = 0;
+  // One request per entry, not per season: a long show's single entry is cut
+  // into seasons, and re-fetching its episode list 23 times would be 23x the
+  // traffic for the same pages.
+  const bySession = new Map();
   for (const plan of plans) {
-    const seenHere = new Set();
-    let off = offset;
+    if (!bySession.has(plan.session)) bySession.set(plan.session, []);
+    bySession.get(plan.session).push(plan);
+  }
+  for (const [session, parts] of bySession) {
+    const eps = [];
+    const seen = new Set();
     for (let page = 1; page <= 60; page++) {
-      const rr = await fetchLimited('/api?m=release&id=' + plan.session + '&sort=episode_asc&page=' + page);
+      const rr = await fetchLimited('/api?m=release&id=' + session + '&sort=episode_asc&page=' + page);
       if (!rr) return { error: 'throttled' };
       const j = rr.ok ? await rr.json().catch(() => null) : null;
       if (!j) return { error: 'challenge' };
-      const list = j.data || [];
-      // Single-entry mode keeps the site's own numbering (gaps stay gaps);
-      // all-seasons mode numbers a season's parts consecutively, because a
-      // "Part 2" list may restart at 1 or continue at 50.
-      if (!allSeasons && off === null) {
-        off = inferOffset(null, list
-          .map((e) => Number(e.episode))
-          .filter((n) => Number.isFinite(n) && n >= 1));
-      }
-      for (const e of list) {
+      for (const e of j.data || []) {
         const ep = Number(e.episode);
-        if (!Number.isFinite(ep) || seenHere.has(ep)) continue;
-        if (maxEps > 0 && seenHere.size >= maxEps) break;
-        seenHere.add(ep);
-        const appEp = allSeasons ? (seasonBase[plan.season] || 0) + seenHere.size : ep - off;
+        if (!Number.isFinite(ep) || seen.has(ep)) continue;
+        seen.add(ep);
+        eps.push(e);
+      }
+      if (page >= (j.last_page || 1)) break;
+    }
+    for (const plan of parts) {
+      // Single-entry mode keeps the site's own numbering (gaps stay gaps).
+      let off = offset;
+      if (!allSeasons && off === null) {
+        off = inferOffset(null, eps.map((e) => Number(e.episode)).filter((n) => n >= 1 && Number.isFinite(n)));
+      }
+      const from = plan.from != null ? Math.max(1, plan.from) : 1;
+      const to = plan.to != null ? plan.to : Infinity;
+      let taken = 0;
+      for (let pos = 1; pos <= eps.length; pos++) {
+        if (pos < from || pos > to) continue;
+        if (maxEps > 0 && taken >= maxEps) break;
+        taken++;
+        const appEp = allSeasons
+          ? (seasonBase[plan.season] || 0) + (pos - from + 1)
+          : Number(eps[pos - 1].episode) - off;
         // Already stored: count it, but do not spend a request.
         if (!force && have.indexOf(plan.season + '/' + appEp) !== -1) {
           skipped++;
           continue;
         }
         if (!dryRun) {
-          const pr = await fetchLimited('/play/' + plan.session + '/' + e.session);
+          const pr = await fetchLimited('/play/' + session + '/' + eps[pos - 1].session);
           if (!pr) return { error: 'throttled' };
           const html = await pr.text();
           // One challenge is the signal to stop the whole batch, not skip a show.
@@ -454,15 +529,13 @@ export function harvestScript(show) {
           await sleep(600);
         }
       }
-      if (maxEps > 0 && seenHere.size >= maxEps) break;
-      if (page >= (j.last_page || 1)) break;
-    }
-    if (allSeasons) {
-      seasonBase[plan.season] = (seasonBase[plan.season] || 0) + seenHere.size;
-      seasonCounts[plan.season] = (seasonCounts[plan.season] || 0) + seenHere.size;
-    } else {
-      // The site's total, not what this run stored: a top-up needs the target.
-      seasonCounts[plan.season] = Math.max(seenHere.size, Number(plan.episodes) || 0);
+      if (allSeasons) {
+        seasonBase[plan.season] = (seasonBase[plan.season] || 0) + taken;
+        seasonCounts[plan.season] = (seasonCounts[plan.season] || 0) + taken;
+      } else {
+        // The site's total, not what this run stored: a top-up needs the target.
+        seasonCounts[plan.season] = Math.max(taken, Number(plan.episodes) || 0);
+      }
     }
   }
 
@@ -474,6 +547,9 @@ export function harvestScript(show) {
       season: p.season,
       title: p.title,
       episodes: p.episodes,
+      // A sliced part is one season's worth of a much longer entry: its own
+      // episode count is the whole entry's (0 when the show is still airing).
+      slice: p.to != null ? p.to - p.from + 1 : null,
       size: p.size,
       partial: !!p.partial,
     })),
