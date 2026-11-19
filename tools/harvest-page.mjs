@@ -100,9 +100,7 @@ export function planSeasons(entries, seasons) {
   // when its name says which season it belongs to - that is a season which has
   // only just started airing - and when the season being filled is itself one
   // episode long.
-  const lone = (e) =>
-    Number(e.episodes) === 1 &&
-    (seasonMarkerOf(e.title) == null || /\bepisode\b/.test(fold(e.title)));
+  const lone = (e) => isLoneEntry(e.title, e.episodes);
 
   for (const season of seasons) {
     let room = Number(season.episodes) || 0;
@@ -178,7 +176,7 @@ export function unfiledHits(term, pool, plans) {
     for (const part of plan.parts || [plan]) used.add(fold(part.title));
   }
   return franchiseOf(term, pool)
-    .filter((h) => !used.has(fold(h.title)))
+    .filter((h) => !used.has(fold(h.title)) && !isLoneEntry(h.title, h.episodes))
     .map((h) => ({ title: h.title, year: h.year, episodes: h.episodes }));
 }
 
@@ -190,6 +188,15 @@ export function isSpecialTitle(title) {
 }
 
 /** The season an entry's own title names, if it names one. */
+/** A film or a single special: one episode, and its name does not name a
+ *  season. A one-episode season that has just started airing is named as a
+ *  season, so it is not this. */
+export function isLoneEntry(title, episodes) {
+  return (
+    Number(episodes) === 1 &&
+    (seasonMarkerOf(title) == null || /\bepisode\b/.test(fold(title)))
+  );
+}
 export function seasonMarkerOf(title) {
   const n = fold(title);
   const m = n.match(/\b(\d+)(?:st|nd|rd|th) season\b/) || n.match(/\bseason (\d+)\b/);
@@ -222,7 +229,10 @@ export function filmsOf(term, pool, plans) {
         hk &&
         !used.has(hk) &&
         (hk === base || hk.indexOf(base + ' ') === 0) &&
-        Number(h.episodes) === 1
+        isLoneEntry(h.title, h.episodes) &&
+        // "Show Season 2 - Episode 0": a prologue inside a season's numbering,
+        // not a title the app can ask for on its own.
+        !/\bepisode\b/.test(hk)
       );
     })
     .map((h) => ({ title: h.title, year: h.year }));
@@ -267,6 +277,7 @@ export function harvestScript(show) {
   const classifyHits = ${classifyHits.toString()};
   const classify = classifyHits;
   const isSpecialTitle = ${isSpecialTitle.toString()};
+  const isLoneEntry = ${isLoneEntry.toString()};
   const seasonMarkerOf = ${seasonMarkerOf.toString()};
   const partOf = ${partOf.toString()};
   const planSeasons = ${planSeasons.toString()};
