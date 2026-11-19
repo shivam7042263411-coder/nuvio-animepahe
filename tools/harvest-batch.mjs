@@ -402,6 +402,7 @@ for (const show of shows) {
       );
     }
     for (const h of result.raw || []) console.log('    raw: ' + JSON.stringify(h));
+    if (result.meta) console.log('    search meta: ' + JSON.stringify(result.meta));
     if (result.plans) {
       console.log(`  plan: ${result.plans.map((p) => 'S' + p.season + ' ' + p.title).join(' | ') || 'nothing'}`);
     }

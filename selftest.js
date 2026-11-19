@@ -1014,6 +1014,43 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [30, "1,2,3,4,5,6,7,8,9,10,11,12", Array.from({ length: 18 }, (_, i) => i + 1).join(",")]
     );
+    // Real output, 2026-11-19: Re:ZERO is one TMDB season of 85 episodes, but
+    // the site splits it into S1 + Season 2 + Season 2 Part 2 + Season 3, and
+    // the entries carry continuous site numbering (Season 2 is eps 26-38).
+    // Sorting parts by their own "Part 2" marker filed Season 3 before Season 2
+    // Part 2, so S1E39-50 played season 3's episodes. Release order must hold.
+    const rzPool = [
+        { title: "Re:ZERO -Starting Life in Another World-", session: "z1", year: 2016, episodes: 25, type: "TV" },
+        { title: "Re:ZERO ~Starting Break Time From Zero~", session: "z2", year: 2016, episodes: 11, type: "Special" },
+        { title: "Re:ZERO -Starting Life in Another World- Season 2", session: "z3", year: 2020, episodes: 13, type: "TV" },
+        { title: "Re:ZERO -Starting Life in Another World- Season 2 Part 2", session: "z4", year: 2021, episodes: 12, type: "TV" },
+        { title: "Re:ZERO -Starting Life in Another World- Season 3", session: "z5", year: 2024, episodes: 16, type: "TV" },
+    ];
+    const rzRanges = { z1: [1, 25], z2: [1, 11], z3: [26, 38], z4: [39, 50], z5: [51, 66] };
+    const rzFetch = async (url) => {
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: rzPool }) };
+        if (url.includes("m=release")) {
+            const id = (url.match(/id=([a-z0-9]+)/) || [])[1];
+            const [a, b] = rzRanges[id] || [1, 0];
+            const data = [];
+            for (let i = a; i <= b; i++) data.push({ episode: String(i), session: id + ":" + i });
+            return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+        }
+        return fakeFetch(url);
+    };
+    const rz = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Re:Zero", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 85, year: "2016" }],
+    }))(rzFetch, FakeDom, (fn) => fn());
+    check(
+        "parts are filed in release order, not by their Part marker",
+        [
+            rz.plans.map((p) => p.title.replace(/^Re:ZERO -Starting Life in Another World- ?/, "") || "S1"),
+            rz.seasons["1"],
+        ],
+        [["S1", "Season 2", "Season 2 Part 2", "Season 3"], 66]
+    );
     check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({

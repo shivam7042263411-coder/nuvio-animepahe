@@ -376,6 +376,7 @@ export function harvestScript(show) {
   // lot of films in its name) has entries past page 1 - Attack on Titan's Final
   // Season is one. Keep paging until a page brings nothing new.
   const pool = [];
+  let searchMeta = null;
   for (let page = 1; page <= 4; page++) {
     const sr = await fetchLimited(
       '/api?m=search&l=15&q=' + encodeURIComponent(term) + '&page=' + page
@@ -383,6 +384,13 @@ export function harvestScript(show) {
     if (!sr) return { error: 'throttled' };
     const s = sr.ok ? await sr.json().catch(() => null) : null;
     if (!s) return { error: 'challenge' };
+    if (page === 1) {
+      // Diagnostic: whatever else the search envelope carries (total,
+      // last_page, per_page) decides whether later seasons can be paged to.
+      const meta = { ...s };
+      delete meta.data;
+      searchMeta = meta;
+    }
     const rows = s.data || [];
     let added = 0;
     for (const h of rows) {
@@ -406,7 +414,11 @@ export function harvestScript(show) {
           plans.push({ ...part, season: p.season, size: p.size, partial: !!p.partial });
         }
       }
-      plans.sort((a, b) => a.season - b.season || a.part - b.part);
+      // Seasons ascending; inside a season the entries keep the release order
+      // the planner consumed them in. Sorting by the entry's own "Part 2"
+      // marker filed Re:ZERO's Season 3 before Season 2 Part 2, so S1E39-50
+      // played season 3's episodes. Release order is the only safe order.
+      plans.sort((a, b) => a.season - b.season);
       sized = plans.length > 0;
     }
     // TMDB's seasons and the site's entries disagree: fall back to the label in
@@ -461,6 +473,7 @@ export function harvestScript(show) {
       ignored,
       films,
       audited,
+      meta: searchMeta,
       raw: pool.slice(0, 2),
       rows: [],
     };
