@@ -385,7 +385,7 @@ for (const show of shows) {
     failed++;
     continue;
   }
-  if (!result.rows.length) {
+  if (!result.rows.length && !DRY_RUN) {
     if (result.skipped) {
       console.log(`  already stored (${result.skipped} episode(s), nothing fetched)`);
       done++;
@@ -411,15 +411,6 @@ for (const show of shows) {
       // the run stores what exists and next week's run tops it up.
       (p.partial ? ' [airing ' + p.episodes + '/' + (p.size || '?') + ']' : '')).join(' | ')}`);
   }
-  if (DRY_RUN) {
-    const counts = Object.keys(result.seasons || {})
-      .sort((a, b) => Number(a) - Number(b))
-      .map((k) => 'S' + k + ': ' + result.seasons[k] + ' ep')
-      .join(', ');
-    console.log(`  dry run: ${counts} - would write ${slug(target)}.json, nothing saved`);
-    done++;
-    continue;
-  }
   // A season can hide in a differently-named entry ("Jujutsu Kaisen: Culling
   // Game"); naming it here is the difference between a visible gap and a
   // silently missing season.
@@ -440,6 +431,15 @@ for (const show of shows) {
   }
   if ((show.maxEps === 0 || show.maxEps > 1) && Number(result.show.episodes) === 1) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);
+  }
+  if (DRY_RUN) {
+    const counts = Object.keys(result.seasons || {})
+      .sort((a, b) => Number(a) - Number(b))
+      .map((k) => 'S' + k + ': ' + result.seasons[k] + ' ep')
+      .join(', ');
+    console.log(`  dry run: ${counts} - would write ${slug(target)}.json, nothing saved`);
+    done++;
+    continue;
   }
   const file = already ? already.file : `${slug(target)}.json`;
   // A file that was filled from a mis-picked entry carries that show's name and
