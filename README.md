@@ -111,6 +111,12 @@ Harvest behaviour worth knowing:
   that starts with the term, then the longest run. Sorting by episode count
   alone once picked *Naruto Shippuden* for "Naruto". Force a hit with
   `resultIndex` in the list.
+- **The search returns eight hits and cannot page** (`&page=2` comes back as
+  page 1, and the `next_page_url` it advertises answers 403). A franchise with
+  more than eight entries therefore used to lose its later seasons — Attack on
+  Titan's Final Season among them. The `/anime` page lists every show, so the
+  entries the search left out are found there and looked up by name; that costs
+  one request only for the shows with a large family of titles.
 - **One line = one season** by default: the harvester takes one AnimePahe entry
   and its first `maxEpisodes`. `--all-seasons` instead fills every season TMDB
   defines, all in the one file, each keyed by the app's season. `--max-eps 0`

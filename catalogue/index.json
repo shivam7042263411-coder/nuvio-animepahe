@@ -1,5 +1,15 @@
 {
   "version": 1,
   "updated": "2026-11-19",
-  "shows": []
+  "shows": [
+    {
+      "file": "mushoku-tensei.json",
+      "title": "Mushoku Tensei",
+      "aliases": [
+        "Mushoku Tensei: Jobless Reincarnation"
+      ],
+      "season": 1,
+      "year": 2021
+    }
+  ]
 }

@@ -914,12 +914,17 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
             text: async () => '<button data-src="/e/AA1080" data-audio="jpn">1080p</button>',
         };
     };
+    let siteRows = [];
     class FakeDom {
         parseFromString() {
             return {
-                querySelectorAll: () => [
-                    { dataset: { src: "/e/AA1080", audio: "jpn" }, textContent: "1080p" },
-                ],
+                querySelectorAll: (sel) =>
+                    sel === 'a[href^="/anime/"]'
+                        ? siteRows.map((r) => ({
+                              getAttribute: (n) => (n === "title" ? r.title : "/anime/" + r.session),
+                              textContent: r.title,
+                          }))
+                        : [{ dataset: { src: "/e/AA1080", audio: "jpn" }, textContent: "1080p" }],
             };
         }
     }
@@ -1000,6 +1005,28 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         ["S1:12 S2:18", 12, 18]
     );
+    // Real pool, 2026-11-19: the ongoing entry has no episode count and a
+    // re-cut of one arc sits beside it ("One Piece Log: Fish-Man Island Saga",
+    // 21 episodes). Filed as a season it would play the wrong episodes, so the
+    // ongoing entry is sliced on its own.
+    const recutPool = [
+        { title: "One Piece", session: "long", year: 1999, episodes: 0, type: "TV" },
+        { title: "One Piece Log: Fish-Man Island Saga", session: "recut", year: 2024, episodes: 21, type: "TV" },
+    ];
+    const recutFetch = async (url) => {
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: recutPool }) };
+        return longFetch(url);
+    };
+    const recut = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "One Piece", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 12, year: "1999" }, { n: 2, episodes: 18, year: null }],
+    }))(recutFetch, FakeDom, (fn) => fn());
+    check(
+        "a re-cut beside an ongoing entry is not filed as a season",
+        [recut.plans.map((p) => p.title).join("|"), recut.seasons["1"], recut.seasons["2"]],
+        ["One Piece|One Piece", 12, 18]
+    );
     const slicedRows = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
         term: "One Piece", maxEps: 0, season: 1, offset: null, resultIndex: -1,
         allSeasons: true, haveEps: [], force: false,
@@ -1076,10 +1103,35 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         [holed.error ? "refused" : "filed", (holed.rows || []).length],
         ["refused", 0]
     );
-    // Real output, 2026-11-19: the search returns 8 hits a page and Attack on
-    // Titan's Final Season (a whole season) is only on page 2. The site hands
-    // back a next-page link; following it is the difference between a season
-    // and a miss.
+    // A blocked search must say what came back: "challenge" alone cannot tell a
+    // Cloudflare page from a 403, and both looked like a command that hangs.
+    const blockedFetch = async (url) => {
+        if (url.includes("m=search")) {
+            return {
+                status: 403,
+                ok: false,
+                clone: () => ({ text: async () => "<html><body>Access denied</body></html>" }),
+                headers: { get: () => "text/html" },
+                json: async () => { throw new Error("not json"); },
+            };
+        }
+        return fakeFetch(url);
+    };
+    const blocked = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Re:Zero", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 25, year: "2016" }],
+    }))(blockedFetch, FakeDom, (fn) => fn());
+    check(
+        "a blocked search reports the reply it got, not just \"challenge\"",
+        [blocked.error, /^403 text\/html .*Access denied/.test(blocked.detail || "")],
+        ["challenge", true]
+    );
+    // Real output, 2026-11-19: the search returns eight hits and cannot page -
+    // "&page=2" returns page 1 again and the advertised next_page_url answers
+    // 403. /anime lists every show, so the entries past the first eight are
+    // found there and looked up by name. Attack on Titan's Final Season is the
+    // case: without it, a whole season (TMDB's 28 episodes) is a miss.
     const aotPage1 = [
         { title: "Attack on Titan", session: "t1", year: 2013, episodes: 25, type: "TV" },
         { title: "Attack on Titan: Junior High", session: "t2", year: 2015, episodes: 12, type: "TV" },
@@ -1088,27 +1140,21 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         { title: "Attack on Titan Season 3", session: "t5", year: 2018, episodes: 12, type: "TV" },
         { title: "Attack on Titan Season 3 Part 2", session: "t6", year: 2019, episodes: 10, type: "TV" },
     ];
-    const aotPage2 = [
+    const aotLater = [
         { title: "Attack on Titan: Final Season", session: "t7", year: 2021, episodes: 16, type: "TV" },
         { title: "Attack on Titan: Final Season Part 2", session: "t8", year: 2022, episodes: 12, type: "TV" },
         { title: "Attack on Titan: Final Season - The Final Chapters", session: "t9", year: 2023, episodes: 2, type: "Special" },
     ];
+    siteRows = aotLater.map((e) => ({ title: e.title, session: e.session }));
     const aotRanges = {
         t1: [1, 25], t2: [1, 12], t3: [26, 37], t4: [1, 3], t5: [38, 49],
         t6: [50, 59], t7: [60, 75], t8: [76, 87], t9: [88, 89],
     };
     const aotFetch = async (url) => {
         if (url.includes("m=search")) {
-            const page = Number((url.match(/page=(\d+)/) || [])[1] || 1);
-            const data = page === 1 ? aotPage1 : page === 2 ? aotPage2 : [];
-            return {
-                status: 200,
-                ok: true,
-                json: async () => ({
-                    data,
-                    next_page_url: page < 2 ? "/api?m=search&q=Attack+on+Titan&page=" + (page + 1) : null,
-                }),
-            };
+            const q = decodeURIComponent((url.match(/q=([^&]*)/) || [])[1] || "");
+            const data = q === "Attack on Titan" ? aotPage1 : aotLater.filter((e) => e.title === q);
+            return { status: 200, ok: true, json: async () => ({ data }) };
         }
         if (url.includes("m=release")) {
             const id = (url.match(/id=([a-z0-9]+)/) || [])[1];
@@ -1126,10 +1172,11 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
             { n: 3, episodes: 22, year: "2018" }, { n: 4, episodes: 28, year: "2020" }],
     }))(aotFetch, FakeDom, (fn) => fn());
     check(
-        "the search's next page is followed so a later season is not missed",
+        "a season past the search's eight hits is found in the site index",
         [aot.pool.length, aot.seasons["4"]],
-        [aotPage1.length + aotPage2.length, 28]
+        [aotPage1.length + aotLater.length, 28]
     );
+    siteRows = [];
     check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({

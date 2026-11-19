@@ -301,6 +301,27 @@ if (!solved) {
   process.exit(2);
 }
 
+// A clear page title does not prove the API is clear: /api can still answer
+// with a Cloudflare page or a 403, and the harvest then reports that as
+// "challenge" on the first show it fetches. Ask the endpoint the harvest
+// actually uses, and print what came back so a block names itself.
+const API_PROBE = `(async () => {
+  const r = await fetch('/api?m=search&l=1&q=naruto').catch(() => null);
+  if (!r) return { error: 'no reply' };
+  const t = await r.text().catch(() => '');
+  try { JSON.parse(t); return { ok: true }; } catch {}
+  return { status: r.status, type: r.headers.get('content-type') || '', head: t.replace(/\\s+/g, ' ').slice(0, 160) };
+})()`;
+const apiUntil = Date.now() + Math.max(WAIT_CHALLENGE, 60_000);
+let api = await evaluate(API_PROBE).catch(() => ({ error: 'no reply' }));
+while (!(api && api.ok) && Date.now() < apiUntil) {
+  console.log(`api not ready: ${JSON.stringify(api)}`);
+  await send('Page.reload', {});
+  await sleep(15_000);
+  api = await evaluate(API_PROBE).catch(() => ({ error: 'no reply' }));
+}
+if (api && api.ok) console.log('api: clear\n');
+
 
 if (AIRING_ONLY) await prefetchShows();
 
@@ -366,18 +387,29 @@ for (const show of shows) {
     continue;
   }
   // A challenge mid-show is usually one checkbox away: wait for it when the
-  // caller asked for that, and only give up when it never clears.
+  // caller asked for that, and only give up when it never clears. Reload first:
+  // a stale clearance re-solves on a fresh load, and a hard block keeps saying
+  // the same thing, which the reply line then names.
   const waitUntil = Date.now() + WAIT_CHALLENGE;
+  let why = null;
   while (result && result.error === 'challenge' && Date.now() < waitUntil) {
-    console.log('  challenge: finish it in the Chrome window, retrying in 30s...');
-    await sleep(30_000);
+    if (!why && result.detail) {
+      why = result.detail;
+      console.log(`  site said: ${why}`);
+    }
+    console.log('  challenge: reloading the window, retrying in 15s...');
+    await send('Page.reload', {});
+    await sleep(15_000);
     try {
       result = await evaluate(harvestScript(plan));
     } catch {}
   }
   if (!result || result.error) {
     if (result && result.error === 'challenge') {
-      console.error('  challenge appeared mid-run: stopping so the clearance is not burned');
+      console.error(
+        '  challenge appeared mid-run: stopping so the clearance is not burned' +
+          (why ? '\n  site said: ' + why : '')
+      );
       break;
     }
     if (result && result.error === 'throttled') {

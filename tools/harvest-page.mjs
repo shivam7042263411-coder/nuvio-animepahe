@@ -113,8 +113,14 @@ export function planSeasons(entries, seasons) {
   // exactly what TMDB describes, each season is a slice of them in release order
   // and nothing has to be guessed. Returns null when that cannot be verified.
   const sliceSeasons = () => {
-    const line = entries.filter((e) => !offSeason(e));
+    let line = entries.filter((e) => !offSeason(e));
     if (!line.length) return null;
+    // An entry with no episode count is still airing, and every episode of the
+    // show lives in it. A later entry that starts over ("One Piece Log:
+    // Fish-Man Island Saga", one arc re-cut) is not a continuation: put into
+    // the run, it shifts every season after it, so the ongoing entry is used
+    // alone.
+    if (!Number(line[0].episodes)) line = [line[0]];
     const known = line.every((e) => Number(e.episodes) > 0);
     // One entry of unknown length (a show still airing says "0 episodes") can
     // still be sliced: it just takes whatever each season asks for, in order.
@@ -238,9 +244,14 @@ export function franchiseOf(term, pool) {
     const yb = Number(b.year) || 9999;
     return ya - yb || partOf(a.title) - partOf(b.title);
   });
-  const hasEpisodes = own.some((h) => Number(h.episodes) > 1);
+  // An entry with no episode count is a show still airing; it is the show
+  // itself, not a one-off film, so it stays in the franchise.
+  const ongoing = (h) => h.episodes != null && Number(h.episodes) === 0;
+  const hasEpisodes = own.some((h) => ongoing(h) || Number(h.episodes) > 1);
   return hasEpisodes
-    ? own.filter((h) => Number(h.episodes) > 1 || seasonMarkerOf(h.title) != null)
+    ? own.filter(
+        (h) => ongoing(h) || Number(h.episodes) > 1 || seasonMarkerOf(h.title) != null
+      )
     : own;
 }
 
@@ -338,6 +349,14 @@ export function harvestScript(show) {
       await sleep(15000);
     }
   };
+  // Every non-JSON reply used to be reported as "challenge" alone, which hid
+  // whether the site sent a Cloudflare page, a 403 or a 5xx. Keep the status,
+  // the content type and the first line of the body so a block names itself.
+  const said = async (r, copy) => {
+    const body = copy ? await copy.text().catch(() => '') : '';
+    const type = r.headers && r.headers.get ? r.headers.get('content-type') || '' : '';
+    return (r.status + ' ' + type + ' ' + body).replace(/\\s+/g, ' ').trim().slice(0, 200);
+  };
   const term = ${JSON.stringify(show.term)};
   const maxEps = ${show.maxEps};
   const resultIndex = ${show.resultIndex};
@@ -369,51 +388,63 @@ export function harvestScript(show) {
   // size decides which season an entry is, not the entry's name.
   const tmdbSeasons = ${JSON.stringify(show.seasons || null)};
 
-  // The site returns 8 hits a page, and a query matches many shows (195 for
-  // "Attack on Titan"), so a later season sits past page 1 - Attack on Titan's
-  // Final Season is only reachable on page 2. Follow the next-page link the
-  // site itself returns, falling back to the same endpoint with page=N; stop
-  // when a page brings no further entry of this show.
+  // The search returns eight hits and cannot page: "&page=2" is ignored (the
+  // same page comes back) and the next_page_url it advertises answers 403, so
+  // following it breaks a show outright. A franchise with more than eight
+  // entries then hides its later seasons - Attack on Titan's Final Season, and
+  // Re:Zero's, are past the first eight. /anime is one plain HTML page listing
+  // every show, so it is used to find what the search left out, and only those
+  // titles are looked up by name for their details.
   const base = fold(term);
-  const searchUrl = (p) => '/api?m=search&l=15&q=' + encodeURIComponent(term) + '&page=' + p;
-  const pool = [];
-  let searchMeta = null;
-  let link = null;
-  for (let page = 1; page <= 4; page++) {
-    const candidates = page === 1 ? [searchUrl(1)] : [link, searchUrl(page)].filter(Boolean);
-    let s = null;
-    for (const url of candidates) {
-      if (!url) continue;
-      const sr = await fetchLimited(url);
-      if (!sr) return { error: 'throttled' };
-      const r = sr.ok ? await sr.json().catch(() => null) : null;
-      if (!r) return { error: 'challenge' };
-      // A "next page" link that repeats entries we already have is not the next
-      // page; the plain page=N form is then tried instead.
-      const fresh = (r.data || []).some(
-        (h) => h && h.session && !pool.some((p) => p.session === h.session)
-      );
-      if (page === 1 || fresh) {
-        s = r;
-        break;
-      }
-    }
-    if (!s) break;
-    if (page === 1) {
-      // Diagnostic: the search envelope (total, last_page, per_page) and the
-      // next-page link it offers.
-      const meta = { ...s };
-      delete meta.data;
-      searchMeta = meta;
-    }
-    let own = 0;
-    for (const h of s.data || []) {
-      if (!h || !h.session || pool.some((p) => p.session === h.session)) continue;
-      pool.push(h);
-      if (fold(h.title).indexOf(base) === 0) own++;
-    }
-    if (page > 1 && !own) break;
-    if (s.next_page_url) link = s.next_page_url;
+  const searchOnce = async (q) => {
+    const sr = await fetchLimited('/api?m=search&l=15&q=' + encodeURIComponent(q) + '&page=1');
+    if (!sr) return { error: 'throttled' };
+    const copy = sr.clone ? sr.clone() : null;
+    const j = sr.ok ? await sr.json().catch(() => null) : null;
+    if (!j) return { error: 'challenge', detail: await said(sr, copy) };
+    return { hits: (j.data || []).filter((h) => h && h.session), meta: j };
+  };
+  // One fetch per Chrome session, not per show: cached on the page itself, so
+  // the whole batch reuses it. (No window object outside a browser, as in the
+  // self-test, so the cache is then per call.)
+  const store = typeof window === 'undefined' ? {} : window;
+  const siteIndex = () => {
+    store.__paheIndex = store.__paheIndex || (async () => {
+      const r = await fetchLimited('/anime');
+      const html = r && r.ok ? await r.text() : '';
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const rows = [];
+      doc.querySelectorAll('a[href^="/anime/"]').forEach((a) => {
+        const title = (a.getAttribute('title') || a.textContent || '').trim().replace(/\\s+/g, ' ');
+        const session = (a.getAttribute('href') || '').split('/anime/')[1];
+        if (title && session) rows.push({ title, session });
+      });
+      return rows;
+    })();
+    return store.__paheIndex;
+  };
+
+  const firstSearch = await searchOnce(term);
+  if (firstSearch.error) return firstSearch;
+  const searchMeta = { ...firstSearch.meta };
+  delete searchMeta.data;
+  const pool = firstSearch.hits.slice();
+  // Only the title family, and only what the search did not already return.
+  const missed = (await siteIndex()).filter((e) => {
+    const k = fold(e.title);
+    return (
+      (k === base || k.indexOf(base + ' ') === 0) && !pool.some((p) => p.session === e.session)
+    );
+  });
+  for (const entry of missed) {
+    // One request every so often, not a burst: a flood is what makes the site
+    // answer with a challenge part way through a show.
+    await sleep(200);
+    const again = await searchOnce(entry.title);
+    if (again.error) return again;
+    const hit = again.hits.find((h) => h.session === entry.session);
+    // A title the search still will not return stays out: no details, no guess.
+    if (hit) pool.push(hit);
   }
 
   let plans;
@@ -509,8 +540,9 @@ export function harvestScript(show) {
     for (let page = 1; page <= 60; page++) {
       const rr = await fetchLimited('/api?m=release&id=' + session + '&sort=episode_asc&page=' + page);
       if (!rr) return { error: 'throttled' };
+      const rCopy = rr.clone ? rr.clone() : null;
       const j = rr.ok ? await rr.json().catch(() => null) : null;
-      if (!j) return { error: 'challenge' };
+      if (!j) return { error: 'challenge', detail: await said(rr, rCopy) };
       for (const e of j.data || []) {
         const ep = Number(e.episode);
         if (!Number.isFinite(ep) || seen.has(ep)) continue;
@@ -561,7 +593,12 @@ export function harvestScript(show) {
           if (!pr) return { error: 'throttled' };
           const html = await pr.text();
           // One challenge is the signal to stop the whole batch, not skip a show.
-          if (/just a moment|attention required|cf-error-details/i.test(html)) return { error: 'challenge' };
+          if (/just a moment|attention required|cf-error-details/i.test(html)) {
+            return {
+              error: 'challenge',
+              detail: (pr.status + ' ' + html).replace(/\\s+/g, ' ').slice(0, 200),
+            };
+          }
           const doc = new DOMParser().parseFromString(html, 'text/html');
           doc.querySelectorAll('#resolutionMenu button').forEach((b) => {
             const id = (b.dataset.src || '').match(/\\/e\\/([A-Za-z0-9]+)/);
