@@ -369,36 +369,51 @@ export function harvestScript(show) {
   // size decides which season an entry is, not the entry's name.
   const tmdbSeasons = ${JSON.stringify(show.seasons || null)};
 
-  // 15 results, the same as the plugin asks for: a show with many seasons
-  // (MHA has eight) does not fit in 8, and a season that is never seen can
-  // never be filed. Extra hits only append, so the automatic pick is unmoved.
-  // The site returns 8 hits a page, so a show with more seasons than that (or a
-  // lot of films in its name) has entries past page 1 - Attack on Titan's Final
-  // Season is one. Keep paging until a page brings nothing new.
+  // The site returns 8 hits a page, and a query matches many shows (195 for
+  // "Attack on Titan"), so a later season sits past page 1 - Attack on Titan's
+  // Final Season is only reachable on page 2. Follow the next-page link the
+  // site itself returns, falling back to the same endpoint with page=N; stop
+  // when a page brings no further entry of this show.
+  const base = fold(term);
+  const searchUrl = (p) => '/api?m=search&l=15&q=' + encodeURIComponent(term) + '&page=' + p;
   const pool = [];
   let searchMeta = null;
+  let link = null;
   for (let page = 1; page <= 4; page++) {
-    const sr = await fetchLimited(
-      '/api?m=search&l=15&q=' + encodeURIComponent(term) + '&page=' + page
-    );
-    if (!sr) return { error: 'throttled' };
-    const s = sr.ok ? await sr.json().catch(() => null) : null;
-    if (!s) return { error: 'challenge' };
+    const candidates = page === 1 ? [searchUrl(1)] : [link, searchUrl(page)].filter(Boolean);
+    let s = null;
+    for (const url of candidates) {
+      if (!url) continue;
+      const sr = await fetchLimited(url);
+      if (!sr) return { error: 'throttled' };
+      const r = sr.ok ? await sr.json().catch(() => null) : null;
+      if (!r) return { error: 'challenge' };
+      // A "next page" link that repeats entries we already have is not the next
+      // page; the plain page=N form is then tried instead.
+      const fresh = (r.data || []).some(
+        (h) => h && h.session && !pool.some((p) => p.session === h.session)
+      );
+      if (page === 1 || fresh) {
+        s = r;
+        break;
+      }
+    }
+    if (!s) break;
     if (page === 1) {
-      // Diagnostic: whatever else the search envelope carries (total,
-      // last_page, per_page) decides whether later seasons can be paged to.
+      // Diagnostic: the search envelope (total, last_page, per_page) and the
+      // next-page link it offers.
       const meta = { ...s };
       delete meta.data;
       searchMeta = meta;
     }
-    const rows = s.data || [];
-    let added = 0;
-    for (const h of rows) {
+    let own = 0;
+    for (const h of s.data || []) {
       if (!h || !h.session || pool.some((p) => p.session === h.session)) continue;
       pool.push(h);
-      added++;
+      if (fold(h.title).indexOf(base) === 0) own++;
     }
-    if (!added) break;
+    if (page > 1 && !own) break;
+    if (s.next_page_url) link = s.next_page_url;
   }
 
   let plans;

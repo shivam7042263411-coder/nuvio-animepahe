@@ -1051,6 +1051,60 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [["S1", "Season 2", "Season 2 Part 2", "Season 3"], 66]
     );
+    // Real output, 2026-11-19: the search returns 8 hits a page and Attack on
+    // Titan's Final Season (a whole season) is only on page 2. The site hands
+    // back a next-page link; following it is the difference between a season
+    // and a miss.
+    const aotPage1 = [
+        { title: "Attack on Titan", session: "t1", year: 2013, episodes: 25, type: "TV" },
+        { title: "Attack on Titan: Junior High", session: "t2", year: 2015, episodes: 12, type: "TV" },
+        { title: "Attack on Titan Season 2", session: "t3", year: 2017, episodes: 12, type: "TV" },
+        { title: "Attack on Titan OAD", session: "t4", year: 2014, episodes: 3, type: "OVA" },
+        { title: "Attack on Titan Season 3", session: "t5", year: 2018, episodes: 12, type: "TV" },
+        { title: "Attack on Titan Season 3 Part 2", session: "t6", year: 2019, episodes: 10, type: "TV" },
+    ];
+    const aotPage2 = [
+        { title: "Attack on Titan: Final Season", session: "t7", year: 2021, episodes: 16, type: "TV" },
+        { title: "Attack on Titan: Final Season Part 2", session: "t8", year: 2022, episodes: 12, type: "TV" },
+        { title: "Attack on Titan: Final Season - The Final Chapters", session: "t9", year: 2023, episodes: 2, type: "Special" },
+    ];
+    const aotRanges = {
+        t1: [1, 25], t2: [1, 12], t3: [26, 37], t4: [1, 3], t5: [38, 49],
+        t6: [50, 59], t7: [60, 75], t8: [76, 87], t9: [88, 89],
+    };
+    const aotFetch = async (url) => {
+        if (url.includes("m=search")) {
+            const page = Number((url.match(/page=(\d+)/) || [])[1] || 1);
+            const data = page === 1 ? aotPage1 : page === 2 ? aotPage2 : [];
+            return {
+                status: 200,
+                ok: true,
+                json: async () => ({
+                    data,
+                    next_page_url: page < 2 ? "/api?m=search&q=Attack+on+Titan&page=" + (page + 1) : null,
+                }),
+            };
+        }
+        if (url.includes("m=release")) {
+            const id = (url.match(/id=([a-z0-9]+)/) || [])[1];
+            const [a, b] = aotRanges[id] || [1, 0];
+            const data = [];
+            for (let i = a; i <= b; i++) data.push({ episode: String(i), session: id + ":" + i });
+            return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+        }
+        return fakeFetch(url);
+    };
+    const aot = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Attack on Titan", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 25, year: "2013" }, { n: 2, episodes: 12, year: "2017" },
+            { n: 3, episodes: 22, year: "2018" }, { n: 4, episodes: 28, year: "2020" }],
+    }))(aotFetch, FakeDom, (fn) => fn());
+    check(
+        "the search's next page is followed so a later season is not missed",
+        [aot.pool.length, aot.seasons["4"]],
+        [aotPage1.length + aotPage2.length, 28]
+    );
     check(
         "harvester script is valid browser JS",
         typeof new Function("return " + pageMod.harvestScript({
