@@ -1,12 +1,10 @@
-# Probe: find entries the plain-title search does not return.
+# Probe: confirm the plain-title search now pages past page 1, so later seasons
+# (Attack on Titan's Final Season) are reachable.
 # Run: node tools/harvest-batch.mjs --file tools/shows-probe.txt --audit \
 #        --wait-challenge 300 --profile tools/.chrome-profile
 #
-# Nothing is planned or written; each line prints the site's whole search pool
-# for that query plus the search envelope (total/last_page), which says whether
-# later seasons can be paged to at all.
+# Nothing is planned or written. Look for "Attack on Titan: Final Season" in
+# the pool and an audit count above 8.
 #
 # term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
 Attack on Titan | 0 | 1 | 0
-Attack on Titan The Final Season | 0 | 4 | 0
-Attack on Titan: The Final Season | 0 | 4 | 0
