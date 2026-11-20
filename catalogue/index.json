@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-19",
+  "updated": "2026-11-20",
   "shows": [
     {
       "file": "attack-on-titan.json",
@@ -10,6 +10,13 @@
       "year": 2013
     },
     {
+      "file": "chainsaw-man.json",
+      "title": "Chainsaw Man",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
       "file": "demon-slayer.json",
       "title": "Demon Slayer",
       "aliases": [
@@ -17,6 +24,13 @@
       ],
       "season": 1,
       "year": 2019
+    },
+    {
+      "file": "kaiju-no-8.json",
+      "title": "Kaiju No. 8",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
     },
     {
       "file": "mushoku-tensei.json",
@@ -35,6 +49,27 @@
       ],
       "season": 1,
       "year": 2016
+    },
+    {
+      "file": "solo-leveling.json",
+      "title": "Solo Leveling",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "that-time-i-got-reincarnated-as-a-slime.json",
+      "title": "That Time I Got Reincarnated as a Slime",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
+    },
+    {
+      "file": "wind-breaker.json",
+      "title": "Wind Breaker",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
     }
   ]
 }
