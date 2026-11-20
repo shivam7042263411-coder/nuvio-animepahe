@@ -47,7 +47,9 @@
     {
       "file": "black-clover.json",
       "title": "Black Clover",
-      "aliases": [],
+      "aliases": [
+        "Black Clover Season 2"
+      ],
       "season": 1,
       "year": 2017
     },
@@ -366,15 +368,6 @@
       "aliases": [],
       "season": 1,
       "year": 2024
-    },
-    {
-      "file": "outcast.json",
-      "title": "Outcast",
-      "aliases": [
-        "The Outcast Season 1"
-      ],
-      "season": 1,
-      "year": 2016
     },
     {
       "file": "parasyte-the-maxim.json",

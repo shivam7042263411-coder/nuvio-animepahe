@@ -1,0 +1,6 @@
+# Audit: find the entries holding the episodes TMDB counts but the file lacks.
+Re:Zero | 0
+Blue Box | 0
+Tokyo Revengers | 0
+The Apothecary Diaries | 0
+Black Clover | 0

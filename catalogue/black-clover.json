@@ -1,14 +1,17 @@
 {
   "title": "Black Clover",
-  "aliases": [],
+  "aliases": [
+    "Black Clover Season 2"
+  ],
   "season": 1,
   "year": 2017,
   "source": "animepahe",
   "search": "Black Clover",
-  "session": "b0584a5d-3d46-ea7c-e750-eee3db930373",
-  "episodes": 170,
+  "session": "4fe5f289-3d8d-c79e-f93e-d51b4f7e0943",
+  "episodes": 0,
   "seasonEpisodes": {
-    "1": 170
+    "1": 170,
+    "2": 7
   },
   "allSeasons": true,
   "rows": [
@@ -1201,6 +1204,55 @@
       "q": 1080,
       "a": "sub",
       "id": "juqAIG2S85b7"
+    },
+    {
+      "s": 2,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "bqcQ9yTq2bBX"
+    },
+    {
+      "s": 2,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "o3WZguHMJSRy"
+    },
+    {
+      "s": 2,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "kYMnbsSdrU5t"
+    },
+    {
+      "s": 2,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "9zpTIBAzlm4C"
+    },
+    {
+      "s": 2,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "jeLvqKC8yaIN"
+    },
+    {
+      "s": 2,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "Fcgh7x9fuVHW"
+    },
+    {
+      "s": 2,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "MyuDIsPuh4rs"
     }
   ],
   "updated": "2026-11-20"
