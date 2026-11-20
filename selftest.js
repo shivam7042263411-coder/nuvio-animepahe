@@ -119,6 +119,17 @@ check(
     sandbox.pickPlayButtons([{ url: "z", quality: "720p", audio: "eng" }]).map((b) => b.url),
     ["z"]
 );
+check(
+    "picks the best sub when the site has no 1080p",
+    sandbox
+        .pickPlayButtons([
+            { url: "hi", quality: "1080p", audio: "eng" },
+            { url: "mid", quality: "720p", audio: "jpn" },
+            { url: "low", quality: "480p", audio: "jpn" },
+        ])
+        .map((b) => b.url),
+    ["mid"]
+);
 
 // --- uniqueAscendingEpisodes -------------------------------------------------
 const deduped = sandbox.uniqueAscendingEpisodes([
@@ -524,9 +535,18 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     };
     check("catalogue serves 1080p sub", sandbox.catalogueRow(catFile, 1, 1).id, "sub1080");
     check(
-        "catalogue refuses 720p",
-        sandbox.catalogueRow({ rows: [{ s: 1, e: 1, q: 720, a: "sub", id: "x" }] }, 1, 1),
-        null
+        "catalogue serves 720p when that is all it has",
+        sandbox.catalogueRow({ rows: [{ s: 1, e: 1, q: 720, a: "sub", id: "x" }] }, 1, 1).id,
+        "x"
+    );
+    check(
+        "catalogue serves the best of several resolutions",
+        sandbox.catalogueRow(
+            { rows: [{ s: 1, e: 1, q: 720, a: "sub", id: "lo" }, { s: 1, e: 1, q: 1080, a: "sub", id: "hi" }] },
+            1,
+            1
+        ).id,
+        "hi"
     );
     check(
         "catalogue refuses dub",

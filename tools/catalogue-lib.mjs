@@ -59,10 +59,23 @@ export function findShow(title) {
   );
 }
 
-/** The only tier the plugin ever offers, and therefore the only one worth
- *  storing. Keeping the check here means every writer (harvest, merge, probe
- *  import) produces the same file. */
-export const is1080Sub = (row) => Number(row && row.q) === 1080 && row && row.a === 'sub';
+/** A row the plugin can serve: sub audio at a real resolution. The harvester
+ *  keeps the best resolution each episode has, so a show the site only offers
+ *  in 720p still plays instead of being dropped from the catalogue. */
+export const isSubRow = (row) =>
+  Boolean(row) && Number(row.q) > 0 && row.a === 'sub' && Boolean(row.id);
+
+/** One row per episode: the highest resolution the site offered for it. */
+export function bestSubRows(rows) {
+  const best = new Map();
+  for (const row of rows || []) {
+    if (!isSubRow(row) || !(Number(row.e) >= 1)) continue;
+    const key = `${row.s}/${row.e}`;
+    const held = best.get(key);
+    if (!held || Number(row.q) > Number(held.q)) best.set(key, row);
+  }
+  return [...best.values()];
+}
 
 /** Add/replace rows keyed by s/e/q/a. A newer id for the same key wins: the
  *  old one is the one that stopped resolving. */
@@ -86,7 +99,7 @@ export function mergeRows(show, rows) {
 
 export function writeShow(file, data) {
   mkdirSync(CATALOGUE_DIR, { recursive: true });
-  data.rows = (data.rows || []).filter(is1080Sub);
+  data.rows = bestSubRows(data.rows);
   data.updated = today();
   writeFileSync(join(CATALOGUE_DIR, file), JSON.stringify(data, null, 2) + '\n');
   return join(CATALOGUE_DIR, file);

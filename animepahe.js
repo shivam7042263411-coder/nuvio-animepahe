@@ -438,23 +438,19 @@ function cataloguePick(index, titles, season) {
     return best ? best.entry : null;
 }
 
-/** The plugin's only tier, and therefore the only one the catalogue stores:
- *  1080p sub. Any other row is a miss and falls back to a normal scrape. */
+/** The best sub row stored for this episode: the highest resolution the
+ *  catalogue holds. The harvester keeps one row per episode, so a show the
+ *  site only has in 720p plays instead of returning nothing. */
 function catalogueRow(file, season, episode) {
     var rows = (file && file.rows) || [];
+    var best = null;
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i] || {};
-        if (
-            Number(row.s) === Number(season) &&
-            Number(row.e) === Number(episode) &&
-            Number(row.q) === 1080 &&
-            isSubAudio(row.a) &&
-            row.id
-        ) {
-            return row;
-        }
+        if (Number(row.s) !== Number(season) || Number(row.e) !== Number(episode)) continue;
+        if (!(Number(row.q) > 0) || !isSubAudio(row.a) || !row.id) continue;
+        if (!best || Number(row.q) > Number(best.q)) best = row;
     }
-    return null;
+    return best;
 }
 
 /** {title, row} for this episode, or null on any miss or fetch failure. */
@@ -469,29 +465,29 @@ async function catalogueLookup(tmdb, season, episode) {
     return { title: entry.title || (file && file.title) || tmdb.titles[0], row: row };
 }
 
-/** Machine-readable ids for the laptop merge (tools/merge-log.mjs). Only 1080p
- *  sub is logged: it is the only tier the plugin serves, so it is the only one
- *  the catalogue stores. */
+/** Machine-readable ids for the laptop merge (tools/merge-log.mjs): the best
+ *  sub release of the episode, the same one the catalogue stores. */
 function logKwikIds(title, season, episode, buttons) {
-    var seen = {};
+    var best = null;
     for (var i = 0; i < buttons.length; i++) {
-        if ((parseInt(buttons[i].quality, 10) || 0) !== 1080) continue;
         if (!isSubAudio(buttons[i].audio)) continue;
-        var m = String(buttons[i].url).match(/kwik\.cx\/e\/([A-Za-z0-9]+)/);
-        if (!m || seen[m[1]]) continue;
-        seen[m[1]] = true;
-        console.log(
-            "kwik-id " +
-                JSON.stringify({
-                    title: title,
-                    s: season,
-                    e: episode,
-                    q: 1080,
-                    a: "sub",
-                    id: m[1]
-                })
-        );
+        var q = parseInt(buttons[i].quality, 10) || 0;
+        var m = String(buttons[i].url || "").match(/kwik\.cx\/e\/([A-Za-z0-9]+)/);
+        if (!q || !m) continue;
+        if (!best || q > best.q) best = { q: q, id: m[1] };
     }
+    if (!best) return;
+    console.log(
+        "kwik-id " +
+            JSON.stringify({
+                title: title,
+                s: season,
+                e: episode,
+                q: best.q,
+                a: "sub",
+                id: best.id
+            })
+    );
 }
 
 /** One stream result, shared by the catalogue and the scrape path. */
@@ -559,20 +555,17 @@ function isSubAudio(audio) {
     return a === "" || a === "jpn" || a === "ja" || a === "japanese" || a === "sub";
 }
 
-/** One 1080p sub link per episode: resolving every button is what gets us
- *  kwik 429s, and the other qualities are never watched. */
+/** One link per episode - the best sub the site has, highest resolution first:
+ *  resolving every button is what gets us kwik 429s. */
 function pickPlayButtons(buttons) {
-    var tiers = [
-        function (b) { return b.quality === "1080p" && isSubAudio(b.audio); },
-        function (b) { return b.quality === "1080p"; },
-        function (b) { return isSubAudio(b.audio); },
-        function () { return true; }
-    ];
-    for (var t = 0; t < tiers.length; t++) {
-        var out = buttons.filter(tiers[t]);
-        if (out.length) return out.slice(0, 1);
+    function best(list) {
+        return list.slice().sort(function (a, b) {
+            return (parseInt(b.quality, 10) || 0) - (parseInt(a.quality, 10) || 0);
+        })[0];
     }
-    return [];
+    var pick =
+        best(buttons.filter(function (b) { return isSubAudio(b.audio); })) || best(buttons);
+    return pick ? [pick] : [];
 }
 
 function audioToLanguage(audio) {
@@ -1011,7 +1004,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             : plan.animeTitle + " - S" + plan.season + "E" + plan.requestedEpisode;
 
         // One request per episode: six parallel kwik resolves is what triggers
-        // the 429s, and only 1080p sub is ever watched.
+        // the 429s, and the lower resolutions come second.
         var chosen = pickPlayButtons(buttons);
         console.log(
             "[AnimePahe] buttons=" + buttons.length + " chosen=" + chosen.length +

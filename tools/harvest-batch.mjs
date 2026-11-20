@@ -38,7 +38,8 @@ import { fileURLToPath } from 'node:url';
 import {
   CATALOGUE_DIR,
   findShow,
-  is1080Sub,
+  isSubRow,
+  bestSubRows,
   mergeRows,
   readCatalogue,
   rebuildIndex,
@@ -186,15 +187,15 @@ if (!shows.length) {
   process.exit(1);
 }
 
-// Files written before the 1080p-sub-only rule are rewritten on the way in;
-// a show with nothing left to store is removed, not left as an empty entry.
+// Files written before the best-sub rule are rewritten on the way in (one row
+// per episode, highest resolution); a show with nothing left is removed.
 for (const { file, data } of readCatalogue()) {
-  if (!data.rows.some((row) => !is1080Sub(row))) continue;
+  if (!data.rows.some((row) => !isSubRow(row))) continue;
   const before = data.rows.length;
   writeShow(file, data);
   if (!data.rows.length) {
     unlinkSync(join(CATALOGUE_DIR, file));
-    console.log(`drop   ${file}: no 1080p sub (was ${before} row(s))`);
+    console.log(`drop   ${file}: no sub release (was ${before} row(s))`);
   } else {
     console.log(`prune  ${file}: ${before} -> ${data.rows.length} row(s)`);
   }
@@ -278,7 +279,13 @@ async function evaluate(expression) {
   if (r.result?.exceptionDetails) {
     throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 400));
   }
-  return r.result?.result?.value;
+  const value = r.result?.result?.value;
+  // A detached page (navigation, crashed tab) answers with no value at all;
+  // naming the reply beats the old bare "failed: no result".
+  if (value === undefined) {
+    throw new Error('no value from the page: ' + JSON.stringify(r.result?.result || null).slice(0, 200));
+  }
+  return value;
 }
 
 await send('Page.enable');
@@ -332,7 +339,7 @@ if (AIRING_ONLY) await prefetchShows();
 /** Write what a run collected for one show. Used for a finished show and for
  *  one stopped mid-way by a 429 or a challenge: those rows are real episodes,
  *  so keeping them lets the next run top up instead of starting a 1180-episode
- *  show over. Returns null when nothing was 1080p sub. */
+ *  show over. Returns null when the site had no sub release at all. */
 function saveShow(show, target, result, already) {
   const file = already ? already.file : `${slug(target)}.json`;
   // A file that was filled from a mis-picked entry carries that show's name and
@@ -373,9 +380,11 @@ function saveShow(show, target, result, already) {
     data.seasonEpisodes = { ...(data.seasonEpisodes || {}), ...result.seasons };
   }
   if (ALL_SEASONS) data.allSeasons = true;
-  const rows1080 = result.rows.filter((r) => Number(r.q) === 1080 && r.a === 'sub' && r.e >= 1);
-  if (!rows1080.length) return null;
-  mergeRows(data, rows1080);
+  // One row per episode at the best resolution the site had: 1080p when it is
+  // there, 720p for a show that never got a 1080p release.
+  const keep = bestSubRows(result.rows);
+  if (!keep.length) return null;
+  mergeRows(data, keep);
   writeShow(file, data);
   // Rebuild every time: an interrupted run must still leave a matching index.
   rebuildIndex();
@@ -593,7 +602,7 @@ for (const show of shows) {
     // re-harvesting, only replaced by a later 1080p upload.
     const have = [...new Set(result.rows.map((r) => `${r.q || '?'}p ${r.a}`))].join(', ');
     console.error(
-      `  no 1080p sub for this show${have ? ` (site has: ${have})` : ' (no episode had a resolution list)'}`
+      `  no sub release for this show${have ? ` (site has: ${have})` : ' (no episode had a resolution list)'}`
     );
     failed++;
     continue;

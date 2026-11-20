@@ -1,0 +1,8 @@
+# The shows that failed only because the site has no 1080p sub: keep the best
+# quality the site does have. The two films from the user list plus the two
+# Dragon Ball entries.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+A Silent Voice | 1
+The Tunnel to Summer, the Exit of Goodbye | 1
+Dragon Ball Super | 0
+Dragon Ball DAIMA | 0
