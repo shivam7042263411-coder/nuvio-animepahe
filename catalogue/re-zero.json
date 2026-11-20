@@ -1,16 +1,17 @@
 {
   "title": "Re:Zero",
   "aliases": [
-    "Re:ZERO -Starting Life in Another World-"
+    "Re:ZERO -Starting Life in Another World-",
+    "Re:ZERO -Starting Life in Another World- Season 4"
   ],
   "season": 1,
   "year": 2016,
   "source": "animepahe",
   "search": "Re:Zero",
-  "session": "3b161fad-dbc4-1f6b-b89c-6a4b0a9579d1",
-  "episodes": 25,
+  "session": "23ff1f38-c273-fae9-ed4a-4b16c7143b85",
+  "episodes": 19,
   "seasonEpisodes": {
-    "1": 66
+    "1": 19
   },
   "allSeasons": true,
   "rows": [
@@ -475,7 +476,140 @@
       "q": 1080,
       "a": "sub",
       "id": "y4MCUnAcuVyJ"
+    },
+    {
+      "s": 1,
+      "e": 67,
+      "q": 1080,
+      "a": "sub",
+      "id": "l8GIKkOLgjuI"
+    },
+    {
+      "s": 1,
+      "e": 68,
+      "q": 1080,
+      "a": "sub",
+      "id": "QOPGxcPPld6j"
+    },
+    {
+      "s": 1,
+      "e": 69,
+      "q": 1080,
+      "a": "sub",
+      "id": "nKhW9dv7hRzP"
+    },
+    {
+      "s": 1,
+      "e": 70,
+      "q": 1080,
+      "a": "sub",
+      "id": "ZHoSiZlWW0eN"
+    },
+    {
+      "s": 1,
+      "e": 71,
+      "q": 1080,
+      "a": "sub",
+      "id": "2aVShQUjPHsW"
+    },
+    {
+      "s": 1,
+      "e": 72,
+      "q": 1080,
+      "a": "sub",
+      "id": "9aXl6tlLFkJY"
+    },
+    {
+      "s": 1,
+      "e": 73,
+      "q": 1080,
+      "a": "sub",
+      "id": "8DlBSiXS04qR"
+    },
+    {
+      "s": 1,
+      "e": 74,
+      "q": 1080,
+      "a": "sub",
+      "id": "1wpTSczbffrt"
+    },
+    {
+      "s": 1,
+      "e": 75,
+      "q": 1080,
+      "a": "sub",
+      "id": "jIoCW0O1WTS2"
+    },
+    {
+      "s": 1,
+      "e": 76,
+      "q": 1080,
+      "a": "sub",
+      "id": "dCCekunnX08v"
+    },
+    {
+      "s": 1,
+      "e": 77,
+      "q": 1080,
+      "a": "sub",
+      "id": "XUE9dtkgj1JM"
+    },
+    {
+      "s": 1,
+      "e": 78,
+      "q": 1080,
+      "a": "sub",
+      "id": "YTOeTqn5zcgv"
+    },
+    {
+      "s": 1,
+      "e": 79,
+      "q": 1080,
+      "a": "sub",
+      "id": "Q1qQT4GUc4fm"
+    },
+    {
+      "s": 1,
+      "e": 80,
+      "q": 1080,
+      "a": "sub",
+      "id": "MO5mPZbJUpaD"
+    },
+    {
+      "s": 1,
+      "e": 81,
+      "q": 1080,
+      "a": "sub",
+      "id": "ttjbidm7StUx"
+    },
+    {
+      "s": 1,
+      "e": 82,
+      "q": 1080,
+      "a": "sub",
+      "id": "Tu4CD0CIXrBt"
+    },
+    {
+      "s": 1,
+      "e": 83,
+      "q": 1080,
+      "a": "sub",
+      "id": "IWgORl0FOYsU"
+    },
+    {
+      "s": 1,
+      "e": 84,
+      "q": 1080,
+      "a": "sub",
+      "id": "fRMKFLtS7UZq"
+    },
+    {
+      "s": 1,
+      "e": 85,
+      "q": 1080,
+      "a": "sub",
+      "id": "UYgF9TOXMYWr"
     }
   ],
-  "updated": "2026-11-19"
+  "updated": "2026-11-20"
 }

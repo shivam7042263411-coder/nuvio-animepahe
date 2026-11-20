@@ -1,0 +1,3 @@
+# The exact-title search buries the entry; the short query lists it at index 1,
+# ahead of the "Break Time" short. resultIndex forces it (audited order).
+Re:ZERO Season 4 | 0 | 1 | 0 | 1 | Re:Zero
