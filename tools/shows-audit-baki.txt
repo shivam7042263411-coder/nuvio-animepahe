@@ -1,0 +1,6 @@
+# Map the Baki entries: TMDB keeps them as four separate shows.
+Baki the Grappler | 0
+Baki Hanma | 0
+Baki-dou | 0
+Baki 2018 | 0
+Baki: Most Evil Death Row Convicts | 0

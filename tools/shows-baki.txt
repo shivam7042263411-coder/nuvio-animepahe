@@ -1,0 +1,10 @@
+# Baki is four separate TMDB shows on the site too. appTitle is TMDB's own
+# name so the app matches; offsets map continuous site numbering.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+Baki the Grappler | 0 | 1 | 0 | | Baki the Grappler
+Baki the Grappler: Saidai Tournament-hen | 0 | 2 | 24 | | Baki the Grappler
+Baki Hanma | 0 | 1 | 0 | | Baki Hanma
+Baki Hanma 2nd Season | 0 | 2 | 0 | | Baki Hanma
+Baki-dou: The Invincible Samurai | 0 | 1 | 0 | | BAKI-DOU: The Invincible Samurai
+Baki-dou: The Invincible Samurai Part 2 | 0 | 1 | 0 | | BAKI-DOU: The Invincible Samurai
+Baki: The Great Raitai Tournament Saga | 0 | 2 | 0 | | BAKI

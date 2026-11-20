@@ -45,6 +45,42 @@
       "year": 2013
     },
     {
+      "file": "baki.json",
+      "title": "BAKI",
+      "aliases": [
+        "Baki: The Great Raitai Tournament Saga"
+      ],
+      "season": 2,
+      "year": 2020
+    },
+    {
+      "file": "baki-hanma.json",
+      "title": "Baki Hanma",
+      "aliases": [
+        "Baki Hanma 2nd Season"
+      ],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "baki-the-grappler.json",
+      "title": "Baki the Grappler",
+      "aliases": [
+        "Baki the Grappler: Saidai Tournament-hen"
+      ],
+      "season": 1,
+      "year": 2001
+    },
+    {
+      "file": "baki-dou-the-invincible-samurai.json",
+      "title": "BAKI-DOU: The Invincible Samurai",
+      "aliases": [
+        "Baki-dou: The Invincible Samurai Part 2"
+      ],
+      "season": 1,
+      "year": 2026
+    },
+    {
       "file": "black-clover.json",
       "title": "Black Clover",
       "aliases": [

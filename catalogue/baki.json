@@ -1,0 +1,109 @@
+{
+  "title": "BAKI",
+  "aliases": [
+    "Baki: The Great Raitai Tournament Saga"
+  ],
+  "season": 2,
+  "year": 2020,
+  "source": "animepahe",
+  "search": "Baki: The Great Raitai Tournament Saga",
+  "session": "9006e277-c4db-5349-34e6-315c31773694",
+  "episodes": 13,
+  "seasonEpisodes": {
+    "2": 13
+  },
+  "rows": [
+    {
+      "s": 2,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "wqslVEV32PLx"
+    },
+    {
+      "s": 2,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "paWO9xUYnKwK"
+    },
+    {
+      "s": 2,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "knCBJazdIzbd"
+    },
+    {
+      "s": 2,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "Pk0051hjzEsh"
+    },
+    {
+      "s": 2,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "KQxoO7jjwB63"
+    },
+    {
+      "s": 2,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "60t6C9PS30Ds"
+    },
+    {
+      "s": 2,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "8roAz8kUsOSm"
+    },
+    {
+      "s": 2,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "jvJ8iEnrSXRo"
+    },
+    {
+      "s": 2,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "2UN9zZxwv981"
+    },
+    {
+      "s": 2,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "H2S90JMc8nNb"
+    },
+    {
+      "s": 2,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "pTPiOoG41WqU"
+    },
+    {
+      "s": 2,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "MIp5erJ01Mj8"
+    },
+    {
+      "s": 2,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "1LbaLiYSLPNO"
+    }
+  ],
+  "updated": "2026-11-20"
+}
