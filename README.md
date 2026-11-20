@@ -121,7 +121,8 @@ Harvest behaviour worth knowing:
   and its first `maxEpisodes`. `--all-seasons` instead fills every season TMDB
   defines, all in the one file, each keyed by the app's season. `--max-eps 0`
   takes every episode, and a `--max-eps` on the command line overrides the
-  list's `maxEpisodes` column.
+  list's `maxEpisodes` column. Shows over 500 TMDB episodes are deferred by
+  default (reported as `defer`); resume them later by passing `--include-over-500`.
 - An entry **named after an arc** ("X: Culling Game", "X: Mugen Train Arc") is
   filed by size, so it no longer needs a line of its own. A sequel that is a
   different TMDB show (a spin-off) is not - it has its own `appTitle` line or
