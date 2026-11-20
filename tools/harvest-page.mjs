@@ -340,13 +340,14 @@ export function harvestScript(show) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // The site rate-limits by IP (HTTP 429). A limited page is not an empty
   // season: wait for the limit to lift, then give up loudly so the run stops
-  // instead of writing a show that is missing episodes.
+  // instead of writing a show that is missing episodes. A minute and a half of
+  // waiting is cheaper than restarting an 1180-episode show.
   const fetchLimited = async (url) => {
     for (let attempt = 0; ; attempt++) {
       const r = await fetch(url);
       if (r.status !== 429) return r;
-      if (attempt >= 2) return null;
-      await sleep(15000);
+      if (attempt >= 3) return null;
+      await sleep(30000);
     }
   };
   // Every non-JSON reply used to be reported as "challenge" alone, which hid
@@ -437,11 +438,13 @@ export function harvestScript(show) {
     );
   });
   for (const entry of missed) {
-    // One request every so often, not a burst: a flood is what makes the site
-    // answer with a challenge part way through a show.
-    await sleep(200);
+    // Paced like the episode pages, not fired in a burst: 35 lookups at 200ms
+    // is what earned a 429 before One Piece's first episode was read.
+    await sleep(1500);
     const again = await searchOnce(entry.title);
-    if (again.error) return again;
+    // A throttle here costs films, not seasons: the episodes already in hand
+    // are what the app asks for, so keep them instead of failing the show.
+    if (again.error) break;
     const hit = again.hits.find((h) => h.session === entry.session);
     // A title the search still will not return stays out: no details, no guess.
     if (hit) pool.push(hit);

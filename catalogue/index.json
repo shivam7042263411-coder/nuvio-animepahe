@@ -3,6 +3,22 @@
   "updated": "2026-11-19",
   "shows": [
     {
+      "file": "attack-on-titan.json",
+      "title": "Attack on Titan",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
+      "file": "demon-slayer.json",
+      "title": "Demon Slayer",
+      "aliases": [
+        "Demon Slayer: Kimetsu no Yaiba"
+      ],
+      "season": 1,
+      "year": 2019
+    },
+    {
       "file": "mushoku-tensei.json",
       "title": "Mushoku Tensei",
       "aliases": [
@@ -10,6 +26,15 @@
       ],
       "season": 1,
       "year": 2021
+    },
+    {
+      "file": "re-zero.json",
+      "title": "Re:Zero",
+      "aliases": [
+        "Re:ZERO -Starting Life in Another World-"
+      ],
+      "season": 1,
+      "year": 2016
     }
   ]
 }
