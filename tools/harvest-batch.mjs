@@ -589,7 +589,12 @@ for (const show of shows) {
   }
   const saved = saveShow(show, target, result, already);
   if (!saved) {
-    console.error('  no 1080p sub for this show');
+    // Name what the site does have: a 720p-only release cannot be "improved" by
+    // re-harvesting, only replaced by a later 1080p upload.
+    const have = [...new Set(result.rows.map((r) => `${r.q || '?'}p ${r.a}`))].join(', ');
+    console.error(
+      `  no 1080p sub for this show${have ? ` (site has: ${have})` : ' (no episode had a resolution list)'}`
+    );
     failed++;
     continue;
   }
