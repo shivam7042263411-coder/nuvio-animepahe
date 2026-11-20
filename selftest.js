@@ -604,6 +604,47 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     out = await sandbox.getStreams(901, "tv", 1, 1, 1);
     check("repeat catalogue hit reuses the cached files", [out.length, catFetches], [1, 2]);
 
+    // A catalogue entry stored under a short name ("Frieren") must still hit
+    // when TMDB only knows that name as an alternative title: one extra TMDB
+    // request, no scrape.
+    sandbox.catalogueCache = null;
+    let shortAltHits = 0;
+    let shortScrapeHits = 0;
+    routes = {
+        "catalogue/index.json": () => ({
+            status: 200,
+            body: JSON.stringify({ shows: [{ file: "short.json", title: "Short", season: 1 }] }),
+        }),
+        "catalogue/short.json": () => ({
+            status: 200,
+            body: JSON.stringify({ title: "Short", rows: [{ s: 1, e: 1, q: 1080, a: "sub", id: "cat1" }] }),
+        }),
+        "api.themoviedb.org/3/tv/902": (url) =>
+            url.indexOf("alternative_titles") !== -1
+                ? (shortAltHits++, {
+                      status: 200,
+                      body: JSON.stringify({ results: [{ iso_3166_1: "US", title: "Short" }] }),
+                  })
+                : {
+                      status: 200,
+                      body: JSON.stringify({
+                          name: "Long Show",
+                          seasons: [{ season_number: 1, episode_count: 12 }],
+                      }),
+                  },
+        "kwik.cx/e/cat1": () => ({ status: 200, body: embedPage(KWIK_M3U8) }),
+        "m=search": () => {
+            shortScrapeHits++;
+            return { status: 200, body: JSON.stringify({ data: [] }) };
+        },
+    };
+    out = await sandbox.getStreams(902, "tv", 1, 1, 1);
+    check(
+        "short catalogue name hits via alternative titles",
+        [out.length, shortAltHits, shortScrapeHits],
+        [1, 1, 0]
+    );
+
     // A dead id (re-upload/takedown) must fall through to the scrape, not fail.
     sandbox.catalogueCache = null;
     routes = Object.assign({}, playable, catRoutes, {

@@ -898,6 +898,24 @@ async function resolveEpisode(tmdb, season, episode, absoluteEpisode) {
 // Entry point
 // ---------------------------------------------------------------------------
 
+/** The one stream a catalogue row can produce, or null when the id is dead. */
+async function catalogueStream(cat, isMovie, season, episode) {
+    console.log(
+        "[AnimePahe] catalogue hit '" + cat.title + "' S" + (isMovie ? 1 : season) +
+        "E" + (isMovie ? 1 : episode) + " q=" + cat.row.q + " a=" + cat.row.a
+    );
+    var stream = await resolveKwikDownload("https://kwik.cx/e/" + cat.row.id);
+    if (!stream) return null;
+    console.log("[AnimePahe] source=" + stream.type + " " + stream.url);
+    return makeResult(
+        isMovie ? cat.title : cat.title + " - S" + season + "E" + episode,
+        cat.row.q ? String(cat.row.q) + "p" : "",
+        audioToLanguage(cat.row.a),
+        "",
+        stream
+    );
+}
+
 async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
     var results = [];
     var isMovie = String(mediaType || "").toLowerCase() === "movie";
@@ -920,25 +938,12 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         } catch (e) {
             console.error("[AnimePahe] catalogue unavailable: " + (e && e.message));
         }
+        var catResult = cat ? await catalogueStream(cat, isMovie, season, episode) : null;
+        if (catResult) {
+            results.push(catResult);
+            return results;
+        }
         if (cat) {
-            console.log(
-                "[AnimePahe] catalogue hit '" + cat.title + "' S" + (isMovie ? 1 : season) +
-                "E" + (isMovie ? 1 : episode) + " q=" + cat.row.q + " a=" + cat.row.a
-            );
-            var catStream = await resolveKwikDownload("https://kwik.cx/e/" + cat.row.id);
-            if (catStream) {
-                console.log("[AnimePahe] source=" + catStream.type + " " + catStream.url);
-                results.push(
-                    makeResult(
-                        isMovie ? cat.title : cat.title + " - S" + season + "E" + episode,
-                        cat.row.q ? String(cat.row.q) + "p" : "",
-                        audioToLanguage(cat.row.a),
-                        "",
-                        catStream
-                    )
-                );
-                return results;
-            }
             // A dead id (re-upload, takedown) is repaired by the scrape below;
             // logKwikIds then hands the laptop the replacement.
             console.error("[AnimePahe] catalogue id " + cat.row.id + " has no source; scraping");
@@ -949,6 +954,22 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         // Only a miss needs the scrape, and the scrape needs the romaji titles:
         // fetch them now instead of on a catalogue hit that never uses them.
         var tmdb = await getTmdbInfo(tmdbId, mediaType, base);
+
+        // The catalogue may name a show short ("Frieren"); TMDB only knows that
+        // as an alternative title. Retry once, or the entry never hits.
+        if (!cat) {
+            var retry = null;
+            try {
+                retry = await catalogueLookup(tmdb, isMovie ? 1 : season, isMovie ? 1 : episode);
+            } catch (e) {
+                console.error("[AnimePahe] catalogue unavailable: " + (e && e.message));
+            }
+            var retryResult = retry ? await catalogueStream(retry, isMovie, season, episode) : null;
+            if (retryResult) {
+                results.push(retryResult);
+                return results;
+            }
+        }
 
         var plan = await resolveEpisode(tmdb, isMovie ? 1 : season, isMovie ? 1 : episode, isMovie ? null : absoluteEpisode);
         console.log(
