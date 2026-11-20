@@ -549,9 +549,18 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "hi"
     );
     check(
-        "catalogue refuses dub",
-        sandbox.catalogueRow({ rows: [{ s: 1, e: 1, q: 1080, a: "dub", id: "x" }] }, 1, 1),
-        null
+        "catalogue serves a dub when the site has no sub",
+        sandbox.catalogueRow({ rows: [{ s: 1, e: 1, q: 1080, a: "dub", id: "d" }] }, 1, 1).id,
+        "d"
+    );
+    check(
+        "catalogue prefers a sub over a higher-resolution dub",
+        sandbox.catalogueRow(
+            { rows: [{ s: 1, e: 1, q: 1080, a: "dub", id: "hi" }, { s: 1, e: 1, q: 720, a: "sub", id: "lo" }] },
+            1,
+            1
+        ).id,
+        "lo"
     );
     check("catalogue never crosses episodes", sandbox.catalogueRow(catFile, 1, 3), null);
     // One file holds every season: S2E1 and S1E1 must never be confused.

@@ -438,19 +438,27 @@ function cataloguePick(index, titles, season) {
     return best ? best.entry : null;
 }
 
-/** The best sub row stored for this episode: the highest resolution the
- *  catalogue holds. The harvester keeps one row per episode, so a show the
- *  site only has in 720p plays instead of returning nothing. */
+/** The best row stored for this episode: a sub beats a dub at any resolution,
+ *  then the higher resolution wins. The harvester stores one row per episode,
+ *  so a show the site only has in 720p - or only dubbed - still plays. */
 function catalogueRow(file, season, episode) {
     var rows = (file && file.rows) || [];
     var best = null;
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i] || {};
         if (Number(row.s) !== Number(season) || Number(row.e) !== Number(episode)) continue;
-        if (!(Number(row.q) > 0) || !isSubAudio(row.a) || !row.id) continue;
-        if (!best || Number(row.q) > Number(best.q)) best = row;
+        if (!(Number(row.q) > 0) || !row.id) continue;
+        if (!best || betterRow(row, best)) best = row;
     }
     return best;
+}
+
+/** Sub over dub, then the higher resolution. */
+function betterRow(a, b) {
+    var aSub = isSubAudio(a.a);
+    var bSub = isSubAudio(b.a);
+    if (aSub !== bSub) return aSub;
+    return (Number(a.q) || 0) > (Number(b.q) || 0);
 }
 
 /** {title, row} for this episode, or null on any miss or fetch failure. */
@@ -466,15 +474,15 @@ async function catalogueLookup(tmdb, season, episode) {
 }
 
 /** Machine-readable ids for the laptop merge (tools/merge-log.mjs): the best
- *  sub release of the episode, the same one the catalogue stores. */
+ *  release of the episode, the same one the catalogue stores. */
 function logKwikIds(title, season, episode, buttons) {
     var best = null;
     for (var i = 0; i < buttons.length; i++) {
-        if (!isSubAudio(buttons[i].audio)) continue;
         var q = parseInt(buttons[i].quality, 10) || 0;
         var m = String(buttons[i].url || "").match(/kwik\.cx\/e\/([A-Za-z0-9]+)/);
         if (!q || !m) continue;
-        if (!best || q > best.q) best = { q: q, id: m[1] };
+        var row = { q: q, a: isSubAudio(buttons[i].audio) ? "sub" : "dub", id: m[1] };
+        if (!best || betterRow(row, best)) best = row;
     }
     if (!best) return;
     console.log(
@@ -484,7 +492,7 @@ function logKwikIds(title, season, episode, buttons) {
                 s: season,
                 e: episode,
                 q: best.q,
-                a: "sub",
+                a: best.a,
                 id: best.id
             })
     );

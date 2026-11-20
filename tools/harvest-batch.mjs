@@ -38,8 +38,8 @@ import { fileURLToPath } from 'node:url';
 import {
   CATALOGUE_DIR,
   findShow,
-  isSubRow,
-  bestSubRows,
+  isPlayableRow,
+  bestRows,
   mergeRows,
   readCatalogue,
   rebuildIndex,
@@ -190,12 +190,12 @@ if (!shows.length) {
 // Files written before the best-sub rule are rewritten on the way in (one row
 // per episode, highest resolution); a show with nothing left is removed.
 for (const { file, data } of readCatalogue()) {
-  if (!data.rows.some((row) => !isSubRow(row))) continue;
+  if (!data.rows.some((row) => !isPlayableRow(row))) continue;
   const before = data.rows.length;
   writeShow(file, data);
   if (!data.rows.length) {
     unlinkSync(join(CATALOGUE_DIR, file));
-    console.log(`drop   ${file}: no sub release (was ${before} row(s))`);
+    console.log(`drop   ${file}: no playable row (was ${before} row(s))`);
   } else {
     console.log(`prune  ${file}: ${before} -> ${data.rows.length} row(s)`);
   }
@@ -339,7 +339,7 @@ if (AIRING_ONLY) await prefetchShows();
 /** Write what a run collected for one show. Used for a finished show and for
  *  one stopped mid-way by a 429 or a challenge: those rows are real episodes,
  *  so keeping them lets the next run top up instead of starting a 1180-episode
- *  show over. Returns null when the site had no sub release at all. */
+ *  show over. Returns null when the site had no playable release at all. */
 function saveShow(show, target, result, already) {
   const file = already ? already.file : `${slug(target)}.json`;
   // A file that was filled from a mis-picked entry carries that show's name and
@@ -380,9 +380,9 @@ function saveShow(show, target, result, already) {
     data.seasonEpisodes = { ...(data.seasonEpisodes || {}), ...result.seasons };
   }
   if (ALL_SEASONS) data.allSeasons = true;
-  // One row per episode at the best resolution the site had: 1080p when it is
-  // there, 720p for a show that never got a 1080p release.
-  const keep = bestSubRows(result.rows);
+  // One row per episode at the best release the site had: sub over dub, then
+  // the higher resolution, so neither a 720p-only nor a dub-only show is lost.
+  const keep = bestRows(result.rows);
   if (!keep.length) return null;
   mergeRows(data, keep);
   writeShow(file, data);
@@ -602,7 +602,7 @@ for (const show of shows) {
     // re-harvesting, only replaced by a later 1080p upload.
     const have = [...new Set(result.rows.map((r) => `${r.q || '?'}p ${r.a}`))].join(', ');
     console.error(
-      `  no sub release for this show${have ? ` (site has: ${have})` : ' (no episode had a resolution list)'}`
+      `  no playable release for this show${have ? ` (site has: ${have})` : ' (no episode had a resolution list)'}`
     );
     failed++;
     continue;

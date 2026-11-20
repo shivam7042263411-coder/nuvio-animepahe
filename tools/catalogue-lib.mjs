@@ -59,20 +59,25 @@ export function findShow(title) {
   );
 }
 
-/** A row the plugin can serve: sub audio at a real resolution. The harvester
- *  keeps the best resolution each episode has, so a show the site only offers
- *  in 720p still plays instead of being dropped from the catalogue. */
-export const isSubRow = (row) =>
-  Boolean(row) && Number(row.q) > 0 && row.a === 'sub' && Boolean(row.id);
+/** A row the plugin can serve: a real resolution and a kwik id. Audio is not
+ *  filtered here - a show the site only uploads dubbed still plays, labelled
+ *  as a dub. */
+export const isPlayableRow = (row) =>
+  Boolean(row) && Number(row.q) > 0 && Boolean(row.id) && (row.a === 'sub' || row.a === 'dub');
 
-/** One row per episode: the highest resolution the site offered for it. */
-export function bestSubRows(rows) {
+/** Sub beats dub at any resolution; inside one audio track the higher
+ *  resolution wins. */
+const betterRow = (a, b) =>
+  (a.a === 'sub') !== (b.a === 'sub') ? a.a === 'sub' : Number(a.q) > Number(b.q);
+
+/** One row per episode: the best release the site offered for it. */
+export function bestRows(rows) {
   const best = new Map();
   for (const row of rows || []) {
-    if (!isSubRow(row) || !(Number(row.e) >= 1)) continue;
+    if (!isPlayableRow(row) || !(Number(row.e) >= 1)) continue;
     const key = `${row.s}/${row.e}`;
     const held = best.get(key);
-    if (!held || Number(row.q) > Number(held.q)) best.set(key, row);
+    if (!held || betterRow(row, held)) best.set(key, row);
   }
   return [...best.values()];
 }
@@ -99,7 +104,7 @@ export function mergeRows(show, rows) {
 
 export function writeShow(file, data) {
   mkdirSync(CATALOGUE_DIR, { recursive: true });
-  data.rows = bestSubRows(data.rows);
+  data.rows = bestRows(data.rows);
   data.updated = today();
   writeFileSync(join(CATALOGUE_DIR, file), JSON.stringify(data, null, 2) + '\n');
   return join(CATALOGUE_DIR, file);
