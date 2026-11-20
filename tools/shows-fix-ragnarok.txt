@@ -1,0 +1,5 @@
+# One line per site entry; offsets keep the site numbering of a part.
+Record of Ragnarok | 0 | 1 | 0 | | Record of Ragnarok
+Record of Ragnarok II | 0 | 2 | 0 | | Record of Ragnarok
+Record of Ragnarok II Part 2 | 0 | 2 | 0 | | Record of Ragnarok
+Record of Ragnarok III | 0 | 3 | 0 | | Record of Ragnarok

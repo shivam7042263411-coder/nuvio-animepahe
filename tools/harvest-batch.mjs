@@ -173,7 +173,9 @@ function parseShows(path) {
         // A season column that the human wrote outranks the name-based guess:
         // one line per site entry is how "Tokyo Ghoul √A" becomes S2.
         seasonExplicit: Boolean(season),
-        offset: Number(offset) || null,
+        // An explicit 0 is a real offset ("keep the site's numbering"): a part
+        // listed as episode 11 must not be renumbered to 1. Blank = infer.
+        offset: String(offset || '').trim() === '' ? null : Number(offset),
         // -1 = pick the series automatically (see harvestScript); >= 0 = force.
         resultIndex: result ? Number(result) : -1,
         // The app's show name, when the site's entry is season-specific

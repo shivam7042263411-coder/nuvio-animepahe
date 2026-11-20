@@ -45,15 +45,6 @@
       "year": 2013
     },
     {
-      "file": "baki.json",
-      "title": "Baki",
-      "aliases": [
-        "Baki Hanma 2nd Season"
-      ],
-      "season": 1,
-      "year": 2023
-    },
-    {
       "file": "black-clover.json",
       "title": "Black Clover",
       "aliases": [],
@@ -411,7 +402,10 @@
     {
       "file": "record-of-ragnarok.json",
       "title": "Record of Ragnarok",
-      "aliases": [],
+      "aliases": [
+        "Record of Ragnarok II",
+        "Record of Ragnarok II Part 2"
+      ],
       "season": 1,
       "year": 2021
     },
