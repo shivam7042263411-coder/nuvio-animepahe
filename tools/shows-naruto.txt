@@ -1,2 +1,4 @@
 # Naruto: one site entry numbered 1..220, TMDB seasons 52/52/54/62.
+# Partly stored (S1 1-52 + S2 1-4) before the site rate-limited the connection;
+# rerunning this same command tops up the rest. 800p sub.
 Naruto | 0
