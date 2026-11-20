@@ -98,7 +98,12 @@
     {
       "file": "bungo-stray-dogs.json",
       "title": "Bungo Stray Dogs",
-      "aliases": [],
+      "aliases": [
+        "Bungo Stray Dogs 2",
+        "Bungo Stray Dogs 3",
+        "Bungo Stray Dogs 4",
+        "Bungo Stray Dogs 5"
+      ],
       "season": 1,
       "year": 2016
     },
@@ -330,7 +335,9 @@
     {
       "file": "my-hero-academia.json",
       "title": "My Hero Academia",
-      "aliases": [],
+      "aliases": [
+        "My Hero Academia Final Season"
+      ],
       "season": 1,
       "year": 2016
     },
@@ -539,7 +546,11 @@
     {
       "file": "tokyo-ghoul.json",
       "title": "Tokyo Ghoul",
-      "aliases": [],
+      "aliases": [
+        "Tokyo Ghoul √A",
+        "Tokyo Ghoul:re",
+        "Tokyo Ghoul:re 2nd Season"
+      ],
       "season": 1,
       "year": 2014
     },

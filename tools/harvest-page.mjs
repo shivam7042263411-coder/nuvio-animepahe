@@ -362,6 +362,7 @@ export function harvestScript(show) {
   const maxEps = ${show.maxEps};
   const resultIndex = ${show.resultIndex};
   const season = ${show.season};
+  const seasonExplicit = ${show.seasonExplicit ? 'true' : 'false'};
   const offset = ${show.offset == null ? 'null' : Number(show.offset)};
   const allSeasons = ${show.allSeasons ? 'true' : 'false'};
   // Test mode: plan the seasons and count episodes, but never fetch a play
@@ -486,7 +487,9 @@ export function harvestScript(show) {
     const hit = resultIndex >= 0 ? pool[resultIndex] : rank(term, pool)[0];
     if (!hit) return { error: 'no search result for ' + term };
     const lab = classify(term, [hit])[0];
-    plans = [{ session: hit.session, title: hit.title, year: hit.year, episodes: hit.episodes, season: lab ? lab.season : season, part: 1 }];
+    // An explicit season column is a fact about the app; the name is a guess.
+    const useSeason = seasonExplicit ? season : lab ? lab.season : season;
+    plans = [{ session: hit.session, title: hit.title, year: hit.year, episodes: hit.episodes, season: useSeason, part: 1 }];
   }
 
 

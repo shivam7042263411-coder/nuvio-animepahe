@@ -1,17 +1,22 @@
 {
   "title": "Tokyo Ghoul",
-  "aliases": [],
+  "aliases": [
+    "Tokyo Ghoul √A",
+    "Tokyo Ghoul:re",
+    "Tokyo Ghoul:re 2nd Season"
+  ],
   "season": 1,
   "year": 2014,
   "source": "animepahe",
   "search": "Tokyo Ghoul",
-  "session": "0ce2be2c-b6b8-f02a-4eb0-54ccddf66d00",
+  "session": "ada672e3-19c6-04cd-750a-cbd5aeb0e10c",
   "episodes": 12,
   "seasonEpisodes": {
     "1": 12,
-    "2": 12
+    "2": 12,
+    "3": 12,
+    "4": 12
   },
-  "allSeasons": true,
   "rows": [
     {
       "s": 1,
@@ -102,80 +107,248 @@
       "e": 1,
       "q": 1080,
       "a": "sub",
-      "id": "wysFbHhDpKd3"
+      "id": "R31A0Mpmd3L6"
     },
     {
       "s": 2,
       "e": 2,
       "q": 1080,
       "a": "sub",
-      "id": "9i7c2ot5bjlz"
+      "id": "TQWBUucC2qe5"
     },
     {
       "s": 2,
       "e": 3,
       "q": 1080,
       "a": "sub",
-      "id": "vT0D183WEfC5"
+      "id": "l9rvUe6RDpfM"
     },
     {
       "s": 2,
       "e": 4,
       "q": 1080,
       "a": "sub",
-      "id": "ofQsl7CjWeq7"
+      "id": "fQ3yUVt6Tcwk"
     },
     {
       "s": 2,
       "e": 5,
       "q": 1080,
       "a": "sub",
-      "id": "thuzQigLCtiK"
+      "id": "rfvpFCRKTfWo"
     },
     {
       "s": 2,
       "e": 6,
       "q": 1080,
       "a": "sub",
-      "id": "MWZYJxc054nO"
+      "id": "UjJ29jSuDJvB"
     },
     {
       "s": 2,
       "e": 7,
       "q": 1080,
       "a": "sub",
-      "id": "f7ppa5NPHyOt"
+      "id": "ymKnGkpo6Mc1"
     },
     {
       "s": 2,
       "e": 8,
       "q": 1080,
       "a": "sub",
-      "id": "w4kpdRYFW9Y4"
+      "id": "R4vTGDVaDiHW"
     },
     {
       "s": 2,
       "e": 9,
       "q": 1080,
       "a": "sub",
-      "id": "ZqRX1HekAn7G"
+      "id": "gys8tXBlxjDB"
     },
     {
       "s": 2,
       "e": 10,
       "q": 1080,
       "a": "sub",
-      "id": "qLN3gedAy0YI"
+      "id": "ALBYJRryYait"
     },
     {
       "s": 2,
       "e": 11,
       "q": 1080,
       "a": "sub",
-      "id": "Yk5hgTzMeItO"
+      "id": "nqfM8w2Ng4Qg"
     },
     {
       "s": 2,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "yvOO8WjwPJ3N"
+    },
+    {
+      "s": 3,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "fI18WkOv8EQ9"
+    },
+    {
+      "s": 3,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "NEuLkIcJXcB8"
+    },
+    {
+      "s": 3,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "RrzAHUZnm7dc"
+    },
+    {
+      "s": 3,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "wKUEpF6oNbKW"
+    },
+    {
+      "s": 3,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "JQv3HlVAfwP8"
+    },
+    {
+      "s": 3,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "j40YjUmi8OvT"
+    },
+    {
+      "s": 3,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "j9XVyCgrGuck"
+    },
+    {
+      "s": 3,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "UdWNzPEq9DEH"
+    },
+    {
+      "s": 3,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "huVySePigDlu"
+    },
+    {
+      "s": 3,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "0MPJl4rXqbeS"
+    },
+    {
+      "s": 3,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "wthAeCD0nfdJ"
+    },
+    {
+      "s": 3,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "pb0G8VEj2n5T"
+    },
+    {
+      "s": 4,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "wysFbHhDpKd3"
+    },
+    {
+      "s": 4,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "9i7c2ot5bjlz"
+    },
+    {
+      "s": 4,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "vT0D183WEfC5"
+    },
+    {
+      "s": 4,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "ofQsl7CjWeq7"
+    },
+    {
+      "s": 4,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "thuzQigLCtiK"
+    },
+    {
+      "s": 4,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "MWZYJxc054nO"
+    },
+    {
+      "s": 4,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "f7ppa5NPHyOt"
+    },
+    {
+      "s": 4,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "w4kpdRYFW9Y4"
+    },
+    {
+      "s": 4,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "ZqRX1HekAn7G"
+    },
+    {
+      "s": 4,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "qLN3gedAy0YI"
+    },
+    {
+      "s": 4,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "Yk5hgTzMeItO"
+    },
+    {
+      "s": 4,
       "e": 12,
       "q": 1080,
       "a": "sub",

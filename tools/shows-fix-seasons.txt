@@ -1,0 +1,14 @@
+# Shows whose site entries are separate seasons: each line fills one app season.
+# TMDB says Tokyo Ghoul has 4x12, Bungo Stray Dogs 1x60, My Hero Academia 8th
+# season 11 eps. appTitle puts every line in the one file the app asks for.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+Tokyo Ghoul | 0 | 1 | 0 | | Tokyo Ghoul
+Tokyo Ghoul √A | 0 | 2 | 0 | | Tokyo Ghoul
+Tokyo Ghoul:re | 0 | 3 | 0 | | Tokyo Ghoul
+Tokyo Ghoul:re 2nd Season | 0 | 4 | 0 | | Tokyo Ghoul
+Bungo Stray Dogs | 0 | 1 | 0 | | Bungo Stray Dogs
+Bungo Stray Dogs 2 | 0 | 1 | -12 | | Bungo Stray Dogs
+Bungo Stray Dogs 3 | 0 | 1 | -24 | | Bungo Stray Dogs
+Bungo Stray Dogs 4 | 0 | 1 | -36 | | Bungo Stray Dogs
+Bungo Stray Dogs 5 | 0 | 1 | -49 | | Bungo Stray Dogs
+My Hero Academia Final Season | 0 | 8 | 0 | | My Hero Academia

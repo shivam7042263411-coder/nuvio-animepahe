@@ -170,6 +170,9 @@ function parseShows(path) {
             ? 0
             : Number(eps) || MAX_EPS,
         season: Number(season) || 1,
+        // A season column that the human wrote outranks the name-based guess:
+        // one line per site entry is how "Tokyo Ghoul √A" becomes S2.
+        seasonExplicit: Boolean(season),
         offset: Number(offset) || null,
         // -1 = pick the series automatically (see harvestScript); >= 0 = force.
         resultIndex: result ? Number(result) : -1,

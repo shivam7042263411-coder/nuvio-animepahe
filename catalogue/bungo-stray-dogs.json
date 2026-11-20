@@ -1,14 +1,19 @@
 {
   "title": "Bungo Stray Dogs",
-  "aliases": [],
+  "aliases": [
+    "Bungo Stray Dogs 2",
+    "Bungo Stray Dogs 3",
+    "Bungo Stray Dogs 4",
+    "Bungo Stray Dogs 5"
+  ],
   "season": 1,
   "year": 2016,
   "source": "animepahe",
   "search": "Bungo Stray Dogs",
-  "session": "a9fdc447-08f0-a533-fb01-827ca1cd5f17",
-  "episodes": 12,
+  "session": "939e7477-1cb7-5625-b56f-cfaa0a713444",
+  "episodes": 11,
   "seasonEpisodes": {
-    "1": 12
+    "1": 11
   },
   "allSeasons": true,
   "rows": [
@@ -95,6 +100,342 @@
       "q": 1080,
       "a": "sub",
       "id": "FvR3dARkrsrW"
+    },
+    {
+      "s": 1,
+      "e": 25,
+      "q": 1080,
+      "a": "sub",
+      "id": "JhchHicbETGo"
+    },
+    {
+      "s": 1,
+      "e": 26,
+      "q": 1080,
+      "a": "sub",
+      "id": "igjyS4nEHydg"
+    },
+    {
+      "s": 1,
+      "e": 27,
+      "q": 1080,
+      "a": "sub",
+      "id": "bIu1uXRNVrm4"
+    },
+    {
+      "s": 1,
+      "e": 28,
+      "q": 1080,
+      "a": "sub",
+      "id": "fijFdm3D9ZA2"
+    },
+    {
+      "s": 1,
+      "e": 29,
+      "q": 1080,
+      "a": "sub",
+      "id": "jK3Zr6Uwpj5E"
+    },
+    {
+      "s": 1,
+      "e": 30,
+      "q": 1080,
+      "a": "sub",
+      "id": "fg3ALiy8F0Ts"
+    },
+    {
+      "s": 1,
+      "e": 31,
+      "q": 1080,
+      "a": "sub",
+      "id": "OGaucqf16RCi"
+    },
+    {
+      "s": 1,
+      "e": 32,
+      "q": 1080,
+      "a": "sub",
+      "id": "88eFj9bcQi3U"
+    },
+    {
+      "s": 1,
+      "e": 33,
+      "q": 1080,
+      "a": "sub",
+      "id": "ztlZs1WuM7ET"
+    },
+    {
+      "s": 1,
+      "e": 34,
+      "q": 1080,
+      "a": "sub",
+      "id": "yyHoSe2EhwoW"
+    },
+    {
+      "s": 1,
+      "e": 35,
+      "q": 1080,
+      "a": "sub",
+      "id": "OGORZZKrHiUC"
+    },
+    {
+      "s": 1,
+      "e": 36,
+      "q": 1080,
+      "a": "sub",
+      "id": "MB9rp8lpXIlu"
+    },
+    {
+      "s": 1,
+      "e": 50,
+      "q": 1080,
+      "a": "sub",
+      "id": "5RQouxdxuz9Y"
+    },
+    {
+      "s": 1,
+      "e": 51,
+      "q": 1080,
+      "a": "sub",
+      "id": "Ds4RLzvghVWS"
+    },
+    {
+      "s": 1,
+      "e": 52,
+      "q": 1080,
+      "a": "sub",
+      "id": "Ndrq80sAffrk"
+    },
+    {
+      "s": 1,
+      "e": 53,
+      "q": 1080,
+      "a": "sub",
+      "id": "dxUNNdEXqKm0"
+    },
+    {
+      "s": 1,
+      "e": 54,
+      "q": 1080,
+      "a": "sub",
+      "id": "f82XiMCcbk6j"
+    },
+    {
+      "s": 1,
+      "e": 55,
+      "q": 1080,
+      "a": "sub",
+      "id": "Q5C1atWaYUZM"
+    },
+    {
+      "s": 1,
+      "e": 56,
+      "q": 1080,
+      "a": "sub",
+      "id": "PlYMXI99NXHF"
+    },
+    {
+      "s": 1,
+      "e": 57,
+      "q": 1080,
+      "a": "sub",
+      "id": "lfBnfsHCMPNs"
+    },
+    {
+      "s": 1,
+      "e": 58,
+      "q": 1080,
+      "a": "sub",
+      "id": "fAPf3q9uEkfY"
+    },
+    {
+      "s": 1,
+      "e": 59,
+      "q": 1080,
+      "a": "sub",
+      "id": "SaqYrNTGc9gp"
+    },
+    {
+      "s": 1,
+      "e": 60,
+      "q": 1080,
+      "a": "sub",
+      "id": "G2wKZ5SAcPow"
+    },
+    {
+      "s": 1,
+      "e": 61,
+      "q": 1080,
+      "a": "sub",
+      "id": "TTMeN9QyqzHo"
+    },
+    {
+      "s": 1,
+      "e": 74,
+      "q": 1080,
+      "a": "sub",
+      "id": "U3mm32MJsxfO"
+    },
+    {
+      "s": 1,
+      "e": 75,
+      "q": 1080,
+      "a": "sub",
+      "id": "DARVWASGATSC"
+    },
+    {
+      "s": 1,
+      "e": 76,
+      "q": 1080,
+      "a": "sub",
+      "id": "VABA5D0AzbeQ"
+    },
+    {
+      "s": 1,
+      "e": 77,
+      "q": 1080,
+      "a": "sub",
+      "id": "0Y9UPzSmHcLC"
+    },
+    {
+      "s": 1,
+      "e": 78,
+      "q": 1080,
+      "a": "sub",
+      "id": "Y1FYRtU0mLbV"
+    },
+    {
+      "s": 1,
+      "e": 79,
+      "q": 1080,
+      "a": "sub",
+      "id": "BfLsQm0LdHx3"
+    },
+    {
+      "s": 1,
+      "e": 80,
+      "q": 1080,
+      "a": "sub",
+      "id": "UxF8a1VH8Npx"
+    },
+    {
+      "s": 1,
+      "e": 81,
+      "q": 1080,
+      "a": "sub",
+      "id": "fVNdJFQV4KuI"
+    },
+    {
+      "s": 1,
+      "e": 82,
+      "q": 1080,
+      "a": "sub",
+      "id": "a4aohJTrSfpa"
+    },
+    {
+      "s": 1,
+      "e": 83,
+      "q": 1080,
+      "a": "sub",
+      "id": "s9BSGDyNfzsS"
+    },
+    {
+      "s": 1,
+      "e": 84,
+      "q": 1080,
+      "a": "sub",
+      "id": "OAgqWnUlusNO"
+    },
+    {
+      "s": 1,
+      "e": 85,
+      "q": 1080,
+      "a": "sub",
+      "id": "OoZVPckAEGZi"
+    },
+    {
+      "s": 1,
+      "e": 86,
+      "q": 1080,
+      "a": "sub",
+      "id": "g7Cw0I7p2sG7"
+    },
+    {
+      "s": 1,
+      "e": 100,
+      "q": 1080,
+      "a": "sub",
+      "id": "XLsB3fTCkBBz"
+    },
+    {
+      "s": 1,
+      "e": 101,
+      "q": 1080,
+      "a": "sub",
+      "id": "9h3roEu7m5iQ"
+    },
+    {
+      "s": 1,
+      "e": 102,
+      "q": 1080,
+      "a": "sub",
+      "id": "eP9Tfx738Ig6"
+    },
+    {
+      "s": 1,
+      "e": 103,
+      "q": 1080,
+      "a": "sub",
+      "id": "rF3ILXvEIgV0"
+    },
+    {
+      "s": 1,
+      "e": 104,
+      "q": 1080,
+      "a": "sub",
+      "id": "0xcpokCjg4Nf"
+    },
+    {
+      "s": 1,
+      "e": 105,
+      "q": 1080,
+      "a": "sub",
+      "id": "W5XHPvWAXGyI"
+    },
+    {
+      "s": 1,
+      "e": 106,
+      "q": 1080,
+      "a": "sub",
+      "id": "62uvQmh07HmH"
+    },
+    {
+      "s": 1,
+      "e": 107,
+      "q": 1080,
+      "a": "sub",
+      "id": "of0NrNx0MKUa"
+    },
+    {
+      "s": 1,
+      "e": 108,
+      "q": 1080,
+      "a": "sub",
+      "id": "dZZtmmBDpvTW"
+    },
+    {
+      "s": 1,
+      "e": 109,
+      "q": 1080,
+      "a": "sub",
+      "id": "3qNRx8skU8am"
+    },
+    {
+      "s": 1,
+      "e": 110,
+      "q": 1080,
+      "a": "sub",
+      "id": "XajjtPHRpVr9"
     }
   ],
   "updated": "2026-11-20"
