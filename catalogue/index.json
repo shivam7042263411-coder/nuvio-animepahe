@@ -168,6 +168,13 @@
       "year": 2015
     },
     {
+      "file": "erased.json",
+      "title": "Erased",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
       "file": "fire-force.json",
       "title": "Fire Force",
       "aliases": [],
@@ -228,6 +235,13 @@
       "year": 2021
     },
     {
+      "file": "hyouka.json",
+      "title": "Hyouka",
+      "aliases": [],
+      "season": 1,
+      "year": 2012
+    },
+    {
       "file": "i-made-friends-with-the-second-prettiest-girl-in-my-class.json",
       "title": "I Made Friends with the Second Prettiest Girl in My Class",
       "aliases": [],
@@ -240,6 +254,13 @@
       "aliases": [],
       "season": 1,
       "year": 2018
+    },
+    {
+      "file": "i-want-to-end-this-love-game.json",
+      "title": "I Want to End This Love Game",
+      "aliases": [],
+      "season": 1,
+      "year": 2026
     },
     {
       "file": "jujutsu-kaisen.json",
@@ -442,6 +463,13 @@
       "aliases": [],
       "season": 1,
       "year": 2025
+    },
+    {
+      "file": "terror-in-resonance.json",
+      "title": "Terror in Resonance",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
     },
     {
       "file": "that-time-i-got-reincarnated-as-a-slime.json",
