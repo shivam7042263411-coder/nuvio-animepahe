@@ -325,6 +325,60 @@ if (api && api.ok) console.log('api: clear\n');
 
 if (AIRING_ONLY) await prefetchShows();
 
+/** Write what a run collected for one show. Used for a finished show and for
+ *  one stopped mid-way by a 429 or a challenge: those rows are real episodes,
+ *  so keeping them lets the next run top up instead of starting a 1180-episode
+ *  show over. Returns null when nothing was 1080p sub. */
+function saveShow(show, target, result, already) {
+  const file = already ? already.file : `${slug(target)}.json`;
+  // A file that was filled from a mis-picked entry carries that show's name and
+  // its ids: renaming it would make the app play the wrong show's episode. When
+  // the line finally picks the entry it asked for, the old rows are not this
+  // show's, so start the file over under the site's name.
+  const retitle =
+    already &&
+    titleKey(result.show.title) === titleKey(target) &&
+    titleKey(already.data.title) !== titleKey(target);
+  const data = already && !retitle
+    ? already.data
+    : {
+        title: retitle ? result.show.title : target,
+        aliases: [],
+        season: show.season,
+        year: result.show.year || null,
+        source: 'animepahe',
+        search: show.term,
+      };
+  if (retitle) {
+    console.log(`  retitle: "${already.data.title}" -> "${result.show.title}" (old rows dropped)`);
+  }
+  // The site's own name for this entry ("Attack on Titan 2nd Season") must not
+  // be lost: a later line for that season looks the file up by it.
+  if (titleKey(result.show.title) !== titleKey(target)) {
+    data.aliases = data.aliases || [];
+    if (!data.aliases.some((a) => titleKey(a) === titleKey(result.show.title))) {
+      data.aliases.push(result.show.title);
+    }
+  }
+  // The list term is the user's best guess at the app's title, but it is not a
+  // site name: aliasing it would let a fallback guess (a sequel filed as S1)
+  // match the app. Keep only names the site itself uses.
+  data.session = result.show.session || data.session;
+  if (result.show.episodes != null) data.episodes = result.show.episodes;
+  if (result.seasons) {
+    data.seasonEpisodes = { ...(data.seasonEpisodes || {}), ...result.seasons };
+  }
+  if (ALL_SEASONS) data.allSeasons = true;
+  const rows1080 = result.rows.filter((r) => Number(r.q) === 1080 && r.a === 'sub' && r.e >= 1);
+  if (!rows1080.length) return null;
+  mergeRows(data, rows1080);
+  writeShow(file, data);
+  // Rebuild every time: an interrupted run must still leave a matching index.
+  rebuildIndex();
+  const episodes = new Set(data.rows.map((r) => `${r.s}/${r.e}`)).size;
+  return { file, rows: data.rows.length, episodes };
+}
+
 let done = 0;
 let failed = 0;
 for (const show of shows) {
@@ -405,6 +459,17 @@ for (const show of shows) {
     } catch {}
   }
   if (!result || result.error) {
+    // A stop mid-show (a 429, a challenge, a refused hole) still leaves real
+    // episodes behind: keep them so the next run tops up instead of starting a
+    // 1180-episode show over from episode one.
+    if (result && result.rows && result.rows.length && !DRY_RUN) {
+      const kept = saveShow(show, target, result, already);
+      if (kept) {
+        console.error(
+          `  kept ${kept.episodes} episode(s) in ${kept.file} before stopping - the next run tops it up`
+        );
+      }
+    }
     if (result && result.error === 'challenge') {
       console.error(
         '  challenge appeared mid-run: stopping so the clearance is not burned' +
@@ -511,58 +576,13 @@ for (const show of shows) {
     done++;
     continue;
   }
-  const file = already ? already.file : `${slug(target)}.json`;
-  // A file that was filled from a mis-picked entry carries that show's name and
-  // its ids: renaming it would make the app play the wrong show's episode. When
-  // the line finally picks the entry it asked for, the old rows are not this
-  // show's, so start the file over under the site's name.
-  const retitle =
-    already &&
-    titleKey(result.show.title) === titleKey(target) &&
-    titleKey(already.data.title) !== titleKey(target);
-  const data = already && !retitle
-    ? already.data
-    : {
-        title: retitle ? result.show.title : target,
-        aliases: [],
-        season: show.season,
-        year: result.show.year || null,
-        source: 'animepahe',
-        search: show.term,
-      };
-  if (retitle) {
-    console.log(`  retitle: "${already.data.title}" -> "${result.show.title}" (old rows dropped)`);
-  }
-  // The site's own name for this entry ("Attack on Titan 2nd Season") must not
-  // be lost: a later line for that season looks the file up by it.
-  if (titleKey(result.show.title) !== titleKey(target)) {
-    data.aliases = data.aliases || [];
-    if (!data.aliases.some((a) => titleKey(a) === titleKey(result.show.title))) {
-      data.aliases.push(result.show.title);
-    }
-  }
-  // The list term is the user's best guess at the app's title, but it is not a
-  // site name: aliasing it would let a fallback guess (a sequel filed as S1)
-  // match the app. Keep only names the site itself uses.
-  data.session = result.show.session || data.session;
-  if (result.show.episodes != null) data.episodes = result.show.episodes;
-  if (result.seasons) {
-    data.seasonEpisodes = { ...(data.seasonEpisodes || {}), ...result.seasons };
-  }
-  if (ALL_SEASONS) data.allSeasons = true;
-  data.search = data.search || show.term;
-  const rows1080 = result.rows.filter((r) => Number(r.q) === 1080 && r.a === 'sub' && r.e >= 1);
-  if (!rows1080.length) {
+  const saved = saveShow(show, target, result, already);
+  if (!saved) {
     console.error('  no 1080p sub for this show');
     failed++;
     continue;
   }
-  mergeRows(data, rows1080);
-  writeShow(file, data);
-  // Rebuild every time: an interrupted run must still leave a matching index.
-  rebuildIndex();
-  const episodes = new Set(data.rows.map((r) => `${r.s}/${r.e}`)).size;
-  console.log(`  ${file}: ${data.rows.length} row(s), ${episodes} episode(s)`);
+  console.log(`  ${saved.file}: ${saved.rows} row(s), ${saved.episodes} episode(s)`);
   done++;
   await sleep(1500);
 }

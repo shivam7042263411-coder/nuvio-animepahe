@@ -537,15 +537,22 @@ export function harvestScript(show) {
     if (!bySession.has(plan.session)) bySession.set(plan.session, []);
     bySession.get(plan.session).push(plan);
   }
+  // What the app needs to name this show, also on a stop part way through.
+  const showOf = () => ({
+    title: plans[0].title,
+    session: plans[0].session,
+    year: plans[0].year,
+    episodes: plans[0].episodes,
+  });
   for (const [session, parts] of bySession) {
     const eps = [];
     const seen = new Set();
     for (let page = 1; page <= 60; page++) {
       const rr = await fetchLimited('/api?m=release&id=' + session + '&sort=episode_asc&page=' + page);
-      if (!rr) return { error: 'throttled' };
+      if (!rr) return { error: 'throttled', show: showOf(), rows };
       const rCopy = rr.clone ? rr.clone() : null;
       const j = rr.ok ? await rr.json().catch(() => null) : null;
-      if (!j) return { error: 'challenge', detail: await said(rr, rCopy) };
+      if (!j) return { error: 'challenge', detail: await said(rr, rCopy), show: showOf(), rows };
       for (const e of j.data || []) {
         const ep = Number(e.episode);
         if (!Number.isFinite(ep) || seen.has(ep)) continue;
@@ -567,6 +574,8 @@ export function harvestScript(show) {
           error:
             'hole in the release list for "' + (parts[0].title || session) +
             '" at episode ' + nums[hole] + '; refusing to slice it',
+          show: showOf(),
+          rows,
         };
       }
     }
@@ -593,13 +602,15 @@ export function harvestScript(show) {
         }
         if (!dryRun) {
           const pr = await fetchLimited('/play/' + session + '/' + eps[pos - 1].session);
-          if (!pr) return { error: 'throttled' };
+          if (!pr) return { error: 'throttled', show: showOf(), rows };
           const html = await pr.text();
           // One challenge is the signal to stop the whole batch, not skip a show.
           if (/just a moment|attention required|cf-error-details/i.test(html)) {
             return {
               error: 'challenge',
               detail: (pr.status + ' ' + html).replace(/\\s+/g, ' ').slice(0, 200),
+              show: showOf(),
+              rows,
             };
           }
           const doc = new DOMParser().parseFromString(html, 'text/html');

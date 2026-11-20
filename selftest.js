@@ -959,6 +959,25 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         throttled.error,
         "throttled"
     );
+    // A stop mid-show (a 429 on a play page) must hand back the episodes it did
+    // read, so the next run tops the show up instead of starting it over.
+    let playsRead = 0;
+    const stopMidway = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Jujutsu Kaisen", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, seasons: [{ n: 1, episodes: 59, year: "2020" }],
+    }))(
+        async (url) => {
+            if (url.includes("/play/") && ++playsRead > 3) return { status: 429, ok: false };
+            return fakeFetch(url);
+        },
+        FakeDom,
+        (fn) => fn()
+    );
+    check(
+        "a stop mid-show keeps the episodes already read",
+        [stopMidway.error, (stopMidway.rows || []).length, stopMidway.show && stopMidway.show.title],
+        ["throttled", 3, "Jujutsu Kaisen"]
+    );
     let playFetches = 0;
     const countingFetch = async (url) => {
         if (url.includes("/play/")) playFetches++;
