@@ -6,6 +6,7 @@
 //                                     [--profile tools/.chrome-profile]
 //
 // --dry-run plans and counts only: no play pages, no ids, nothing written.
+// Shows over 500 TMDB episodes are deferred for a later run.
 // --airing-only keeps just the shows TMDB has a next episode for: the weekly
 // top-up. Costs one TMDB lookup per show, no site request for the rest.
 // --audit prints the site's whole search pool and the season plan, writes
@@ -46,7 +47,7 @@ import {
   writeShow,
 } from './catalogue-lib.mjs';
 import { harvestScript, isSpecialTitle, seasonMarkerOf } from './harvest-page.mjs';
-import { tmdbKey, tmdbShow } from './tmdb.mjs';
+import { tmdbKey, tmdbShow, totalEpisodes } from './tmdb.mjs';
 
 const TMDB_KEY = tmdbKey();
 if (!TMDB_KEY) {
@@ -113,6 +114,9 @@ const FORCE = args.includes('--force');
 // Fill every season the site labels ("2nd Season", "Part 2") instead of the
 // one entry a line names. Unlabelled sequels are skipped, never guessed.
 const ALL_SEASONS = args.includes('--all-seasons');
+// Oversized series are deferred by default so they cannot consume a bulk run.
+const MAX_SHOW_EPISODES = 500;
+const INCLUDE_OVER_500 = args.includes('--include-over-500');
 // Weekly top-up: leave out every show TMDB has no next episode for. Finished
 // shows then cost one TMDB lookup and no site request.
 const AIRING_ONLY = args.includes('--airing-only');
@@ -390,6 +394,13 @@ for (const show of shows) {
   // entry ("Attack on Titan 2nd Season" -> attack-on-titan.json).
   const target = show.catalogueTitle || show.term;
   if (AIRING_ONLY && !(await airingFor(show.term))) continue;
+  if (!INCLUDE_OVER_500) {
+    const info = await showFor(show.catalogueTitle || show.term);
+    if (info && totalEpisodes(info) > MAX_SHOW_EPISODES) {
+      console.log(`defer  ${show.term} (${totalEpisodes(info)} TMDB episodes; limit ${MAX_SHOW_EPISODES})`);
+      continue;
+    }
+  }
   const already = FORCE ? null : findShow(target);
   const storedEps = already
     ? new Set(already.data.rows.filter((r) => Number(r.s) === Number(show.season)).map((r) => Number(r.e)))

@@ -135,6 +135,16 @@ check("no marker", sandbox.seasonMarker("Jujutsu Kaisen: Shimetsu Kaiyuu"), null
 check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
 
 (async () => {
+    const tmdbTools = await import("./tools/tmdb.mjs");
+    check(
+        "the episode cutoff defers only shows above 500 total episodes",
+        [
+            tmdbTools.underEpisodeLimit({ seasons: [{ episodes: 499 }, { episodes: 1 }] }, 500),
+            tmdbTools.underEpisodeLimit({ seasons: [{ episodes: 500 }, { episodes: 1 }] }, 500),
+        ],
+        [true, false]
+    );
+
     // --- findEpisode: exact match, then positional ---------------------------
     const continuous = [];
     for (let e = 25; e <= 47; e++) continuous.push({ episode: String(e), session: `s${e}` });

@@ -52,6 +52,14 @@ const latinOnly = (v) => {
 
 /** The TMDB show behind a list term, or null when nothing matches exactly.
  *  Loose matching would file one show's episodes under another. */
+export function totalEpisodes(show) {
+  return (show && show.seasons || []).reduce((sum, season) => sum + (Number(season.episodes) || 0), 0);
+}
+
+export function underEpisodeLimit(show, limit) {
+  return Boolean(show && totalEpisodes(show) <= limit);
+}
+
 export async function tmdbShow(term, key) {
   if (!key) return null;
   const want = fold(term);
