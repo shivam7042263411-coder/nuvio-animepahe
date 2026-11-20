@@ -1149,6 +1149,38 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [30, "1,2,3,4,5,6,7,8,9,10,11,12", Array.from({ length: 18 }, (_, i) => i + 1).join(",")]
     );
+    // Real output, 2026-11-20: Naruto's search pool also carries "Naruto
+    // Shippuden" (500 episodes, a TMDB show of its own), so the entry sums
+    // could never equal TMDB's 52/52/54/62 and all 220 episodes landed in
+    // season 1. The entry named exactly like the show is the show.
+    const narutoPool = [
+        { title: "Naruto", session: "long", year: 2002, episodes: 220, type: "TV" },
+        { title: "Naruto Shippuden", session: "ship", year: 2007, episodes: 500, type: "TV" },
+        { title: "Naruto Spin-Off: Rock Lee & His Ninja Pals", session: "lee", year: 2012, episodes: 51, type: "TV" },
+    ];
+    const narutoFetch = async (url) => {
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: narutoPool }) };
+        if (url.includes("m=release")) {
+            const data = [];
+            for (let i = 1; i <= 220; i++) data.push({ episode: String(i), session: "n" + i });
+            return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+        }
+        return fakeFetch(url);
+    };
+    const naruto = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Naruto", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false, dryRun: true,
+        seasons: [{ n: 1, episodes: 52 }, { n: 2, episodes: 52 }, { n: 3, episodes: 54 }, { n: 4, episodes: 62 }],
+    }))(narutoFetch, FakeDom, (fn) => fn());
+    check(
+        "a same-prefix sequel does not steal the seasons (Naruto vs Shippuden)",
+        [
+            naruto.sized,
+            naruto.plans.map((p) => "S" + p.season + ":" + p.slice).join(" "),
+            [1, 2, 3, 4].map((s) => naruto.seasons[s]).join(","),
+        ],
+        [true, "S1:52 S2:52 S3:54 S4:62", "52,52,54,62"]
+    );
     // Real output, 2026-11-19: Re:ZERO is one TMDB season of 85 episodes, but
     // the site splits it into S1 + Season 2 + Season 2 Part 2 + Season 3, and
     // the entries carry continuous site numbering (Season 2 is eps 26-38).

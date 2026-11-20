@@ -392,6 +392,13 @@
       "year": 2013
     },
     {
+      "file": "naruto.json",
+      "title": "Naruto",
+      "aliases": [],
+      "season": 1,
+      "year": 2002
+    },
+    {
       "file": "ninja-kamui.json",
       "title": "Ninja Kamui",
       "aliases": [],

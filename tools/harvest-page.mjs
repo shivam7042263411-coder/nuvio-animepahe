@@ -255,6 +255,24 @@ export function franchiseOf(term, pool) {
     : own;
 }
 
+/** The entries a season plan may consume. The pool can hold another show that
+ *  merely shares the name prefix (Naruto's pool carries Naruto Shippuden, a
+ *  TMDB show of its own), and its episode count breaks the sum for every
+ *  season. When the entry named exactly like the show alone holds exactly the
+ *  episodes TMDB describes, that entry is the show; otherwise the whole
+ *  franchise is offered and the names decide. */
+export function sliceCandidates(term, pool, seasons) {
+  const franchise = franchiseOf(term, pool);
+  const base = fold(term);
+  const exact = franchise.filter((h) => fold(h.title) === base);
+  if (exact.length && exact.every((h) => Number(h.episodes) > 0)) {
+    const total = exact.reduce((n, h) => n + Number(h.episodes), 0);
+    const wanted = (seasons || []).reduce((n, s) => n + (Number(s.episodes) || 0), 0);
+    if (wanted && total === wanted) return exact;
+  }
+  return franchise;
+}
+
 /** Entries that share the show's name but were not filed into any season, so a
  *  missing season is visible in the log instead of silent. */
 export function unfiledHits(term, pool, plans) {
@@ -383,6 +401,7 @@ export function harvestScript(show) {
   const partOf = ${partOf.toString()};
   const planSeasons = ${planSeasons.toString()};
   const franchiseOf = ${franchiseOf.toString()};
+  const sliceCandidates = ${sliceCandidates.toString()};
   const unfiledHits = ${unfiledHits.toString()};
   const filmsOf = ${filmsOf.toString()};
   const inferOffset = ${inferOffset.toString()};
@@ -458,8 +477,10 @@ export function harvestScript(show) {
     plans = [];
     if (tmdbSeasons && tmdbSeasons.length) {
       // File by season size. An entry whose title never says "season 3" lands
-      // there anyway when the episodes add up.
-      for (const p of planSeasons(franchiseOf(term, pool), tmdbSeasons)) {
+      // there anyway when the episodes add up. sliceCandidates drops the
+      // same-prefix entries of another show when the exact-named entry alone
+      // holds exactly these episodes.
+      for (const p of planSeasons(sliceCandidates(term, pool, tmdbSeasons), tmdbSeasons)) {
         for (const part of p.parts) {
           plans.push({ ...part, season: p.season, size: p.size, partial: !!p.partial });
         }
