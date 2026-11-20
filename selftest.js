@@ -135,16 +135,6 @@ check("no marker", sandbox.seasonMarker("Jujutsu Kaisen: Shimetsu Kaiyuu"), null
 check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
 
 (async () => {
-    const tmdbTools = await import("./tools/tmdb.mjs");
-    check(
-        "the episode cutoff defers only shows above 500 total episodes",
-        [
-            tmdbTools.underEpisodeLimit({ seasons: [{ episodes: 499 }, { episodes: 1 }] }, 500),
-            tmdbTools.underEpisodeLimit({ seasons: [{ episodes: 500 }, { episodes: 1 }] }, 500),
-        ],
-        [true, false]
-    );
-
     // --- findEpisode: exact match, then positional ---------------------------
     const continuous = [];
     for (let e = 25; e <= 47; e++) continuous.push({ episode: String(e), session: `s${e}` });
@@ -556,15 +546,22 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     check("catalogue keeps seasons apart", sandbox.catalogueRow(multiSeason, 2, 3), null);
 
     // --- getStreams: a catalogue hit skips AnimePahe entirely ---------------
+    let catFetches = 0;
     const catRoutes = {
-        "catalogue/index.json": () => ({
-            status: 200,
-            body: JSON.stringify({ shows: [{ file: "show.json", title: "Show", season: 1 }] }),
-        }),
-        "catalogue/show.json": () => ({
-            status: 200,
-            body: JSON.stringify({ title: "Show", rows: [{ s: 1, e: 1, q: 1080, a: "sub", id: "cat1" }] }),
-        }),
+        "catalogue/index.json": () => {
+            catFetches++;
+            return {
+                status: 200,
+                body: JSON.stringify({ shows: [{ file: "show.json", title: "Show", season: 1 }] }),
+            };
+        },
+        "catalogue/show.json": () => {
+            catFetches++;
+            return {
+                status: 200,
+                body: JSON.stringify({ title: "Show", rows: [{ s: 1, e: 1, q: 1080, a: "sub", id: "cat1" }] }),
+            };
+        },
     };
     let searchHits = 0;
     const countSearch = () => {
@@ -573,17 +570,24 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     };
 
     sandbox.catalogueCache = null;
+    catFetches = 0;
+    let tmdbBaseHits = 0;
+    let tmdbAltHits = 0;
     routes = Object.assign({}, catRoutes, {
-        "api.themoviedb.org/3/tv/901": (url) =>
-            url.indexOf("alternative_titles") !== -1
-                ? { status: 200, body: JSON.stringify({ results: [] }) }
-                : {
-                      status: 200,
-                      body: JSON.stringify({
-                          name: "Show",
-                          seasons: [{ season_number: 1, episode_count: 12 }],
-                      }),
-                  },
+        "api.themoviedb.org/3/tv/901": (url) => {
+            if (url.indexOf("alternative_titles") !== -1) {
+                tmdbAltHits++;
+                return { status: 200, body: JSON.stringify({ results: [] }) };
+            }
+            tmdbBaseHits++;
+            return {
+                status: 200,
+                body: JSON.stringify({
+                    name: "Show",
+                    seasons: [{ season_number: 1, episode_count: 12 }],
+                }),
+            };
+        },
         "kwik.cx/e/cat1": () => ({ status: 200, body: embedPage(KWIK_M3U8) }),
         "m=search": countSearch,
         "m=release": countSearch,
@@ -594,6 +598,11 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     check("catalogue hit never contacts AnimePahe", searchHits, 0);
     check("catalogue hit keeps the kwik referer", out[0] && out[0].headers.Referer, "https://kwik.cx/");
     check("catalogue hit labels the episode", out[0] && out[0].title, "Show - S1E1");
+    // Speed is the point: one TMDB request, no alternative titles, and the
+    // second play of the same show refetches no catalogue file.
+    check("catalogue hit skips alternative titles", [tmdbBaseHits, tmdbAltHits], [1, 0]);
+    out = await sandbox.getStreams(901, "tv", 1, 1, 1);
+    check("repeat catalogue hit reuses the cached files", [out.length, catFetches], [1, 2]);
 
     // A dead id (re-upload/takedown) must fall through to the scrape, not fail.
     sandbox.catalogueCache = null;

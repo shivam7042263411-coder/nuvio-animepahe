@@ -30,6 +30,7 @@ var CATALOGUE_BASE =
     "https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/catalogue/";
 var CATALOGUE_TTL_MS = 10 * 60 * 1000;
 var catalogueCache = null;
+var catalogueFileCache = {};
 
 // Per-run cache of AnimePahe responses (see apGet). Reset by getStreams.
 var responseCache = null;
@@ -399,6 +400,16 @@ async function catalogueIndex() {
     }
 }
 
+/** One show file, cached like the index: playing five episodes of the same
+ *  show must cost one file download, not five. A miss is cached too. */
+async function catalogueFile(name) {
+    var hit = catalogueFileCache[name];
+    if (hit && Date.now() - hit.at < CATALOGUE_TTL_MS) return hit.file;
+    var file = await catalogueJson(CATALOGUE_BASE + name).catch(() => null);
+    catalogueFileCache[name] = { at: Date.now(), file: file };
+    return file;
+}
+
 /** Folded title key: lower-case, punctuation to spaces, doubled letters
  *  squashed. "Haikyu!!" and AnimePahe's "Haikyuu!!" collapse to one key.
  *  Matching is exact on purpose - a prefix match would let the "One Piece" TV
@@ -452,7 +463,7 @@ async function catalogueLookup(tmdb, season, episode) {
     if (!index) return null;
     var entry = cataloguePick(index, tmdb.titles, season);
     if (!entry || !entry.file) return null;
-    var file = await catalogueJson(CATALOGUE_BASE + entry.file);
+    var file = await catalogueFile(entry.file);
     var row = catalogueRow(file, season, episode);
     if (!row) return null;
     return { title: entry.title || (file && file.title) || tmdb.titles[0], row: row };
@@ -893,8 +904,10 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
     responseCache = {};
 
     try {
-        var tmdb = await getTmdbInfo(tmdbId, mediaType);
-        if (!tmdb.titles.length) {
+        // TMDB's own titles come first: the catalogue usually matches one, and
+        // a hit must not pay for the alternative-titles request.
+        var base = await getTmdbBase(tmdbId, mediaType);
+        if (!base.titles.length) {
             console.error("[AnimePahe] TMDB returned no title for " + mediaType + " " + tmdbId);
             return results;
         }
@@ -903,7 +916,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         // no clearanced play page. Every miss falls through to the scrape below.
         var cat = null;
         try {
-            cat = await catalogueLookup(tmdb, isMovie ? 1 : season, isMovie ? 1 : episode);
+            cat = await catalogueLookup(base, isMovie ? 1 : season, isMovie ? 1 : episode);
         } catch (e) {
             console.error("[AnimePahe] catalogue unavailable: " + (e && e.message));
         }
@@ -932,6 +945,10 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         } else {
             console.log("[AnimePahe] catalogue miss S" + (isMovie ? 1 : season) + "E" + (isMovie ? 1 : episode));
         }
+
+        // Only a miss needs the scrape, and the scrape needs the romaji titles:
+        // fetch them now instead of on a catalogue hit that never uses them.
+        var tmdb = await getTmdbInfo(tmdbId, mediaType, base);
 
         var plan = await resolveEpisode(tmdb, isMovie ? 1 : season, isMovie ? 1 : episode, isMovie ? null : absoluteEpisode);
         console.log(
@@ -1020,16 +1037,33 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
     return results;
 }
 
-async function getTmdbInfo(tmdbId, mediaType) {
+/** TMDB's own title (no alternative titles yet): the catalogue usually matches
+ *  this, and a hit must not pay for a second TMDB request. */
+async function getTmdbBase(tmdbId, mediaType) {
     var kind = String(mediaType || "").toLowerCase() === "movie" ? "movie" : "tv";
     var data = await tmdbJson("/" + kind + "/" + encodeURIComponent(tmdbId));
-
     var titles = [];
     function addTitle(value) {
         if (value && titles.indexOf(value) === -1) titles.push(value);
     }
     addTitle(data.name || data.title);
     addTitle(data.original_name || data.original_title);
+    return {
+        kind: kind,
+        titles: titles,
+        jpTitles: [],
+        seasons: Array.isArray(data.seasons) ? data.seasons : []
+    };
+}
+
+async function getTmdbInfo(tmdbId, mediaType, base) {
+    var info = base || (await getTmdbBase(tmdbId, mediaType));
+    var kind = info.kind;
+    // A copy: the caller may reuse its base titles after this.
+    var titles = info.titles.slice();
+    function addTitle(value) {
+        if (value && titles.indexOf(value) === -1) titles.push(value);
+    }
 
     // AnimePahe lists English/romaji titles. TMDB's alternative titles carry a
     // region; the JP ones are the romaji the site actually uses ("Re:Zero kara
@@ -1058,7 +1092,7 @@ async function getTmdbInfo(tmdbId, mediaType) {
         kind: kind,
         titles: titles,
         jpTitles: jpTitles,
-        seasons: Array.isArray(data.seasons) ? data.seasons : []
+        seasons: info.seasons
     };
 }
 
