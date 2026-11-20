@@ -1,0 +1,9 @@
+# Hitori no Shita: the site calls it "The Outcast". Filed under TMDB's name,
+# with no "Outcast" alias - that name belongs to a different TMDB show.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+The Outcast Season 1 | 0 | 1 | 0 | | Hitori No Shita - The Outcast
+The Outcast Season 2 | 0 | 2 | 0 | | Hitori No Shita - The Outcast
+The Outcast Season 3 | 0 | 3 | 0 | | Hitori No Shita - The Outcast
+The Outcast Season 4 | 0 | 4 | 0 | | Hitori No Shita - The Outcast
+The Outcast Season 5 | 0 | 5 | 0 | | Hitori No Shita - The Outcast
+The Outcast Season 6 | 0 | 6 | 0 | | Hitori No Shita - The Outcast
