@@ -1,0 +1,24 @@
+{
+  "title": "A Silent Voice",
+  "aliases": [],
+  "season": 1,
+  "year": 2016,
+  "source": "animepahe",
+  "search": "A Silent Voice",
+  "session": "df2c281f-048b-41fe-038c-a5b34c2dd36a",
+  "episodes": 1,
+  "seasonEpisodes": {
+    "1": 1
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1036,
+      "a": "sub",
+      "id": "u8tTuNJtxCZD"
+    }
+  ],
+  "updated": "2026-11-20"
+}

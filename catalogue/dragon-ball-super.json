@@ -1,0 +1,934 @@
+{
+  "title": "Dragon Ball Super",
+  "aliases": [],
+  "season": 1,
+  "year": 2015,
+  "source": "animepahe",
+  "search": "Dragon Ball Super",
+  "session": "75e1244a-8c72-9356-d7e4-c24aa0bf4db1",
+  "episodes": 131,
+  "seasonEpisodes": {
+    "1": 131
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "dub",
+      "id": "tAkrE3qJ1ROF"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "dub",
+      "id": "bjw795YxJR0r"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "dub",
+      "id": "ki2eDVpWqgK2"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "dub",
+      "id": "reCgDhtnYGNt"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "dub",
+      "id": "KvUbCIRbM9n6"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "dub",
+      "id": "qf7PGHf04kJx"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "dub",
+      "id": "DjkdZXrLadgK"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "dub",
+      "id": "FfAkNLNadRHX"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "dub",
+      "id": "Z5SSCOPiUKNI"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "dub",
+      "id": "4epVwuM7Wwb5"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "dub",
+      "id": "jJuMxBxAHJHi"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "dub",
+      "id": "Xmt093j6TRlc"
+    },
+    {
+      "s": 1,
+      "e": 13,
+      "q": 1080,
+      "a": "dub",
+      "id": "GfvIXmNcJb23"
+    },
+    {
+      "s": 1,
+      "e": 14,
+      "q": 1080,
+      "a": "dub",
+      "id": "Ft3lShuJPzNl"
+    },
+    {
+      "s": 1,
+      "e": 15,
+      "q": 1080,
+      "a": "dub",
+      "id": "15P5C0JHpvsL"
+    },
+    {
+      "s": 1,
+      "e": 16,
+      "q": 1080,
+      "a": "dub",
+      "id": "Xhcbe543YPPJ"
+    },
+    {
+      "s": 1,
+      "e": 17,
+      "q": 1080,
+      "a": "dub",
+      "id": "fyuqBbMMXlEq"
+    },
+    {
+      "s": 1,
+      "e": 18,
+      "q": 1080,
+      "a": "dub",
+      "id": "OsPsl5dckcim"
+    },
+    {
+      "s": 1,
+      "e": 19,
+      "q": 1080,
+      "a": "dub",
+      "id": "8xqdrlrILF0N"
+    },
+    {
+      "s": 1,
+      "e": 20,
+      "q": 1080,
+      "a": "dub",
+      "id": "gCDDTFarUMGe"
+    },
+    {
+      "s": 1,
+      "e": 21,
+      "q": 1080,
+      "a": "dub",
+      "id": "ZyI67mW6aCVh"
+    },
+    {
+      "s": 1,
+      "e": 22,
+      "q": 1080,
+      "a": "dub",
+      "id": "qFPvXzKDhii5"
+    },
+    {
+      "s": 1,
+      "e": 23,
+      "q": 1080,
+      "a": "dub",
+      "id": "mtSNgWhynZBv"
+    },
+    {
+      "s": 1,
+      "e": 24,
+      "q": 1080,
+      "a": "dub",
+      "id": "fl0xR5ntb0GE"
+    },
+    {
+      "s": 1,
+      "e": 25,
+      "q": 1080,
+      "a": "dub",
+      "id": "PtbchzcG0mzH"
+    },
+    {
+      "s": 1,
+      "e": 26,
+      "q": 1080,
+      "a": "dub",
+      "id": "colg1TSkJb3C"
+    },
+    {
+      "s": 1,
+      "e": 27,
+      "q": 1080,
+      "a": "dub",
+      "id": "g6v56PH3C2MT"
+    },
+    {
+      "s": 1,
+      "e": 28,
+      "q": 1080,
+      "a": "dub",
+      "id": "PndWyGz2smgx"
+    },
+    {
+      "s": 1,
+      "e": 29,
+      "q": 1080,
+      "a": "dub",
+      "id": "NSXPDymROCd3"
+    },
+    {
+      "s": 1,
+      "e": 30,
+      "q": 1080,
+      "a": "dub",
+      "id": "3ly7uUEQW5vj"
+    },
+    {
+      "s": 1,
+      "e": 31,
+      "q": 1080,
+      "a": "dub",
+      "id": "x9vkF0Nd9wep"
+    },
+    {
+      "s": 1,
+      "e": 32,
+      "q": 1080,
+      "a": "dub",
+      "id": "FYlyxvbsDyUx"
+    },
+    {
+      "s": 1,
+      "e": 33,
+      "q": 1080,
+      "a": "dub",
+      "id": "x4XTmoG11pCD"
+    },
+    {
+      "s": 1,
+      "e": 34,
+      "q": 1080,
+      "a": "dub",
+      "id": "cesOlXEUFWZz"
+    },
+    {
+      "s": 1,
+      "e": 35,
+      "q": 1080,
+      "a": "dub",
+      "id": "IvjLAoWBBRLh"
+    },
+    {
+      "s": 1,
+      "e": 36,
+      "q": 1080,
+      "a": "dub",
+      "id": "ULLJBLCupgrf"
+    },
+    {
+      "s": 1,
+      "e": 37,
+      "q": 1080,
+      "a": "dub",
+      "id": "JhjCyelrApt7"
+    },
+    {
+      "s": 1,
+      "e": 38,
+      "q": 1080,
+      "a": "dub",
+      "id": "9cQUGrIaznvG"
+    },
+    {
+      "s": 1,
+      "e": 39,
+      "q": 1080,
+      "a": "dub",
+      "id": "peZzJd9URF6w"
+    },
+    {
+      "s": 1,
+      "e": 40,
+      "q": 1080,
+      "a": "dub",
+      "id": "Fnmf2eIJWZ9I"
+    },
+    {
+      "s": 1,
+      "e": 41,
+      "q": 1080,
+      "a": "dub",
+      "id": "NWZAuIOnpCff"
+    },
+    {
+      "s": 1,
+      "e": 42,
+      "q": 1080,
+      "a": "dub",
+      "id": "KaNYxk5NQ8Ej"
+    },
+    {
+      "s": 1,
+      "e": 43,
+      "q": 1080,
+      "a": "dub",
+      "id": "A5Iaqb2NUAkn"
+    },
+    {
+      "s": 1,
+      "e": 44,
+      "q": 1080,
+      "a": "dub",
+      "id": "RwNXSe1jwggR"
+    },
+    {
+      "s": 1,
+      "e": 45,
+      "q": 1080,
+      "a": "dub",
+      "id": "PQHs54KCHpMx"
+    },
+    {
+      "s": 1,
+      "e": 46,
+      "q": 1080,
+      "a": "dub",
+      "id": "Sn9AQCvcqbnm"
+    },
+    {
+      "s": 1,
+      "e": 47,
+      "q": 1080,
+      "a": "dub",
+      "id": "OQPn9FiVzo0z"
+    },
+    {
+      "s": 1,
+      "e": 48,
+      "q": 1080,
+      "a": "dub",
+      "id": "fsmNgXPrF7oB"
+    },
+    {
+      "s": 1,
+      "e": 49,
+      "q": 1080,
+      "a": "dub",
+      "id": "BYMrmVodxbg0"
+    },
+    {
+      "s": 1,
+      "e": 50,
+      "q": 1080,
+      "a": "dub",
+      "id": "2AQFyAy3dZtk"
+    },
+    {
+      "s": 1,
+      "e": 51,
+      "q": 1080,
+      "a": "dub",
+      "id": "3sxWVqN0FhFn"
+    },
+    {
+      "s": 1,
+      "e": 52,
+      "q": 1080,
+      "a": "dub",
+      "id": "8z2pGGNYwyVb"
+    },
+    {
+      "s": 1,
+      "e": 53,
+      "q": 1080,
+      "a": "dub",
+      "id": "e4SJRBhLqlqZ"
+    },
+    {
+      "s": 1,
+      "e": 54,
+      "q": 1080,
+      "a": "dub",
+      "id": "XLVPL4J90lWX"
+    },
+    {
+      "s": 1,
+      "e": 55,
+      "q": 1080,
+      "a": "dub",
+      "id": "oWcLDTmhi3Wk"
+    },
+    {
+      "s": 1,
+      "e": 56,
+      "q": 1080,
+      "a": "dub",
+      "id": "87P8Ami1SWeI"
+    },
+    {
+      "s": 1,
+      "e": 57,
+      "q": 1080,
+      "a": "dub",
+      "id": "VC9PbpE9j7Og"
+    },
+    {
+      "s": 1,
+      "e": 58,
+      "q": 1080,
+      "a": "dub",
+      "id": "45A0zVXNVzCh"
+    },
+    {
+      "s": 1,
+      "e": 59,
+      "q": 1080,
+      "a": "dub",
+      "id": "rUxHRmwZdjLN"
+    },
+    {
+      "s": 1,
+      "e": 60,
+      "q": 1080,
+      "a": "dub",
+      "id": "HAWrHkNtCvZJ"
+    },
+    {
+      "s": 1,
+      "e": 61,
+      "q": 1080,
+      "a": "dub",
+      "id": "zEn1iY13FiZU"
+    },
+    {
+      "s": 1,
+      "e": 62,
+      "q": 1080,
+      "a": "dub",
+      "id": "t2lDyFlg8BBs"
+    },
+    {
+      "s": 1,
+      "e": 63,
+      "q": 1080,
+      "a": "dub",
+      "id": "oBqK3Iy2kutn"
+    },
+    {
+      "s": 1,
+      "e": 64,
+      "q": 1080,
+      "a": "dub",
+      "id": "iBGHl8VYpvG9"
+    },
+    {
+      "s": 1,
+      "e": 65,
+      "q": 1080,
+      "a": "dub",
+      "id": "nE1GFsgR7nWt"
+    },
+    {
+      "s": 1,
+      "e": 66,
+      "q": 1080,
+      "a": "dub",
+      "id": "ZMlAmNS58A0a"
+    },
+    {
+      "s": 1,
+      "e": 67,
+      "q": 1080,
+      "a": "dub",
+      "id": "V7rDfdXWEAg9"
+    },
+    {
+      "s": 1,
+      "e": 68,
+      "q": 1080,
+      "a": "dub",
+      "id": "1aNIi7JVE86z"
+    },
+    {
+      "s": 1,
+      "e": 69,
+      "q": 1080,
+      "a": "dub",
+      "id": "Pndb3Hm22Jzw"
+    },
+    {
+      "s": 1,
+      "e": 70,
+      "q": 1080,
+      "a": "dub",
+      "id": "7ccKie2tk9S3"
+    },
+    {
+      "s": 1,
+      "e": 71,
+      "q": 1080,
+      "a": "dub",
+      "id": "oydsHPOQHTjG"
+    },
+    {
+      "s": 1,
+      "e": 72,
+      "q": 1080,
+      "a": "dub",
+      "id": "xyHVHVwuX8Bt"
+    },
+    {
+      "s": 1,
+      "e": 73,
+      "q": 1080,
+      "a": "dub",
+      "id": "W9d5r3FL1yoM"
+    },
+    {
+      "s": 1,
+      "e": 74,
+      "q": 1080,
+      "a": "dub",
+      "id": "hGIc9BjHR7yU"
+    },
+    {
+      "s": 1,
+      "e": 75,
+      "q": 1080,
+      "a": "dub",
+      "id": "AvNV0vLq4WER"
+    },
+    {
+      "s": 1,
+      "e": 76,
+      "q": 1080,
+      "a": "dub",
+      "id": "xoaBnpEjsEbn"
+    },
+    {
+      "s": 1,
+      "e": 77,
+      "q": 1080,
+      "a": "dub",
+      "id": "ot0eNPx4v7Vi"
+    },
+    {
+      "s": 1,
+      "e": 78,
+      "q": 1080,
+      "a": "dub",
+      "id": "zofbpZOxBpIh"
+    },
+    {
+      "s": 1,
+      "e": 79,
+      "q": 1080,
+      "a": "dub",
+      "id": "DoDAyN4UoZfb"
+    },
+    {
+      "s": 1,
+      "e": 80,
+      "q": 1080,
+      "a": "dub",
+      "id": "iHpjz9uKKaXj"
+    },
+    {
+      "s": 1,
+      "e": 81,
+      "q": 1080,
+      "a": "dub",
+      "id": "nuhFOwJHpV5r"
+    },
+    {
+      "s": 1,
+      "e": 82,
+      "q": 1080,
+      "a": "dub",
+      "id": "EUoaSJ24mtDw"
+    },
+    {
+      "s": 1,
+      "e": 83,
+      "q": 1080,
+      "a": "dub",
+      "id": "9XkqC6bKIJri"
+    },
+    {
+      "s": 1,
+      "e": 84,
+      "q": 1080,
+      "a": "dub",
+      "id": "d7Un6ySsX59A"
+    },
+    {
+      "s": 1,
+      "e": 85,
+      "q": 1080,
+      "a": "dub",
+      "id": "hbwyV1DKkg4W"
+    },
+    {
+      "s": 1,
+      "e": 86,
+      "q": 1080,
+      "a": "dub",
+      "id": "jCIgiKGuREah"
+    },
+    {
+      "s": 1,
+      "e": 87,
+      "q": 1080,
+      "a": "dub",
+      "id": "etfpLjyc1kMi"
+    },
+    {
+      "s": 1,
+      "e": 88,
+      "q": 1080,
+      "a": "dub",
+      "id": "dpxJTFV4GueU"
+    },
+    {
+      "s": 1,
+      "e": 89,
+      "q": 1080,
+      "a": "dub",
+      "id": "hOjNHzbwxpAr"
+    },
+    {
+      "s": 1,
+      "e": 90,
+      "q": 1080,
+      "a": "dub",
+      "id": "LAA1l7az3yhm"
+    },
+    {
+      "s": 1,
+      "e": 91,
+      "q": 1080,
+      "a": "dub",
+      "id": "lhNxgLYqwAJc"
+    },
+    {
+      "s": 1,
+      "e": 92,
+      "q": 1080,
+      "a": "dub",
+      "id": "pD4DurJ8gqJN"
+    },
+    {
+      "s": 1,
+      "e": 93,
+      "q": 1080,
+      "a": "dub",
+      "id": "yK7qWHhDO63Z"
+    },
+    {
+      "s": 1,
+      "e": 94,
+      "q": 1080,
+      "a": "dub",
+      "id": "elQKbQbR9I3M"
+    },
+    {
+      "s": 1,
+      "e": 95,
+      "q": 1080,
+      "a": "dub",
+      "id": "NtbGAeUxvFhj"
+    },
+    {
+      "s": 1,
+      "e": 96,
+      "q": 1080,
+      "a": "dub",
+      "id": "q7vW4mCEHzdu"
+    },
+    {
+      "s": 1,
+      "e": 97,
+      "q": 1080,
+      "a": "dub",
+      "id": "Jvtk4QugbqPL"
+    },
+    {
+      "s": 1,
+      "e": 98,
+      "q": 1080,
+      "a": "dub",
+      "id": "a9o4Pa5aDZqv"
+    },
+    {
+      "s": 1,
+      "e": 99,
+      "q": 1080,
+      "a": "dub",
+      "id": "4YBphMdkF1CH"
+    },
+    {
+      "s": 1,
+      "e": 100,
+      "q": 1080,
+      "a": "dub",
+      "id": "TjEngI0CO2IS"
+    },
+    {
+      "s": 1,
+      "e": 101,
+      "q": 1080,
+      "a": "dub",
+      "id": "CMxqq6CXg8hx"
+    },
+    {
+      "s": 1,
+      "e": 102,
+      "q": 1080,
+      "a": "dub",
+      "id": "r4NVJMJ0V6q4"
+    },
+    {
+      "s": 1,
+      "e": 103,
+      "q": 1080,
+      "a": "dub",
+      "id": "eFh2SkAqqh8a"
+    },
+    {
+      "s": 1,
+      "e": 104,
+      "q": 1080,
+      "a": "dub",
+      "id": "SQo4cYrmX9l7"
+    },
+    {
+      "s": 1,
+      "e": 105,
+      "q": 1080,
+      "a": "dub",
+      "id": "VftWnValpFt0"
+    },
+    {
+      "s": 1,
+      "e": 106,
+      "q": 1080,
+      "a": "dub",
+      "id": "OJznJfCShcsx"
+    },
+    {
+      "s": 1,
+      "e": 107,
+      "q": 1080,
+      "a": "dub",
+      "id": "SxDmo0bW9AoX"
+    },
+    {
+      "s": 1,
+      "e": 108,
+      "q": 1080,
+      "a": "dub",
+      "id": "PYvIKFjfm1dW"
+    },
+    {
+      "s": 1,
+      "e": 109,
+      "q": 1080,
+      "a": "dub",
+      "id": "40asE9wPHviM"
+    },
+    {
+      "s": 1,
+      "e": 110,
+      "q": 1080,
+      "a": "dub",
+      "id": "3A6ZYGvIW3ug"
+    },
+    {
+      "s": 1,
+      "e": 111,
+      "q": 1080,
+      "a": "dub",
+      "id": "y4R13qh6A3Zs"
+    },
+    {
+      "s": 1,
+      "e": 112,
+      "q": 1080,
+      "a": "dub",
+      "id": "sKJDvE8UMimW"
+    },
+    {
+      "s": 1,
+      "e": 113,
+      "q": 1080,
+      "a": "dub",
+      "id": "VokxYIRJUUah"
+    },
+    {
+      "s": 1,
+      "e": 114,
+      "q": 1080,
+      "a": "dub",
+      "id": "Ii4TFBAtfZQv"
+    },
+    {
+      "s": 1,
+      "e": 115,
+      "q": 1080,
+      "a": "dub",
+      "id": "7fgwqVNi70IQ"
+    },
+    {
+      "s": 1,
+      "e": 116,
+      "q": 1080,
+      "a": "dub",
+      "id": "y9C7d0Xy6RUZ"
+    },
+    {
+      "s": 1,
+      "e": 117,
+      "q": 1080,
+      "a": "dub",
+      "id": "J1YmHiknQBWT"
+    },
+    {
+      "s": 1,
+      "e": 118,
+      "q": 1080,
+      "a": "dub",
+      "id": "5NrB5XdfDVTP"
+    },
+    {
+      "s": 1,
+      "e": 119,
+      "q": 1080,
+      "a": "dub",
+      "id": "UlixUz5USBFT"
+    },
+    {
+      "s": 1,
+      "e": 120,
+      "q": 1080,
+      "a": "dub",
+      "id": "MJRK46Y29PPL"
+    },
+    {
+      "s": 1,
+      "e": 121,
+      "q": 1080,
+      "a": "dub",
+      "id": "kib7j9YsCLEX"
+    },
+    {
+      "s": 1,
+      "e": 122,
+      "q": 1080,
+      "a": "dub",
+      "id": "iKvDTNFkUyaC"
+    },
+    {
+      "s": 1,
+      "e": 123,
+      "q": 1080,
+      "a": "dub",
+      "id": "kGczBkjW5vQ8"
+    },
+    {
+      "s": 1,
+      "e": 124,
+      "q": 1080,
+      "a": "dub",
+      "id": "dAUb7UMfvruT"
+    },
+    {
+      "s": 1,
+      "e": 125,
+      "q": 1080,
+      "a": "dub",
+      "id": "nxumcMWuEv6P"
+    },
+    {
+      "s": 1,
+      "e": 126,
+      "q": 1080,
+      "a": "dub",
+      "id": "romNtteHSWrT"
+    },
+    {
+      "s": 1,
+      "e": 127,
+      "q": 1080,
+      "a": "dub",
+      "id": "ZecqfCaC3N4t"
+    },
+    {
+      "s": 1,
+      "e": 128,
+      "q": 1080,
+      "a": "dub",
+      "id": "YCY8mULVI102"
+    },
+    {
+      "s": 1,
+      "e": 129,
+      "q": 1080,
+      "a": "dub",
+      "id": "rwbvFPaxQku9"
+    },
+    {
+      "s": 1,
+      "e": 130,
+      "q": 1080,
+      "a": "dub",
+      "id": "SNhRqqxa3rnu"
+    },
+    {
+      "s": 1,
+      "e": 131,
+      "q": 1080,
+      "a": "dub",
+      "id": "pxfHOtWx5lXu"
+    }
+  ],
+  "updated": "2026-11-20"
+}

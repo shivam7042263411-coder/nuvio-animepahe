@@ -10,6 +10,13 @@
       "year": 2025
     },
     {
+      "file": "a-silent-voice.json",
+      "title": "A Silent Voice",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
       "file": "alya-sometimes-hides-her-feelings-in-russian.json",
       "title": "Alya Sometimes Hides Her Feelings in Russian",
       "aliases": [],
@@ -124,6 +131,20 @@
       ],
       "season": 1,
       "year": 2019
+    },
+    {
+      "file": "dragon-ball-daima.json",
+      "title": "Dragon Ball DAIMA",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "dragon-ball-super.json",
+      "title": "Dragon Ball Super",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
     },
     {
       "file": "fire-force.json",
@@ -407,6 +428,15 @@
       "aliases": [],
       "season": 1,
       "year": 2025
+    },
+    {
+      "file": "the-tunnel-to-summer-the-exit-of-goodbye.json",
+      "title": "The Tunnel to Summer, the Exit of Goodbye",
+      "aliases": [
+        "The Tunnel to Summer, the Exit of Goodbyes"
+      ],
+      "season": 1,
+      "year": 2022
     },
     {
       "file": "tokyo-ghoul.json",
