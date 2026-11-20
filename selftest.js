@@ -801,6 +801,35 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         "KonoSuba: God's Blessing on This Wonderful World!"
     );
     const lib = await import("./tools/catalogue-lib.mjs");
+    check(
+        "a rerun skips a show whose every TMDB episode is stored",
+        lib.seasonsComplete(
+            [{ s: 1, e: 1 }, { s: 1, e: 2 }, { s: 2, e: 1 }, { s: 2, e: 2 }],
+            [{ n: 1, episodes: 2 }, { n: 2, episodes: 2 }]
+        ),
+        true
+    );
+    check(
+        "a hole from an interrupted run is not a finished show",
+        lib.seasonsComplete(
+            [{ s: 1, e: 1 }, { s: 1, e: 3 }, { s: 2, e: 1 }],
+            [{ n: 1, episodes: 3 }, { n: 2, episodes: 1 }]
+        ),
+        false
+    );
+    check(
+        "a season the site has not uploaded yet keeps the show unfinished",
+        lib.seasonsComplete([{ s: 1, e: 1 }], [{ n: 1, episodes: 1 }, { n: 2, episodes: 12 }]),
+        false
+    );
+    check(
+        "a film is done with its one row, an empty file is not",
+        [
+            lib.seasonsComplete([{ s: 1, e: 1, q: 720, a: "sub", id: "x" }], []),
+            lib.seasonsComplete([], []),
+        ],
+        [true, false]
+    );
     // A temp file whose title differs from the list term: this is the filename
     // fallback, and it must hold whether or not the catalogue has been filled.
     const tempFile = path.join(__dirname, "catalogue", "selftest-show.json");

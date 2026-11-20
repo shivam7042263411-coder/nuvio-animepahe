@@ -110,6 +110,32 @@ export function writeShow(file, data) {
   return join(CATALOGUE_DIR, file);
 }
 
+/** True when every episode of every listed season has a stored row. A hole
+ *  counts as missing, so a gap left by an interrupted run is not mistaken for a
+ *  finished show. With no season layout (a film), one row at S1E1 is the whole
+ *  thing. Used to skip shows on a rerun: with a catalogue this size, re-reading
+ *  finished shows would spend the whole site budget. */
+export function seasonsComplete(rows, seasons) {
+  const list = rows || [];
+  const have = new Map();
+  for (const row of list) {
+    const s = Number(row.s);
+    if (!have.has(s)) have.set(s, new Set());
+    have.get(s).add(Number(row.e));
+  }
+  if (!seasons || !seasons.length) {
+    return list.length > 0 && list.every((r) => Number(r.s) === 1 && Number(r.e) === 1);
+  }
+  return seasons.every((season) => {
+    const got = have.get(Number(season.n));
+    if (!got) return false;
+    for (let e = 1; e <= Number(season.episodes); e++) {
+      if (!got.has(e)) return false;
+    }
+    return true;
+  });
+}
+
 /** index.json is derived, never hand-edited: rebuild it after every write. */
 export function rebuildIndex() {
   const shows = readCatalogue()

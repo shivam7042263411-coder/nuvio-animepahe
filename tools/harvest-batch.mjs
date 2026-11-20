@@ -7,6 +7,9 @@
 //
 // --dry-run plans and counts only: no play pages, no ids, nothing written.
 // Shows over 500 TMDB episodes are deferred for a later run.
+// A show whose every season is already stored is skipped (one TMDB lookup, no
+// site request), so a bulk list resumes at the first unfinished title; --force
+// re-reads one.
 // --airing-only keeps just the shows TMDB has a next episode for: the weekly
 // top-up. Costs one TMDB lookup per show, no site request for the rest.
 // --audit prints the site's whole search pool and the season plan, writes
@@ -43,6 +46,7 @@ import {
   mergeRows,
   readCatalogue,
   rebuildIndex,
+  seasonsComplete,
   slug,
   titleKey,
   writeShow,
@@ -408,14 +412,27 @@ for (const show of shows) {
   // entry ("Attack on Titan 2nd Season" -> attack-on-titan.json).
   const target = show.catalogueTitle || show.term;
   if (AIRING_ONLY && !(await airingFor(show.term))) continue;
-  if (!INCLUDE_OVER_500) {
-    const info = await showFor(show.catalogueTitle || show.term);
-    if (info && totalEpisodes(info) > MAX_SHOW_EPISODES) {
-      console.log(`defer  ${show.term} (${totalEpisodes(info)} TMDB episodes; limit ${MAX_SHOW_EPISODES})`);
+  // The TMDB record is read whatever the limit is: it also proves a show on a
+  // later run is already finished (see the skip below).
+  const info = await showFor(target);
+  if (!INCLUDE_OVER_500 && info && totalEpisodes(info) > MAX_SHOW_EPISODES) {
+    console.log(`defer  ${show.term} (${totalEpisodes(info)} TMDB episodes; limit ${MAX_SHOW_EPISODES})`);
+    continue;
+  }
+  const already = FORCE ? null : findShow(target);
+  // A finished show is not re-read: a 2000-show list rerun daily would otherwise
+  // spend its entire site budget on shows already done. "Finished" is TMDB's own
+  // season sizes against the stored rows, so a cour that has since aired fails
+  // the test and still tops up. --force re-reads one, which is also how a later,
+  // higher-resolution upload gets picked up.
+  if (already && already.data.allSeasons) {
+    const film = !info && Number(already.data.episodes) === 1;
+    const layout = info && info.seasons.length ? info.seasons : film ? [] : null;
+    if (layout && seasonsComplete(already.data.rows, layout)) {
+      console.log(`skip   ${show.term} (every season stored; --force to redo)`);
       continue;
     }
   }
-  const already = FORCE ? null : findShow(target);
   const storedEps = already
     ? new Set(already.data.rows.filter((r) => Number(r.s) === Number(show.season)).map((r) => Number(r.e)))
     : new Set();
