@@ -1,0 +1,101 @@
+{
+  "title": "Blue Spring Ride",
+  "aliases": [],
+  "season": 1,
+  "year": 2014,
+  "source": "animepahe",
+  "search": "Blue Spring Ride",
+  "session": "f55c8185-c670-01ee-ba6c-3959a7dedf17",
+  "episodes": 12,
+  "seasonEpisodes": {
+    "1": 12
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "bqwlvhOEuJWK"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "c7TvwKVJPnVP"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "ZZy6PIEYFruV"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "lz0jPHRjpsyf"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "blHF215jIjXy"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "fEsPc7BVznZU"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "32RUiXSB5vAj"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "Wu9rZfAvVxFp"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "FqGScnkpc3d9"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "st5bh1Iu8bPd"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "KHouMkWmpoB5"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "WVWktO7gBSJ5"
+    }
+  ],
+  "updated": "2026-11-20"
+}

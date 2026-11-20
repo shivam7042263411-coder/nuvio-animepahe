@@ -82,6 +82,13 @@
       "year": 2022
     },
     {
+      "file": "blue-spring-ride.json",
+      "title": "Blue Spring Ride",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
       "file": "buddy-daddies.json",
       "title": "Buddy Daddies",
       "aliases": [],
@@ -117,6 +124,13 @@
       "year": 2024
     },
     {
+      "file": "darling-in-the-franxx.json",
+      "title": "DARLING in the FRANXX",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
+    },
+    {
       "file": "death-note.json",
       "title": "Death Note",
       "aliases": [],
@@ -131,6 +145,13 @@
       ],
       "season": 1,
       "year": 2019
+    },
+    {
+      "file": "devilman-crybaby.json",
+      "title": "Devilman Crybaby",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
     },
     {
       "file": "dragon-ball-daima.json",
@@ -207,6 +228,13 @@
       "year": 2021
     },
     {
+      "file": "i-made-friends-with-the-second-prettiest-girl-in-my-class.json",
+      "title": "I Made Friends with the Second Prettiest Girl in My Class",
+      "aliases": [],
+      "season": 1,
+      "year": 2026
+    },
+    {
       "file": "i-want-to-eat-your-pancreas.json",
       "title": "I Want to Eat Your Pancreas",
       "aliases": [],
@@ -230,6 +258,13 @@
     {
       "file": "kaiju-no-8.json",
       "title": "Kaiju No. 8",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
+    },
+    {
+      "file": "makeine-too-many-losing-heroines.json",
+      "title": "Makeine: Too Many Losing Heroines!",
       "aliases": [],
       "season": 1,
       "year": 2024
@@ -279,6 +314,13 @@
       "year": 2016
     },
     {
+      "file": "my-teen-romantic-comedy-snafu.json",
+      "title": "My Teen Romantic Comedy SNAFU",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
       "file": "ninja-kamui.json",
       "title": "Ninja Kamui",
       "aliases": [],
@@ -314,6 +356,13 @@
       ],
       "season": 1,
       "year": 2016
+    },
+    {
+      "file": "parasyte-the-maxim.json",
+      "title": "Parasyte -the maxim-",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
     },
     {
       "file": "psycho-pass.json",
@@ -388,6 +437,13 @@
       "year": 2025
     },
     {
+      "file": "tatsuki-fujimoto-17-26.json",
+      "title": "Tatsuki Fujimoto 17-26",
+      "aliases": [],
+      "season": 1,
+      "year": 2025
+    },
+    {
       "file": "that-time-i-got-reincarnated-as-a-slime.json",
       "title": "That Time I Got Reincarnated as a Slime",
       "aliases": [],
@@ -397,6 +453,13 @@
     {
       "file": "the-angel-next-door-spoils-me-rotten.json",
       "title": "The Angel Next Door Spoils Me Rotten",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "the-apothecary-diaries.json",
+      "title": "The Apothecary Diaries",
       "aliases": [],
       "season": 1,
       "year": 2023
@@ -414,6 +477,13 @@
       "aliases": [],
       "season": 1,
       "year": 2023
+    },
+    {
+      "file": "the-eminence-in-shadow.json",
+      "title": "The Eminence in Shadow",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
     },
     {
       "file": "the-fragrant-flower-blooms-with-dignity.json",
@@ -493,6 +563,13 @@
       "aliases": [],
       "season": 1,
       "year": 2024
+    },
+    {
+      "file": "witch-hat-atelier.json",
+      "title": "Witch Hat Atelier",
+      "aliases": [],
+      "season": 1,
+      "year": 2026
     },
     {
       "file": "your-lie-in-april.json",
