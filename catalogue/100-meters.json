@@ -1,0 +1,24 @@
+{
+  "title": "100 Meters",
+  "aliases": [],
+  "season": 1,
+  "year": 2025,
+  "source": "animepahe",
+  "search": "100 Meters",
+  "session": "d1ebb7ad-0a4c-84a0-490d-1a1140273db9",
+  "episodes": 1,
+  "seasonEpisodes": {
+    "1": 1
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "olx4H8hrMTFo"
+    }
+  ],
+  "updated": "2026-11-20"
+}

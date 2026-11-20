@@ -1,0 +1,101 @@
+{
+  "title": "Bungo Stray Dogs",
+  "aliases": [],
+  "season": 1,
+  "year": 2016,
+  "source": "animepahe",
+  "search": "Bungo Stray Dogs",
+  "session": "a9fdc447-08f0-a533-fb01-827ca1cd5f17",
+  "episodes": 12,
+  "seasonEpisodes": {
+    "1": 12
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "UoK6CrgzrCiF"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "NCdUSrkHmzNq"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "9FR2m61qah6Y"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "LumeOKO8zYJc"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "RvCvksWNKD66"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "Q6U3xVsQTF3d"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "D5GPIizqzx3y"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "jFCz39p5jLgO"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "dxx91wVadeOG"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "5FzPpQuDKzOo"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "PTg3qnIaRdiX"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "FvR3dARkrsrW"
+    }
+  ],
+  "updated": "2026-11-20"
+}

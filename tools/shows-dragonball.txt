@@ -1,0 +1,5 @@
+# Dragon Ball, only the two the user wants. The 1986 series has no 1080p sub
+# on the site, so it is not listed here.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+Dragon Ball Super | 0
+Dragon Ball DAIMA | 0

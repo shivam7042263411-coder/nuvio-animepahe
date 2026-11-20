@@ -1,0 +1,24 @@
+{
+  "title": "Weathering with You",
+  "aliases": [],
+  "season": 1,
+  "year": 2019,
+  "source": "animepahe",
+  "search": "Weathering with You",
+  "session": "149fc8ff-bfd2-4663-91dc-37cb66468bc6",
+  "episodes": 1,
+  "seasonEpisodes": {
+    "1": 1
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "RZTFdnaFbIa3"
+    }
+  ],
+  "updated": "2026-11-20"
+}

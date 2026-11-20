@@ -1,0 +1,103 @@
+{
+  "title": "Outcast",
+  "aliases": [
+    "The Outcast Season 1"
+  ],
+  "season": 1,
+  "year": 2016,
+  "source": "animepahe",
+  "search": "Outcast",
+  "session": "d7bd69ae-f34a-6e15-f928-37d6fc92f69b",
+  "episodes": 12,
+  "seasonEpisodes": {
+    "1": 12
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "cxOKUgfdwJYi"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "QSxmnHTlwL57"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "cCQFmHiDEgZj"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "5bwjHgzps3F7"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "1fQw2xneHK4x"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "0bWK7nV4Lnso"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "WquGKfQSHYxM"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "wKs7GaWdrDjH"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "aL0jhbc59DI7"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "A2PG8eEpUwcP"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "sqWPmnzsqrAf"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "e0zyDK0kBvNe"
+    }
+  ],
+  "updated": "2026-11-20"
+}

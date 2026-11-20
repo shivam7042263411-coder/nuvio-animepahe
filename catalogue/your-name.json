@@ -1,0 +1,24 @@
+{
+  "title": "Your Name",
+  "aliases": [],
+  "season": 1,
+  "year": 2016,
+  "source": "animepahe",
+  "search": "Your Name",
+  "session": "dcf51d73-a817-d3ca-9dc7-e1b227cbca80",
+  "episodes": 1,
+  "seasonEpisodes": {
+    "1": 1
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "GP0FfcyJfpRW"
+    }
+  ],
+  "updated": "2026-11-20"
+}
