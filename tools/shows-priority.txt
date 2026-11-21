@@ -16,7 +16,7 @@ March Comes in Like a Lion | 0 | 1 | 0
 Shangri-La Frontier | 0 | 1 | 0
 Gurren Lagann | 0 | 1 | 0
 Bleach | 0 | 1 | 0
-Magi: The Labyrinth of Magic | 0 | 1 | 0
+Magi | 0 | 1 | 0
 Noragami | 0 | 1 | 0
 Durarara!! | 0 | 1 | 0
 Land of the Lustrous | 0 | 1 | 0
@@ -40,13 +40,13 @@ Ping Pong the Animation | 0 | 1 | 0
 Bakuman | 0 | 1 | 0
 Barakamon | 0 | 1 | 0
 Natsume's Book of Friends | 0 | 1 | 0
-Mushishi | 0 | 1 | 0
+Mushi-Shi | 0 | 1 | 0
 Anohana: The Flower We Saw That Day | 0 | 1 | 0
 Clannad | 0 | 1 | 0
 Toradora! | 0 | 1 | 0
 From Me to You: Kimi ni Todoke | 0 | 1 | 0
 Insomniacs After School | 0 | 1 | 0
-Tsuki ga Kirei | 0 | 1 | 0
+Tsukigakirei | 0 | 1 | 0
 ReLIFE | 0 | 1 | 0
 K-On! | 0 | 1 | 0
 The Tatami Galaxy | 0 | 1 | 0
@@ -94,7 +94,7 @@ Ef: A Tale of Memories | 0 | 1 | 0
 ## Action / dark-fantasy batch.
 Vivy: Fluorite Eye's Song | 0 | 1 | 0
 Black Lagoon | 0 | 1 | 0
-Ajin: Demi-Human | 0 | 1 | 0
+Ajin | 0 | 1 | 0
 Drifters | 0 | 1 | 0
 Kabaneri of the Iron Fortress | 0 | 1 | 0
 Akame ga Kill! | 0 | 1 | 0
