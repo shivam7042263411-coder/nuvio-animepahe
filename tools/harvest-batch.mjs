@@ -167,6 +167,7 @@ const writeGap = (ms) => {
 };
 const gapFlag = option('--min-gap-ms', null);
 let minGap = gapFlag != null ? Number(gapFlag) : readGap() ?? 1200;
+const MIN_GAP_FLOOR = 600;
 const CHROME = option(
   '--chrome',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -567,7 +568,10 @@ for (const show of shows) {
   // ended on, so a clean show means the next one may go slightly faster.
   const pace = await evaluate('globalThis.__apPace || null').catch(() => null);
   if (pace && pace.requests) {
-    minGap = nextGap(pace.gap, pace.limited);
+    // The floor is 600ms, not 300: the one stretch that ran at 300ms also saw a
+    // 429 and a browser death, so ~100 req/min is as fast as this site is worth
+    // pushing without babysitting.
+    minGap = nextGap(pace.gap, pace.limited, { floor: MIN_GAP_FLOOR });
     writeGap(minGap);
     if (pace.limited) {
       console.log(`  paced: ${pace.requests} request(s), 429 x${pace.limited} -> gap ${minGap}ms`);

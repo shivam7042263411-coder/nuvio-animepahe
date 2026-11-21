@@ -1,3 +1,6 @@
 # Site-name fixes: the TMDB title does not match the site's search.
 # Re-run after regenerating shows-auto*.txt; these are not in the generated list.
 Tsukimichi: Moonlit Fantasy | 0
+# The site keeps season 2 under its own entry name; without this line the run
+# sees seasonEpisodes 2:25 from TMDB and can never find the entry to fill it.
+Tsukimichi -Moonlit Fantasy- Season 2 | 0 | 2 | 0 | | Tsukimichi: Moonlit Fantasy
