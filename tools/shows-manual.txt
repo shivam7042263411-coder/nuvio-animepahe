@@ -1,0 +1,3 @@
+# Site-name fixes: the TMDB title does not match the site's search.
+# Re-run after regenerating shows-auto*.txt; these are not in the generated list.
+Tsukimichi: Moonlit Fantasy | 0

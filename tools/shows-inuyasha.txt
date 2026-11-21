@@ -1,0 +1,6 @@
+# InuYasha: the site's single 167-episode entry has a hole at episode 135, so
+# positional slicing would shift every later episode. Mapping by the site's own
+# number (offset 0) keeps 1-134 and 136-167 exact; 135 becomes a miss.
+# TMDB files The Final Act as season 2, and the site has it as its own entry.
+InuYasha | 0 | 1 | 0 | | InuYasha
+InuYasha: The Final Act | 0 | 2 | 0 | | InuYasha
