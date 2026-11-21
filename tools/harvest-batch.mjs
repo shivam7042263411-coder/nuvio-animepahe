@@ -143,9 +143,10 @@ const STARTED = Date.now();
 // instead of ending. CI has nobody to click, so it stays 0 there.
 const WAIT_CHALLENGE = Number(option('--wait-challenge', 0)) * 1000;
 // A 429 lifts on its own after a few minutes. With nobody at the laptop there is
-// no point ending the run, so --wait-429 sleeps the limit out and retries the
-// same show; 0 keeps the old behaviour of stopping.
-const WAIT_429 = Number(option('--wait-429', 0)) * 1000;
+// no point ending the run, so --wait-429 <minutes> sleeps the limit out and
+// retries; 0 keeps the old behaviour of stopping. Minutes, unlike
+// --wait-challenge: a rate limit is measured in minutes, a checkbox in seconds.
+const WAIT_429 = Number(option('--wait-429', 0)) * 60_000;
 const CHROME = option(
   '--chrome',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -305,8 +306,11 @@ await send('Page.enable');
 await send('Runtime.enable');
 
 console.log('waiting for the challenge to clear (finish it in the window if it asks)...');
+// A rate-limited site serves the Cloudflare 429 page as the document too, so the
+// title never clears. Keep trying as long as --wait-429 allows, not a fixed 180s.
+const clearUntil = Date.now() + Math.max(180_000, WAIT_429);
 let solved = false;
-for (let i = 0; i < 90; i++) {
+for (let i = 0; Date.now() < clearUntil; i++) {
   let title = '';
   try {
     title = (await evaluate('document.title')) || '';
@@ -320,7 +324,7 @@ for (let i = 0; i < 90; i++) {
   await sleep(2000);
 }
 if (!solved) {
-  console.error('challenge did not clear within 180s');
+  console.error('challenge did not clear; stopping.');
   chrome.kill();
   process.exit(2);
 }
@@ -336,7 +340,7 @@ const API_PROBE = `(async () => {
   try { JSON.parse(t); return { ok: true }; } catch {}
   return { status: r.status, type: r.headers.get('content-type') || '', head: t.replace(/\\s+/g, ' ').slice(0, 160) };
 })()`;
-const apiUntil = Date.now() + Math.max(WAIT_CHALLENGE, 60_000);
+const apiUntil = Date.now() + Math.max(WAIT_CHALLENGE, WAIT_429, 60_000);
 let api = await evaluate(API_PROBE).catch(() => ({ error: 'no reply' }));
 while (!(api && api.ok) && Date.now() < apiUntil) {
   console.log(`api not ready: ${JSON.stringify(api)}`);
