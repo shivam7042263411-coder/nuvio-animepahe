@@ -1,0 +1,52 @@
+# Priority 50, fetched in this order. Every episode of every season.
+# term | maxEpisodes | appSeason | episodeOffset
+86: Eighty-Six | 0 | 1 | 0
+Summer Time Rendering | 0 | 1 | 0
+Dr. STONE | 0 | 1 | 0
+JoJo's Bizarre Adventure | 0 | 1 | 0
+The Promised Neverland | 0 | 1 | 0
+Gintama | 0 | 1 | 0
+Yu Yu Hakusho | 0 | 1 | 0
+World Trigger | 0 | 1 | 0
+Ranking of Kings | 0 | 1 | 0
+Great Pretender | 0 | 1 | 0
+To Your Eternity | 0 | 1 | 0
+A Place Further than the Universe | 0 | 1 | 0
+March Comes in Like a Lion | 0 | 1 | 0
+Shangri-La Frontier | 0 | 1 | 0
+Gurren Lagann | 0 | 1 | 0
+Bleach | 0 | 1 | 0
+Magi: The Labyrinth of Magic | 0 | 1 | 0
+Noragami | 0 | 1 | 0
+Durarara!! | 0 | 1 | 0
+Land of the Lustrous | 0 | 1 | 0
+Astra Lost in Space | 0 | 1 | 0
+Death Parade | 0 | 1 | 0
+Delicious in Dungeon | 0 | 1 | 0
+Ascendance of a Bookworm | 0 | 1 | 0
+Log Horizon | 0 | 1 | 0
+Fairy Tail | 0 | 1 | 0
+D.Gray-man | 0 | 1 | 0
+The Disastrous Life of Saiki K. | 0 | 1 | 0
+Kuroko's Basketball | 0 | 1 | 0
+Fighting Spirit | 0 | 1 | 0
+Slam Dunk | 0 | 1 | 0
+Initial D | 0 | 1 | 0
+Hikaru no Go | 0 | 1 | 0
+Chihayafuru | 0 | 1 | 0
+Ace of the Diamond | 0 | 1 | 0
+Run with the Wind | 0 | 1 | 0
+Ping Pong the Animation | 0 | 1 | 0
+Bakuman | 0 | 1 | 0
+Barakamon | 0 | 1 | 0
+Natsume's Book of Friends | 0 | 1 | 0
+Mushishi | 0 | 1 | 0
+Anohana: The Flower We Saw That Day | 0 | 1 | 0
+Clannad | 0 | 1 | 0
+Toradora! | 0 | 1 | 0
+From Me to You: Kimi ni Todoke | 0 | 1 | 0
+Insomniacs After School | 0 | 1 | 0
+Tsuki ga Kirei | 0 | 1 | 0
+ReLIFE | 0 | 1 | 0
+K-On! | 0 | 1 | 0
+The Tatami Galaxy | 0 | 1 | 0

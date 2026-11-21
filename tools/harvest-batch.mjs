@@ -293,8 +293,12 @@ ws.onmessage = (ev) => {
 };
 // The tab or window closing used to leave the run waiting on a promise that
 // never settles. Say what happened and stop; finished shows are already saved.
-ws.onclose = () => {
-  console.error('chrome window closed: stopping (re-run resumes where this left off)');
+ws.onclose = (ev) => {
+  console.error(
+    `chrome window closed: stopping (re-run resumes where this left off) [code ${ev && ev.code} ${
+      (ev && ev.reason) || ''
+    }]`
+  );
   process.exit(3);
 };
 const send = (method, params = {}) =>
