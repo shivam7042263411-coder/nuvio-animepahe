@@ -444,7 +444,9 @@ for (const show of shows) {
   // The TMDB record is read whatever the limit is: it also proves a show on a
   // later run is already finished (see the skip below).
   const info = await showFor(target);
-  if (!INCLUDE_OVER_500 && info && totalEpisodes(info) > MAX_SHOW_EPISODES) {
+  // 500 counts as out: Naruto Shippuden is exactly 500 and was excluded on
+  // purpose, so the cap is "500 or more", not "more than 500".
+  if (!INCLUDE_OVER_500 && info && totalEpisodes(info) >= MAX_SHOW_EPISODES) {
     console.log(`defer  ${show.term} (${totalEpisodes(info)} TMDB episodes; limit ${MAX_SHOW_EPISODES})`);
     continue;
   }

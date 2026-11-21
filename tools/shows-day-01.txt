@@ -58,7 +58,6 @@ Bleach | 0 | 1 | 0
 Dragon Ball Super: Beerus | 0 | 1 | 0
 Dragon Ball Z | 0 | 1 | 0
 JoJo's Bizarre Adventure | 0 | 1 | 0
-Naruto Shippūden | 0 | 1 | 0
 Gurren Lagann | 0 | 1 | 0
 Hunter x Hunter | 0 | 1 | 0
 Ranma ½ | 0 | 1 | 0
@@ -98,3 +97,4 @@ EDENS ZERO | 0 | 1 | 0
 Super Dragon Ball Heroes | 0 | 1 | 0
 Kenichi: The Mightiest Disciple | 0 | 1 | 0
 Redo of Healer | 0 | 1 | 0
+Black Lagoon | 0 | 1 | 0

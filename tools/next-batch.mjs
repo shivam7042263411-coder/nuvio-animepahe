@@ -55,7 +55,9 @@ for (const line of lines) {
   }
   const info = await tmdbShow(term, key);
   const total = info ? totalEpisodes(info) : 0;
-  if (info && total > MAX_SHOW_EPISODES) {
+  // 500 counts as out: Naruto Shippuden is exactly 500 and is deliberately not
+  // fetched, so the cap is "500 or more", not "more than 500".
+  if (info && total >= MAX_SHOW_EPISODES) {
     skippedBig++;
     continue;
   }
