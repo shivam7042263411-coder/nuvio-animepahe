@@ -142,6 +142,10 @@ const STARTED = Date.now();
 // At the laptop a challenge is a checkbox to click; the run can wait for it
 // instead of ending. CI has nobody to click, so it stays 0 there.
 const WAIT_CHALLENGE = Number(option('--wait-challenge', 0)) * 1000;
+// A 429 lifts on its own after a few minutes. With nobody at the laptop there is
+// no point ending the run, so --wait-429 sleeps the limit out and retries the
+// same show; 0 keeps the old behaviour of stopping.
+const WAIT_429 = Number(option('--wait-429', 0)) * 1000;
 const CHROME = option(
   '--chrome',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -486,9 +490,42 @@ for (const show of shows) {
   // caller asked for that, and only give up when it never clears. Reload first:
   // a stale clearance re-solves on a fresh load, and a hard block keeps saying
   // the same thing, which the reply line then names.
+  // A 429 is the same shape of wait, so --wait-429 handles it in this loop:
+  // sleep the limit out and retry the same show instead of ending the run.
   const waitUntil = Date.now() + WAIT_CHALLENGE;
   let why = null;
-  while (result && result.error === 'challenge' && Date.now() < waitUntil) {
+  let waits = 0;
+  while (
+    result &&
+    ((result.error === 'challenge' && Date.now() < waitUntil) ||
+      (result.error === 'throttled' && WAIT_429))
+  ) {
+    if (result.error === 'throttled') {
+      if (waits++ >= 8) {
+        console.error('  429: still limited after 8 waits; stopping.');
+        break;
+      }
+      // Keep what the site already gave us: refreshing haveEps then skips those
+      // pages on the retry, so the wait is not spent re-reading them.
+      if (result.rows && result.rows.length && !DRY_RUN) {
+        const kept = saveShow(show, target, result, already);
+        if (kept) {
+          console.log(`  kept ${kept.episodes} episode(s) in ${kept.file} before waiting`);
+        }
+      }
+      const back = findShow(target);
+      if (back) plan.haveEps = back.data.rows.map((r) => `${r.s}/${r.e}`);
+      if (MAX_MINUTES && (Date.now() - STARTED) / 60000 + WAIT_429 / 60000 > MAX_MINUTES) {
+        console.error('  429: not enough minute budget left to wait; stopping.');
+        break;
+      }
+      console.log(`  429 too many requests: waiting ${WAIT_429 / 60000} min, then retrying...`);
+      await sleep(WAIT_429);
+      try {
+        result = await evaluate(harvestScript(plan));
+      } catch {}
+      continue;
+    }
     if (!why && result.detail) {
       why = result.detail;
       console.log(`  site said: ${why}`);
