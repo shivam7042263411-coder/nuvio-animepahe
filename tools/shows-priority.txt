@@ -73,7 +73,7 @@ Aldnoah.Zero | 0 | 1 | 0
 ## Romance batch.
 A Sign of Affection | 0 | 1 | 0
 Golden Time | 0 | 1 | 0
-Lovely★Complex | 0 | 1 | 0
+Lovely Complex | 0 | 1 | 0
 Taisho Otome Fairy Tale | 0 | 1 | 0
 Boarding School Juliet | 0 | 1 | 0
 Maid Sama! | 0 | 1 | 0
