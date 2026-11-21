@@ -1,17 +1,14 @@
 {
-  "title": "Magic Knight Rayearth",
-  "aliases": [
-    "Magic Knight Rayearth (2026)"
-  ],
+  "title": "The Orbital Children",
+  "aliases": [],
   "season": 1,
-  "year": 2026,
+  "year": 2022,
   "source": "animepahe",
-  "search": "Magic Knight Rayearth",
-  "session": "f6dce8f9-e7da-62b3-b7ca-e492aae717d0",
-  "episodes": 0,
+  "search": "The Orbital Children",
+  "session": "a4176762-c4d1-fe24-dff9-94b42015a1a8",
+  "episodes": 6,
   "seasonEpisodes": {
-    "1": 7,
-    "2": 0
+    "1": 6
   },
   "allSeasons": true,
   "rows": [
@@ -20,49 +17,42 @@
       "e": 1,
       "q": 1080,
       "a": "sub",
-      "id": "9ZC9hkMBnh8w"
+      "id": "5AVXwqxdVAgw"
     },
     {
       "s": 1,
       "e": 2,
       "q": 1080,
       "a": "sub",
-      "id": "4NEIu2YEMVUV"
+      "id": "BG8BJHNN1h3E"
     },
     {
       "s": 1,
       "e": 3,
       "q": 1080,
       "a": "sub",
-      "id": "MIkeZg6qYEIL"
+      "id": "xE2FA2bCuFiJ"
     },
     {
       "s": 1,
       "e": 4,
       "q": 1080,
       "a": "sub",
-      "id": "lDRc5SGGRA2V"
+      "id": "g6WQsmdfuqMV"
     },
     {
       "s": 1,
       "e": 5,
       "q": 1080,
       "a": "sub",
-      "id": "7AZbXsmLDJ8d"
+      "id": "DBjjq1Y6RGxI"
     },
     {
       "s": 1,
       "e": 6,
       "q": 1080,
       "a": "sub",
-      "id": "DlYZ0Zch630t"
-    },
-    {
-      "s": 1,
-      "e": 7,
-      "q": 1080,
-      "a": "sub",
-      "id": "PtL9yuFwR43M"
+      "id": "LK6qhsKE6E0v"
     }
   ],
   "updated": "2026-11-21"

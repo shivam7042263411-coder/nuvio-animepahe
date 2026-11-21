@@ -1,0 +1,89 @@
+{
+  "title": "Saint Seiya: Saintia Sho",
+  "aliases": [
+    "Saint Seiya: Saintia Shou"
+  ],
+  "season": 1,
+  "year": 2019,
+  "source": "animepahe",
+  "search": "Saint Seiya: Saintia Sho",
+  "session": "ef26e525-815f-904e-eb89-ac757b1cf893",
+  "episodes": 10,
+  "seasonEpisodes": {
+    "1": 10
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "dsCti21Nudel"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "xuW3fZyeCgtc"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "UbmHPnmrYih4"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "aLgTktlgfda2"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "vHZl3J0i87XN"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "24PicjI6i9cq"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "rOR9Gg3WlUWq"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "mJZptFYuxeby"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "eGFGApmztfRX"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "S89Id5aMEa42"
+    }
+  ],
+  "updated": "2026-11-21"
+}

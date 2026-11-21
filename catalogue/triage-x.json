@@ -1,0 +1,87 @@
+{
+  "title": "Triage X",
+  "aliases": [],
+  "season": 1,
+  "year": 2015,
+  "source": "animepahe",
+  "search": "Triage X",
+  "session": "d3f1f09e-9ce7-9f74-06bb-a734bcc1172c",
+  "episodes": 10,
+  "seasonEpisodes": {
+    "1": 10
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "D8vJFkmtXQn3"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "OFswjwsDAfaE"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "vCITk0EnY6Ta"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "bNa3kqaT8JAL"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "hGzglwpY7pNL"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "If4QDjKjlJlq"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "Whi1UCU4Qxnr"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "5aYBRaM1MD6T"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "vkGOGRi5cG0z"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "mw8i15hhfe3t"
+    }
+  ],
+  "updated": "2026-11-21"
+}

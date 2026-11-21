@@ -255,6 +255,24 @@ export function franchiseOf(term, pool) {
     : own;
 }
 
+/** The one entry a name-free fallback may file as season 1: the show's own
+ *  entries only. The site's top hit is a different show when the search has no
+ *  real match - "AIKa" returns "Aikatsu!", "Macross Plus" returns "Super
+ *  Dimension Fortress Macross" - so filing it blind puts another show's
+ *  episodes in the file. A site entry that marks itself with a production year
+ *  ("X (2026)") is a remake, a different show from a TMDB entry that started
+ *  another decade. null means the show was not found: a miss, which the app
+ *  handles, and which is safer than a wrong season. */
+export function pickOwnEntry(term, pool, resultIndex, showYear) {
+  // An explicit pick from the caller (a shows list line) is a fact, not a guess.
+  if (resultIndex >= 0) return pool[resultIndex] || null;
+  const own = franchiseOf(term, pool).filter((h) => {
+    const m = String(h.title || '').match(/\(\s*((?:19|20)\d{2})\s*\)/);
+    return !m || !showYear || Math.abs(Number(m[1]) - Number(showYear)) <= 2;
+  });
+  return rankHits(term, own)[0] || null;
+}
+
 /** The entries a season plan may consume. The pool can hold another show that
  *  merely shares the name prefix (Naruto's pool carries Naruto Shippuden, a
  *  TMDB show of its own), and its episode count breaks the sum for every
@@ -408,7 +426,7 @@ export function harvestScript(show) {
   const audit = ${show.audit ? 'true' : 'false'};
   const have = ${JSON.stringify(show.haveEps || [])};
   const force = ${show.force ? 'true' : 'false'};
-  const rank = ${rankHits.toString()};
+  const rankHits = ${rankHits.toString()};
   const fold = ${fold.toString()};
   const classifyHits = ${classifyHits.toString()};
   const classify = classifyHits;
@@ -418,6 +436,7 @@ export function harvestScript(show) {
   const partOf = ${partOf.toString()};
   const planSeasons = ${planSeasons.toString()};
   const franchiseOf = ${franchiseOf.toString()};
+  const pickOwnEntry = ${pickOwnEntry.toString()};
   const sliceCandidates = ${sliceCandidates.toString()};
   const unfiledHits = ${unfiledHits.toString()};
   const filmsOf = ${filmsOf.toString()};
@@ -425,6 +444,12 @@ export function harvestScript(show) {
   // The app counts episodes by TMDB's seasons; when the caller supplied them,
   // size decides which season an entry is, not the entry's name.
   const tmdbSeasons = ${JSON.stringify(show.seasons || null)};
+  // The show's own start year, so a remake that shares its name can be told
+  // apart from it. Null when TMDB had no match: the year guard is then off.
+  const showYear =
+    tmdbSeasons && tmdbSeasons.length
+      ? Math.min(...tmdbSeasons.map((s) => Number(s.year) || 9999))
+      : null;
 
   // The search returns eight hits and cannot page: "&page=2" is ignored (the
   // same page comes back) and the next_page_url it advertises answers 403, so
@@ -516,14 +541,14 @@ export function harvestScript(show) {
     // No labelled entry: fall back to the best hit as season 1, the same guess
     // a one-line harvest makes. Warn so a wrong guess is visible in the log.
     if (!plans.length) {
-      const hit = resultIndex >= 0 ? pool[resultIndex] : rank(term, pool)[0];
-      if (!hit) return { error: 'no search result for ' + term };
+      const hit = pickOwnEntry(term, pool, resultIndex, showYear);
+      if (!hit) return { error: 'no matching entry for ' + term };
       fallback = true;
       plans = [{ session: hit.session, title: hit.title, year: hit.year, episodes: hit.episodes, season, part: 1 }];
     }
   } else {
-    const hit = resultIndex >= 0 ? pool[resultIndex] : rank(term, pool)[0];
-    if (!hit) return { error: 'no search result for ' + term };
+    const hit = pickOwnEntry(term, pool, resultIndex, showYear);
+    if (!hit) return { error: 'no matching entry for ' + term };
     const lab = classify(term, [hit])[0];
     // An explicit season column is a fact about the app; the name is a guess.
     const useSeason = seasonExplicit ? season : lab ? lab.season : season;

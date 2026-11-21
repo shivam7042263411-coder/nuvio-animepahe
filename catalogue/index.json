@@ -31,6 +31,13 @@
       "year": 2012
     },
     {
+      "file": "arifureta-from-commonplace-to-world-s-strongest.json",
+      "title": "Arifureta: From Commonplace to World's Strongest",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
       "file": "assassination-classroom.json",
       "title": "Assassination Classroom",
       "aliases": [],
@@ -90,6 +97,13 @@
       "year": 2017
     },
     {
+      "file": "blood-lad.json",
+      "title": "Blood Lad",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
       "file": "blue-box.json",
       "title": "Blue Box",
       "aliases": [],
@@ -137,6 +151,13 @@
       "year": 2016
     },
     {
+      "file": "burn-the-witch.json",
+      "title": "BURN THE WITCH",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
+    },
+    {
       "file": "campfire-cooking-in-another-world-with-my-absurd-skill.json",
       "title": "Campfire Cooking in Another World with My Absurd Skill",
       "aliases": [],
@@ -144,11 +165,25 @@
       "year": 2023
     },
     {
+      "file": "cautious-hero-the-hero-is-overpowered-but-overly-cautious.json",
+      "title": "Cautious Hero: The Hero Is Overpowered but Overly Cautious",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
       "file": "chainsaw-man.json",
       "title": "Chainsaw Man",
       "aliases": [],
       "season": 1,
       "year": 2022
+    },
+    {
+      "file": "chainsaw-man-the-compilation.json",
+      "title": "Chainsaw Man - The Compilation",
+      "aliases": [],
+      "season": 1,
+      "year": 2025
     },
     {
       "file": "classroom-of-the-elite.json",
@@ -167,6 +202,13 @@
     {
       "file": "darling-in-the-franxx.json",
       "title": "DARLING in the FRANXX",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
+    },
+    {
+      "file": "death-march-to-the-parallel-world-rhapsody.json",
+      "title": "Death March to the Parallel World Rhapsody",
       "aliases": [],
       "season": 1,
       "year": 2018
@@ -204,6 +246,15 @@
       "year": 1999
     },
     {
+      "file": "disney-twisted-wonderland-the-animation.json",
+      "title": "Disney Twisted-Wonderland: The Animation",
+      "aliases": [
+        "Disney Twisted-Wonderland The Animation: Episode of Heartslabyul"
+      ],
+      "season": 1,
+      "year": 2025
+    },
+    {
       "file": "dragon-ball-daima.json",
       "title": "Dragon Ball DAIMA",
       "aliases": [],
@@ -216,6 +267,13 @@
       "aliases": [],
       "season": 1,
       "year": 2015
+    },
+    {
+      "file": "dragon-s-dogma.json",
+      "title": "Dragon's Dogma",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
     },
     {
       "file": "erased.json",
@@ -271,6 +329,13 @@
       "year": 2015
     },
     {
+      "file": "ghost-in-the-shell-arise-alternative-architecture.json",
+      "title": "Ghost in the Shell: Arise - Alternative Architecture",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
+    },
+    {
       "file": "haikyuu.json",
       "title": "Haikyuu!!",
       "aliases": [],
@@ -283,6 +348,20 @@
       "aliases": [],
       "season": 1,
       "year": 2023
+    },
+    {
+      "file": "hellsing-ultimate.json",
+      "title": "Hellsing Ultimate",
+      "aliases": [],
+      "season": 1,
+      "year": 2006
+    },
+    {
+      "file": "hellsing-the-dawn.json",
+      "title": "Hellsing: The Dawn",
+      "aliases": [],
+      "season": 1,
+      "year": 2011
     },
     {
       "file": "hitori-no-shita-the-outcast.json",
@@ -306,11 +385,25 @@
       "year": 2021
     },
     {
+      "file": "how-not-to-summon-a-demon-lord.json",
+      "title": "How Not to Summon a Demon Lord",
+      "aliases": [],
+      "season": 1,
+      "year": 2018
+    },
+    {
       "file": "hyouka.json",
       "title": "Hyouka",
       "aliases": [],
       "season": 1,
       "year": 2012
+    },
+    {
+      "file": "i-got-a-cheat-skill-in-another-world-and-became-unrivaled-in-the-real-world-too.json",
+      "title": "I Got a Cheat Skill in Another World and Became Unrivaled in the Real World, Too",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
     },
     {
       "file": "i-made-friends-with-the-second-prettiest-girl-in-my-class.json",
@@ -334,11 +427,27 @@
       "year": 2026
     },
     {
-      "file": "inuyasha.json",
-      "title": "InuYasha",
+      "file": "i-ve-been-killing-slimes-for-300-years-and-maxed-out-my-level.json",
+      "title": "I've Been Killing Slimes for 300 Years and Maxed Out My Level",
       "aliases": [],
       "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "inuyasha.json",
+      "title": "InuYasha",
+      "aliases": [
+        "InuYasha: The Final Act"
+      ],
+      "season": 1,
       "year": 2000
+    },
+    {
+      "file": "japan-sinks-2020.json",
+      "title": "Japan Sinks: 2020",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
     },
     {
       "file": "jujutsu-kaisen.json",
@@ -374,15 +483,6 @@
       "aliases": [],
       "season": 1,
       "year": 2013
-    },
-    {
-      "file": "magic-knight-rayearth.json",
-      "title": "Magic Knight Rayearth",
-      "aliases": [
-        "Magic Knight Rayearth (2026)"
-      ],
-      "season": 1,
-      "year": 2026
     },
     {
       "file": "makeine-too-many-losing-heroines.json",
@@ -459,6 +559,13 @@
       "year": 2024
     },
     {
+      "file": "no-game-no-life.json",
+      "title": "No Game No Life",
+      "aliases": [],
+      "season": 1,
+      "year": 2014
+    },
+    {
       "file": "no-longer-allowed-in-another-world.json",
       "title": "No Longer Allowed in Another World",
       "aliases": [],
@@ -473,6 +580,13 @@
       "year": 2015
     },
     {
+      "file": "onimusha.json",
+      "title": "Onimusha",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
       "file": "orb-on-the-movements-of-the-earth.json",
       "title": "Orb: On the Movements of the Earth",
       "aliases": [],
@@ -485,6 +599,20 @@
       "aliases": [],
       "season": 1,
       "year": 2014
+    },
+    {
+      "file": "pluto.json",
+      "title": "PLUTO",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
+      "file": "poke-mon-origins.json",
+      "title": "Pokémon Origins",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
     },
     {
       "file": "psycho-pass.json",
@@ -514,11 +642,34 @@
       "year": 2021
     },
     {
+      "file": "recovery-of-an-mmo-junkie.json",
+      "title": "Recovery of an MMO Junkie",
+      "aliases": [],
+      "season": 1,
+      "year": 2017
+    },
+    {
+      "file": "resident-evil-infinite-darkness.json",
+      "title": "RESIDENT EVIL: Infinite Darkness",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
       "file": "saga-of-tanya-the-evil.json",
       "title": "Saga of Tanya the Evil",
       "aliases": [],
       "season": 1,
       "year": 2017
+    },
+    {
+      "file": "saint-seiya-saintia-sho.json",
+      "title": "Saint Seiya: Saintia Sho",
+      "aliases": [
+        "Saint Seiya: Saintia Shou"
+      ],
+      "season": 1,
+      "year": 2019
     },
     {
       "file": "sakamoto-days.json",
@@ -549,6 +700,13 @@
       "year": 2023
     },
     {
+      "file": "so-i-m-a-spider-so-what.json",
+      "title": "So I'm a Spider, So What?",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
       "file": "solo-leveling.json",
       "title": "Solo Leveling",
       "aliases": [],
@@ -568,6 +726,13 @@
       "aliases": [],
       "season": 1,
       "year": 2011
+    },
+    {
+      "file": "suicide-squad-isekai.json",
+      "title": "Suicide Squad Isekai",
+      "aliases": [],
+      "season": 1,
+      "year": 2024
     },
     {
       "file": "sword-art-online.json",
@@ -661,6 +826,20 @@
       "year": 2025
     },
     {
+      "file": "the-ghost-in-the-shell.json",
+      "title": "THE GHOST IN THE SHELL",
+      "aliases": [],
+      "season": 1,
+      "year": 2026
+    },
+    {
+      "file": "the-orbital-children.json",
+      "title": "The Orbital Children",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
+    },
+    {
       "file": "the-rising-of-the-shield-hero.json",
       "title": "The Rising of the Shield Hero",
       "aliases": [],
@@ -684,6 +863,20 @@
       "year": 2022
     },
     {
+      "file": "the-vision-of-escaflowne.json",
+      "title": "The Vision of Escaflowne",
+      "aliases": [],
+      "season": 1,
+      "year": 1996
+    },
+    {
+      "file": "the-world-s-finest-assassin-gets-reincarnated-in-another-world-as-an-aristocrat.json",
+      "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
       "file": "tokyo-ghoul.json",
       "title": "Tokyo Ghoul",
       "aliases": [
@@ -700,6 +893,27 @@
       "aliases": [],
       "season": 1,
       "year": 2021
+    },
+    {
+      "file": "triage-x.json",
+      "title": "Triage X",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
+    },
+    {
+      "file": "tsukimichi-moonlit-fantasy.json",
+      "title": "Tsukimichi: Moonlit Fantasy",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "vampire-in-the-garden.json",
+      "title": "Vampire in the Garden",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
     },
     {
       "file": "vinland-saga.json",
@@ -744,6 +958,13 @@
       "year": 2024
     },
     {
+      "file": "wise-man-s-grandchild.json",
+      "title": "Wise Man's Grandchild",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
       "file": "wistoria-wand-and-sword.json",
       "title": "Wistoria: Wand and Sword",
       "aliases": [],
@@ -756,6 +977,13 @@
       "aliases": [],
       "season": 1,
       "year": 2026
+    },
+    {
+      "file": "yasuke.json",
+      "title": "Yasuke",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
     },
     {
       "file": "your-lie-in-april.json",

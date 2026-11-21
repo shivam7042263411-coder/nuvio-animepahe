@@ -1,0 +1,87 @@
+{
+  "title": "Hellsing Ultimate",
+  "aliases": [],
+  "season": 1,
+  "year": 2006,
+  "source": "animepahe",
+  "search": "Hellsing Ultimate",
+  "session": "534ef047-4c54-7fbc-af6d-603b75f6b826",
+  "episodes": 10,
+  "seasonEpisodes": {
+    "1": 10
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "nwxpR1NQKUYg"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "JcKJTzjvltq3"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "n5Uemm2zTlGm"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "aB0unTXhShSy"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "JgUAPJSadAHS"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "AOm7q41pzYI0"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "CeeS51iMWkrl"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "ddwNhCWG2Asi"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "MqQ2wCRgly05"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "HR17ocWn1HGx"
+    }
+  ],
+  "updated": "2026-11-21"
+}

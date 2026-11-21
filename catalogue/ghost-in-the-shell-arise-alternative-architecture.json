@@ -1,0 +1,87 @@
+{
+  "title": "Ghost in the Shell: Arise - Alternative Architecture",
+  "aliases": [],
+  "season": 1,
+  "year": 2015,
+  "source": "animepahe",
+  "search": "Ghost in the Shell: Arise - Alternative Architecture",
+  "session": "781554e9-b3f9-b237-5a81-7813ef93d878",
+  "episodes": 10,
+  "seasonEpisodes": {
+    "1": 10
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "qjmq7Qx1qryl"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "zt4InKSLlo3N"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "O4xGWSCF9Sjm"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "5j8DRbYFVy7E"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "I1jmlho8ZvjV"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "1KwY1f5zNUTW"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "ltyn823apjN0"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "dD6NgCihzyzD"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "mhdADyJX794W"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "kIdWQXB1nsmH"
+    }
+  ],
+  "updated": "2026-11-21"
+}

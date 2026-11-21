@@ -800,6 +800,29 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ])[0].title,
         "KonoSuba: God's Blessing on This Wonderful World!"
     );
+    // --- a name-free fallback may only file the show's own entry -------------
+    // Real bad data this caught: "AIKa" filed Aikatsu!'s 178 episodes, "AIKa
+    // ZERO" filed Aria the Natural's 26, "Macross Plus" filed SDF Macross's 36.
+    const own = (term, hits) => pageMod.pickOwnEntry(term, hits.map((h) => show(h[0], h[1])), -1);
+    check("a different show is never filed as season 1", own("AIKa", [["Aikatsu!", 178]]), null);
+    check("a name sibling is not a match", own("AIKa ZERO", [["Aria the Natural", 26]]), null);
+    check(
+        "a remake's own year keeps it out",
+        pageMod.pickOwnEntry("Magic Knight Rayearth", [show("Magic Knight Rayearth (2026)", 7)], -1, 1994),
+        null
+    );
+    check(
+        "a same-year production is kept",
+        pageMod.pickOwnEntry("Magic Knight Rayearth", [show("Magic Knight Rayearth (2026)", 7)], -1, 2026)?.title,
+        "Magic Knight Rayearth (2026)"
+    );
+    check("a longer own title still files", own("Disney Twisted-Wonderland: The Animation", [
+        ["Disney Twisted-Wonderland The Animation: Episode of Heartslabyul", 8],
+    ])?.title, "Disney Twisted-Wonderland The Animation: Episode of Heartslabyul");
+    check("an explicit result index is trusted", pageMod.pickOwnEntry("The Outcast", [
+        show("x", 5),
+        show("Hitori no Shita - The Outcast", 94),
+    ], 1)?.title, "Hitori no Shita - The Outcast");
     const lib = await import("./tools/catalogue-lib.mjs");
     check(
         "a rerun skips a show whose every TMDB episode is stored",

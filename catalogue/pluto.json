@@ -1,0 +1,73 @@
+{
+  "title": "PLUTO",
+  "aliases": [],
+  "season": 1,
+  "year": 2023,
+  "source": "animepahe",
+  "search": "PLUTO",
+  "session": "6b016c27-c40e-1dfe-2b7f-0fb94c7d7342",
+  "episodes": 8,
+  "seasonEpisodes": {
+    "1": 8
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "3apfLtXINrzi"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "wp487LjXDHfC"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "wqawWnDwZtlJ"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "SCpjUwB6M2SL"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "f6RiDSi1dwjG"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "CiCfSCrXvMdX"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "btN46T6dEzV1"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "VHvReadRUxlu"
+    }
+  ],
+  "updated": "2026-11-21"
+}

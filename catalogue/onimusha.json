@@ -1,0 +1,73 @@
+{
+  "title": "Onimusha",
+  "aliases": [],
+  "season": 1,
+  "year": 2023,
+  "source": "animepahe",
+  "search": "Onimusha",
+  "session": "16a54a74-532b-af00-3f28-db062ebcae2a",
+  "episodes": 8,
+  "seasonEpisodes": {
+    "1": 8
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "uMLLtWzkgwIn"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "NAsVj0a7tTUW"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "ZbA68YfdXxBq"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "JYkU00vficdq"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "FA3FeDViJnFz"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "M072uicBQhMa"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "sVDGfV36vZRC"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "3loXxeebvmed"
+    }
+  ],
+  "updated": "2026-11-21"
+}
