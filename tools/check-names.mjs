@@ -5,6 +5,10 @@
 //
 //   node tools/check-names.mjs [list file]
 //
+// The snapshot is near-complete, not complete: four shows already harvested
+// from the site are missing from it. A term that matches nothing is a warning
+// to look it up, not proof the site lacks the show.
+//
 // Exit 1 when a term matches nothing: the harvester would report it as a miss.
 import { readFileSync } from 'node:fs';
 import { fold } from './harvest-page.mjs';
@@ -44,7 +48,7 @@ for (const term of terms) {
     .filter((x) => x.sc >= 0.34);
   console.log('miss  ' + term);
   for (const n of near) console.log('        ' + n.sc.toFixed(2) + '  ' + n.t);
-  if (!near.length) console.log('        (nothing similar on the site)');
+  if (!near.length) console.log('        (nothing similar in the snapshot - try a live search)');
 }
 
 console.log(`\n${terms.length - bad}/${terms.length} terms match a site title; ${bad} to fix`);
