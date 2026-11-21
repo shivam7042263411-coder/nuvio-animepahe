@@ -1,0 +1,643 @@
+{
+  "title": "Welcome to Demon School! Iruma-kun",
+  "aliases": [],
+  "season": 1,
+  "year": 2019,
+  "source": "animepahe",
+  "search": "Welcome to Demon School! Iruma-kun",
+  "session": "a8fdb355-6db9-8c53-c026-87d836c7d6c0",
+  "episodes": 23,
+  "seasonEpisodes": {
+    "1": 23,
+    "2": 21,
+    "3": 21,
+    "4": 24
+  },
+  "allSeasons": true,
+  "rows": [
+    {
+      "s": 1,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "i59k2QVNreVR"
+    },
+    {
+      "s": 1,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "6W4KFhzyVAsb"
+    },
+    {
+      "s": 1,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "duBPDE1NurC6"
+    },
+    {
+      "s": 1,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "Uyv8OhRGW753"
+    },
+    {
+      "s": 1,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "6G3K1hqbpJCY"
+    },
+    {
+      "s": 1,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "9svJ1fWsMEqb"
+    },
+    {
+      "s": 1,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "fGdMy0WNP03L"
+    },
+    {
+      "s": 1,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "byQAMTp09jjT"
+    },
+    {
+      "s": 1,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "LGWgjf3X9H4B"
+    },
+    {
+      "s": 1,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "yFMVRhC5l1T2"
+    },
+    {
+      "s": 1,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "rsxiEWrnWHvz"
+    },
+    {
+      "s": 1,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "0GyE7dyEWcAD"
+    },
+    {
+      "s": 1,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "OOA4ncKYbf0G"
+    },
+    {
+      "s": 1,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "QxU0fAMqERru"
+    },
+    {
+      "s": 1,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "ftLo4SxhSxVC"
+    },
+    {
+      "s": 1,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "bsSzAPIqyBmw"
+    },
+    {
+      "s": 1,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "QIdq6MbPx1vm"
+    },
+    {
+      "s": 1,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "7zEGp6zENw1n"
+    },
+    {
+      "s": 1,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "M4BAFoB5Qjjc"
+    },
+    {
+      "s": 1,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "4cUNvGRR7OKj"
+    },
+    {
+      "s": 1,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "ey5NA6vw7pxg"
+    },
+    {
+      "s": 1,
+      "e": 22,
+      "q": 1080,
+      "a": "sub",
+      "id": "Yh1BMrqlCMCp"
+    },
+    {
+      "s": 1,
+      "e": 23,
+      "q": 1080,
+      "a": "sub",
+      "id": "OAlevaOlIUIb"
+    },
+    {
+      "s": 2,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "DGhW0mO16uMj"
+    },
+    {
+      "s": 2,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "Lgf0qdOkarTH"
+    },
+    {
+      "s": 2,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "ASi824zgJQWp"
+    },
+    {
+      "s": 2,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "TuErZNljnHuw"
+    },
+    {
+      "s": 2,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "vl8VECy1GjP8"
+    },
+    {
+      "s": 2,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "kjHEKxz0nhLu"
+    },
+    {
+      "s": 2,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "RhRYvrYPJPgt"
+    },
+    {
+      "s": 2,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "QY3m0jwKcNjf"
+    },
+    {
+      "s": 2,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "v7Egl0Qy8sMy"
+    },
+    {
+      "s": 2,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "5Fnsbc6zGgJy"
+    },
+    {
+      "s": 2,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "st2WqH0R9EU7"
+    },
+    {
+      "s": 2,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "CUZEit8nzQP3"
+    },
+    {
+      "s": 2,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "vcanhDR90IB5"
+    },
+    {
+      "s": 2,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "2IOxffQCorEH"
+    },
+    {
+      "s": 2,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "7OlJnScVCcfx"
+    },
+    {
+      "s": 2,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "5NVkPgSQRMkd"
+    },
+    {
+      "s": 2,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "gwAOFyuAb6iK"
+    },
+    {
+      "s": 2,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "1w5EH3UaNEku"
+    },
+    {
+      "s": 2,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "Sctuvv4C2nkQ"
+    },
+    {
+      "s": 2,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "0ft8A2v1ENqy"
+    },
+    {
+      "s": 2,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "xxS9RoNL97uY"
+    },
+    {
+      "s": 3,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "UPX7CRHVJFX5"
+    },
+    {
+      "s": 3,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "M6gNfItcxPMZ"
+    },
+    {
+      "s": 3,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "Wxcn7Oya7YIT"
+    },
+    {
+      "s": 3,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "if3hWhxawKR6"
+    },
+    {
+      "s": 3,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "wywIeTVWNO1M"
+    },
+    {
+      "s": 3,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "uKlMOZgIFEye"
+    },
+    {
+      "s": 3,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "mui8eow8gFwo"
+    },
+    {
+      "s": 3,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "sVHTQFTEajbY"
+    },
+    {
+      "s": 3,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "x1oL1xchVQMB"
+    },
+    {
+      "s": 3,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "ykPokbsgO0QR"
+    },
+    {
+      "s": 3,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "Z8dwMbYZlfML"
+    },
+    {
+      "s": 3,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "YGjUjImrltXN"
+    },
+    {
+      "s": 3,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "fm8xby0t8KpE"
+    },
+    {
+      "s": 3,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "6xkrpJDzb1Hw"
+    },
+    {
+      "s": 3,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "0ZQTIQqZ2Ixy"
+    },
+    {
+      "s": 3,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "KsVuV4Y4JC2o"
+    },
+    {
+      "s": 3,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "amxEF7wbGuB7"
+    },
+    {
+      "s": 3,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "ugOfSgv22jJ5"
+    },
+    {
+      "s": 3,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "Z5R4hWG5YKgc"
+    },
+    {
+      "s": 3,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "h3PLEdj7FtG3"
+    },
+    {
+      "s": 3,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "z4WCOaico7yN"
+    },
+    {
+      "s": 4,
+      "e": 1,
+      "q": 1080,
+      "a": "sub",
+      "id": "GNIHQkKhjQM4"
+    },
+    {
+      "s": 4,
+      "e": 2,
+      "q": 1080,
+      "a": "sub",
+      "id": "6fvhCY3yPiXH"
+    },
+    {
+      "s": 4,
+      "e": 3,
+      "q": 1080,
+      "a": "sub",
+      "id": "Yd5OfftyKMHU"
+    },
+    {
+      "s": 4,
+      "e": 4,
+      "q": 1080,
+      "a": "sub",
+      "id": "xQVVljj9jJi0"
+    },
+    {
+      "s": 4,
+      "e": 5,
+      "q": 1080,
+      "a": "sub",
+      "id": "9aLggc9x3cqi"
+    },
+    {
+      "s": 4,
+      "e": 6,
+      "q": 1080,
+      "a": "sub",
+      "id": "1nRKyyStCMf9"
+    },
+    {
+      "s": 4,
+      "e": 7,
+      "q": 1080,
+      "a": "sub",
+      "id": "xjEAG2qNzUoB"
+    },
+    {
+      "s": 4,
+      "e": 8,
+      "q": 1080,
+      "a": "sub",
+      "id": "J5djMscPWzXS"
+    },
+    {
+      "s": 4,
+      "e": 9,
+      "q": 1080,
+      "a": "sub",
+      "id": "6A2q4ysiiJwZ"
+    },
+    {
+      "s": 4,
+      "e": 10,
+      "q": 1080,
+      "a": "sub",
+      "id": "gInige6x2qN6"
+    },
+    {
+      "s": 4,
+      "e": 11,
+      "q": 1080,
+      "a": "sub",
+      "id": "3zhd0WLfwgad"
+    },
+    {
+      "s": 4,
+      "e": 12,
+      "q": 1080,
+      "a": "sub",
+      "id": "XPwxss2bonTO"
+    },
+    {
+      "s": 4,
+      "e": 13,
+      "q": 1080,
+      "a": "sub",
+      "id": "vJWMIYcqs4Tw"
+    },
+    {
+      "s": 4,
+      "e": 14,
+      "q": 1080,
+      "a": "sub",
+      "id": "z19pVJhWoDwf"
+    },
+    {
+      "s": 4,
+      "e": 15,
+      "q": 1080,
+      "a": "sub",
+      "id": "GKkrv9h6nRgY"
+    },
+    {
+      "s": 4,
+      "e": 16,
+      "q": 1080,
+      "a": "sub",
+      "id": "K4c4r0M5jmPc"
+    },
+    {
+      "s": 4,
+      "e": 17,
+      "q": 1080,
+      "a": "sub",
+      "id": "dOUqH1obMvhv"
+    },
+    {
+      "s": 4,
+      "e": 18,
+      "q": 1080,
+      "a": "sub",
+      "id": "67Su8eIVN47K"
+    },
+    {
+      "s": 4,
+      "e": 19,
+      "q": 1080,
+      "a": "sub",
+      "id": "7sVQ5szZKYpk"
+    },
+    {
+      "s": 4,
+      "e": 20,
+      "q": 1080,
+      "a": "sub",
+      "id": "geI8hbOxduQ1"
+    },
+    {
+      "s": 4,
+      "e": 21,
+      "q": 1080,
+      "a": "sub",
+      "id": "EtbU2kC9QbnJ"
+    },
+    {
+      "s": 4,
+      "e": 22,
+      "q": 1080,
+      "a": "sub",
+      "id": "K1hbriVIZ6p1"
+    },
+    {
+      "s": 4,
+      "e": 23,
+      "q": 1080,
+      "a": "sub",
+      "id": "wWcWiPU7YaQz"
+    },
+    {
+      "s": 4,
+      "e": 24,
+      "q": 1080,
+      "a": "sub",
+      "id": "qDRGlOKTi0xL"
+    }
+  ],
+  "updated": "2026-11-21"
+}

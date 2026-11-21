@@ -137,6 +137,13 @@
       "year": 2016
     },
     {
+      "file": "campfire-cooking-in-another-world-with-my-absurd-skill.json",
+      "title": "Campfire Cooking in Another World with My Absurd Skill",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
       "file": "chainsaw-man.json",
       "title": "Chainsaw Man",
       "aliases": [],
@@ -186,6 +193,15 @@
       "aliases": [],
       "season": 1,
       "year": 2018
+    },
+    {
+      "file": "digimon-digital-monsters.json",
+      "title": "Digimon: Digital Monsters",
+      "aliases": [
+        "Digimon Adventure"
+      ],
+      "season": 1,
+      "year": 1999
     },
     {
       "file": "dragon-ball-daima.json",
@@ -246,6 +262,13 @@
       "aliases": [],
       "season": 1,
       "year": 2025
+    },
+    {
+      "file": "gate.json",
+      "title": "Gate",
+      "aliases": [],
+      "season": 1,
+      "year": 2015
     },
     {
       "file": "haikyuu.json",
@@ -330,6 +353,29 @@
       "aliases": [],
       "season": 1,
       "year": 2024
+    },
+    {
+      "file": "konosuba-god-s-blessing-on-this-wonderful-world.json",
+      "title": "KONOSUBA - God's blessing on this wonderful world!",
+      "aliases": [],
+      "season": 1,
+      "year": 2016
+    },
+    {
+      "file": "log-horizon.json",
+      "title": "Log Horizon",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
+      "file": "magic-knight-rayearth.json",
+      "title": "Magic Knight Rayearth",
+      "aliases": [
+        "Magic Knight Rayearth (2026)"
+      ],
+      "season": 1,
+      "year": 2026
     },
     {
       "file": "makeine-too-many-losing-heroines.json",
@@ -461,11 +507,25 @@
       "year": 2021
     },
     {
+      "file": "saga-of-tanya-the-evil.json",
+      "title": "Saga of Tanya the Evil",
+      "aliases": [],
+      "season": 1,
+      "year": 2017
+    },
+    {
       "file": "sakamoto-days.json",
       "title": "Sakamoto Days",
       "aliases": [],
       "season": 1,
       "year": 2025
+    },
+    {
+      "file": "seirei-gensouki-spirit-chronicles.json",
+      "title": "Seirei Gensouki: Spirit Chronicles",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
     },
     {
       "file": "shikimori-s-not-just-a-cutie.json",
@@ -501,6 +561,13 @@
       "aliases": [],
       "season": 1,
       "year": 2011
+    },
+    {
+      "file": "sword-art-online.json",
+      "title": "Sword Art Online",
+      "aliases": [],
+      "season": 1,
+      "year": 2012
     },
     {
       "file": "takopi-s-original-sin.json",
@@ -552,6 +619,13 @@
       "year": 2023
     },
     {
+      "file": "the-devil-is-a-part-timer.json",
+      "title": "The Devil Is a Part-Timer!",
+      "aliases": [],
+      "season": 1,
+      "year": 2013
+    },
+    {
       "file": "the-dreaming-boy-is-a-realist.json",
       "title": "The Dreaming Boy Is a Realist",
       "aliases": [],
@@ -566,11 +640,25 @@
       "year": 2022
     },
     {
+      "file": "the-familiar-of-zero.json",
+      "title": "The Familiar of Zero",
+      "aliases": [],
+      "season": 1,
+      "year": 2006
+    },
+    {
       "file": "the-fragrant-flower-blooms-with-dignity.json",
       "title": "The Fragrant Flower Blooms with Dignity",
       "aliases": [],
       "season": 1,
       "year": 2025
+    },
+    {
+      "file": "the-rising-of-the-shield-hero.json",
+      "title": "The Rising of the Shield Hero",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
     },
     {
       "file": "the-summer-hikaru-died.json",
@@ -630,6 +718,13 @@
     {
       "file": "weathering-with-you.json",
       "title": "Weathering with You",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
+      "file": "welcome-to-demon-school-iruma-kun.json",
+      "title": "Welcome to Demon School! Iruma-kun",
       "aliases": [],
       "season": 1,
       "year": 2019
