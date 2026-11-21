@@ -356,16 +356,33 @@ export function inferOffset(offset, episodes) {
 export function harvestScript(show) {
   return `(async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  // The site rate-limits by IP (HTTP 429). A limited page is not an empty
-  // season: wait for the limit to lift, then give up loudly so the run stops
-  // instead of writing a show that is missing episodes. A minute and a half of
-  // waiting is cheaper than restarting an 1180-episode show.
+  // The site rate-limits by IP over a time window, so a burst is what earns a
+  // 429, not the total. Every request waits out a minimum gap with jitter, and a
+  // 429 doubles that gap for the rest of the show. The gap lives on the global so
+  // the caller can read it back after each show and keep it between runs.
+  const pace = (globalThis.__apPace = {
+    gap: Math.max(150, ${Number(show.minGapMs) || 1200}),
+    last: 0,
+    requests: 0,
+    limited: 0,
+  });
+  const fetchPaced = async (url) => {
+    const wait = pace.last + pace.gap * (0.75 + Math.random() * 0.5) - Date.now();
+    if (wait > 0) await sleep(wait);
+    pace.last = Date.now();
+    pace.requests++;
+    return fetch(url);
+  };
+  // A limited page is not an empty season: give up loudly (null) so the run
+  // stops rather than writing a show that is missing episodes.
   const fetchLimited = async (url) => {
     for (let attempt = 0; ; attempt++) {
-      const r = await fetch(url);
+      const r = await fetchPaced(url);
       if (r.status !== 429) return r;
-      if (attempt >= 3) return null;
-      await sleep(30000);
+      pace.limited++;
+      pace.gap = Math.min(pace.gap * 2, 60000);
+      if (attempt >= 2) return null;
+      await sleep(pace.gap);
     }
   };
   // Every non-JSON reply used to be reported as "challenge" alone, which hid
@@ -645,7 +662,7 @@ export function harvestScript(show) {
             const a = /eng|dub/i.test((b.dataset.audio || '') + b.textContent) ? 'dub' : 'sub';
             rows.push({ s: plan.season, e: appEp, q, a, id: id[1] });
           });
-          await sleep(600);
+          // Spacing is the pacer's job now; a fixed sleep here would only add to it.
         }
       }
       if (allSeasons) {

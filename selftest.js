@@ -830,6 +830,20 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [true, false]
     );
+    check(
+        "a 429 gap is adopted, a clean show creeps down, floor holds",
+        [
+            // 800 doubled by the page after a 429 -> adopt it, do not double again.
+            lib.nextGap(1600, 1),
+            // A clean show at 1000 -> 10% faster.
+            lib.nextGap(1000, 0),
+            // Never below the floor, however many clean shows.
+            lib.nextGap(400, 0),
+            // A bogus report cannot open the floodgates.
+            lib.nextGap(0, 0),
+        ],
+        [1600, 900, 360, 300]
+    );
     // A temp file whose title differs from the list term: this is the filename
     // fallback, and it must hold whether or not the catalogue has been filled.
     const tempFile = path.join(__dirname, "catalogue", "selftest-show.json");

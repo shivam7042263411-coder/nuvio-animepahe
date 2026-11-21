@@ -136,6 +136,17 @@ export function seasonsComplete(rows, seasons) {
   });
 }
 
+/** How far apart to keep site requests. `reported` is the gap the page ended on
+ *  (it doubles its own gap on every 429). A 429 therefore means the last gap was
+ *  too small, so adopt the doubled one; a clean show means there may be room, so
+ *  creep down. The floor stops a run ever bursting, the ceiling stops one bad
+ *  block turning into an hour per episode. */
+export function nextGap(reported, limited, { floor = 300, ceiling = 60_000 } = {}) {
+  if (!(reported > 0)) return floor;
+  if (limited > 0) return Math.min(reported, ceiling);
+  return Math.max(Math.floor(reported * 0.9), floor);
+}
+
 /** index.json is derived, never hand-edited: rebuild it after every write. */
 export function rebuildIndex() {
   const shows = readCatalogue()

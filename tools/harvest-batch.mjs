@@ -34,7 +34,7 @@
 // cost: ~1 request per episode (~0.6s each) plus one search. 200 shows x 12 eps
 // is roughly 30-45 minutes in one sitting; stop whenever, re-run to resume.
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, unlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,6 +44,7 @@ import {
   isPlayableRow,
   bestRows,
   mergeRows,
+  nextGap,
   readCatalogue,
   rebuildIndex,
   seasonsComplete,
@@ -147,6 +148,25 @@ const WAIT_CHALLENGE = Number(option('--wait-challenge', 0)) * 1000;
 // retries; 0 keeps the old behaviour of stopping. Minutes, unlike
 // --wait-challenge: a rate limit is measured in minutes, a checkbox in seconds.
 const WAIT_429 = Number(option('--wait-429', 0)) * 60_000;
+// The pace is learned, not guessed: the page reports the gap it ended on and the
+// rate it hit a 429 at, and the batch keeps the result between runs so a fresh
+// run starts at the fastest rate that has actually been proven safe. --min-gap-ms
+// overrides the seed for one run.
+const RATE_STATE = join(HERE, '.rate-state.json');
+const readGap = () => {
+  try {
+    return Number(JSON.parse(readFileSync(RATE_STATE, 'utf8')).minGapMs) || null;
+  } catch {
+    return null;
+  }
+};
+const writeGap = (ms) => {
+  try {
+    writeFileSync(RATE_STATE, JSON.stringify({ minGapMs: ms, updated: new Date().toISOString() }) + '\n');
+  } catch {}
+};
+const gapFlag = option('--min-gap-ms', null);
+let minGap = gapFlag != null ? Number(gapFlag) : readGap() ?? 1200;
 const CHROME = option(
   '--chrome',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -468,6 +488,8 @@ for (const show of shows) {
   const plan = {
     ...show,
     allSeasons: ALL_SEASONS,
+    // The page paces its own requests; the seed is the gap proven safe so far.
+    minGapMs: minGap,
     // Every stored row, no matter the season: an all-seasons run revisits each.
     // A dry run ignores them so it reports what the site has, not what is kept.
     haveEps: DRY_RUN ? [] : (already ? already.data.rows : []).map((r) => `${r.s}/${r.e}`),
@@ -540,6 +562,16 @@ for (const show of shows) {
     try {
       result = await evaluate(harvestScript(plan));
     } catch {}
+  }
+  // Learn the pace: the page doubles its gap on any 429 and reports the gap it
+  // ended on, so a clean show means the next one may go slightly faster.
+  const pace = await evaluate('globalThis.__apPace || null').catch(() => null);
+  if (pace && pace.requests) {
+    minGap = nextGap(pace.gap, pace.limited);
+    writeGap(minGap);
+    if (pace.limited) {
+      console.log(`  paced: ${pace.requests} request(s), 429 x${pace.limited} -> gap ${minGap}ms`);
+    }
   }
   if (!result || result.error) {
     // A stop mid-show (a 429, a challenge, a refused hole) still leaves real
@@ -680,4 +712,15 @@ console.log(`\n${done} harvested, ${failed} failed -> ${path} (${indexed.length}
 console.log('push catalogue/ to GitHub for the TV to see it.');
 ws.close();
 chrome.kill();
+// A chained run starts a new Chrome on the same profile seconds later. If the
+// old one is still listening, the new process takes the handoff and exits, which
+// the next run sees as "chrome window closed". Wait for the port to go quiet.
+for (let i = 0; i < 40; i++) {
+  try {
+    await fetch(`http://127.0.0.1:${PORT}/json/version`);
+    await sleep(250);
+  } catch {
+    break;
+  }
+}
 process.exit(failed && !done ? 1 : 0);

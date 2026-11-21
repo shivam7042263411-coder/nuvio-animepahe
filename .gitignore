@@ -1,2 +1,5 @@
 tools/.tmdb-key
 tools/.chrome-profile/
+tools/shows-weekly.txt
+tools/.rate-state.json
+tools/.run-unattended.log
