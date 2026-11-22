@@ -1,7 +1,7 @@
 # All anime to harvest. One line per show, in run order.
 # term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
 # Ordered 2026-11-22: the main walk, then the ones that failed and are retried last.
-# resultIndex 4 = retry-last queue (started, failed, wrote nothing).
+# (Order is the only queue signal; resultIndex is a search-hit override, not a marker.)
 86: Eighty-Six | 0 | 1 | 0
 Summer Time Rendering | 0 | 1 | 0
 Dr. STONE | 0 | 1 | 0
