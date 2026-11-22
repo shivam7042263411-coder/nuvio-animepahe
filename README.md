@@ -1,7 +1,10 @@
-# Nuvio AnimePahe plugin
+# Nuvio Anime Torrents plugin
 
-AnimePahe scraper plugin for the Nuvio app (plugin format, QuickJS).
-1080p Sub streams only.
+A torrent scraper for the Nuvio app (plugin format, QuickJS). It turns a TMDB
+show/episode into per-episode magnets that Nuvio plays through its built-in P2P
+engine or resolves instantly through a debrid provider.
+
+This replaces the earlier AnimePahe scraper. The install URL is unchanged.
 
 ## Install in the app
 
@@ -14,217 +17,126 @@ https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/ma
 The manifest is reloaded every 6 hours, or immediately via **Refresh** in
 Plugins settings.
 
-## The kwik-id catalogue (no Cloudflare on repeat plays)
+## Enable playback
 
-Every episode's stream lives on a kwik id (`https://kwik.cx/e/<id>`). That id
-does not expire with AnimePahe's front end, and the CDN is not behind
-Cloudflare — it only wants the kwik referer. So a play that already knows the
-id never touches `animepahe.pw`: no search, no season matching, no challenge.
+**P2P (no account):** Settings → Playback → P2P Streaming → toggle on and accept
+the consent dialog. The defaults (Balanced profile, 2 GB cache) are fine to
+start. Seeding is on by default.
+
+**Debrid (recommended):** Settings → Debrid → connect Torbox or Premiumize. A
+cached magnet becomes a direct HTTP stream with no peer wait.
+
+Torrent results are labelled **AnimeTorrents**. Select one and Nuvio either
+starts `TorrentState.Connecting → Streaming` or asks debrid for a link.
+
+## How it works
 
 ```
-catalogue/index.json          title -> file
-catalogue/<show>.json         rows: s, e, q, a, id
+TMDB (English + romaji titles, season count)
+  -> Nyaa RSS search (Anime / English-translated, seeders first)
+  -> strict release matcher
+  -> magnet (40-hex infoHash)
 ```
 
-The plugin fetches the index first, matches a TMDB title exactly (punctuation
-and doubled letters folded), then serves `1080p sub` from the show file. Only
-that tier is stored - one row per episode, nothing else. A miss, a dead id, or
-an unreachable catalogue falls back to today's scrape - silently.
+Queries (max 3 per episode):
 
-The app is not involved: no new repository in Settings, no storage binding,
-no app change. Only the plugin reads these files.
-
-### Filling it
-
-Two writers, both on a laptop. The TV is read-only.
-
-```bash
-# 1. from the probe harvests already in ../probe
-node tools/build-catalogue.mjs
-
-# 2. bulk: one Chrome window, one Cloudflare solve, a list of shows
-node tools/harvest-batch.mjs                            # tools/shows.txt (4 shows)
-node tools/harvest-batch.mjs --file tools/shows-bulk.txt # 156 shows/films
-node tools/harvest-batch.mjs --all-seasons --max-eps 0   # every season, every episode
-node tools/harvest-batch.mjs --force                    # redo shows already stored
-
-# 3. from a device log (the scrape prints one `kwik-id {...}` per tier)
-adb logcat -d | node tools/merge-log.mjs -
+```
+<romaji title> S01E01
+<romaji title> 01
+<english title> 01        (and the absolute episode when the app provides one)
 ```
 
-Then commit `catalogue/`. `index.json` is generated - never hand-edit it.
+The matcher is deliberately strict:
 
-`--profile` keeps Chrome's cookies between runs, so one Cloudflare solve covers
-many runs instead of one:
+- The release must actually contain the show title (group tags are stripped
+  first, so `[SubsPlease] Frieren - 01` still matches).
+- The episode token must match: `S01E01`, `S1 - 01`, `Episode 01`, `- 01`,
+  `01v2`, `[01]`, or the absolute number in `(60)`.
+- A different season is rejected (`S02E05` for a season 1 request).
+- Season packs and batches are rejected: `Batch`, `Complete`, `01-12`,
+  `01 ~ 12`, `S1-S4`, `(01-25)`.
+- OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
+  "Kanketsu-hen" finale specials are rejected.
+- "The Final Season" is mapped to TMDB's last season.
+- `1080p` ranks first, then `720p`; sub ranks above dub; seeders break ties.
 
-```bash
-node tools/harvest-batch.mjs --profile tools/.chrome-profile --all-seasons --max-eps 0
+If Nyaa returns nothing, AnimeTosho's HTML search is tried. Its base32 info
+hashes are decoded to the 40-hex form Nuvio requires.
+
+## Why only single episodes
+
+Nuvio's plugin bridge hardcodes `fileIdx = null` for scraper results, so a batch
+torrent cannot be pointed at the requested file. The scraper therefore returns
+only single-episode releases. Debrid's own file selector is not used for these
+results either.
+
+## What Nuvio accepts
+
+Each result is:
+
+```js
+{
+  title: "Release name",
+  name: "AnimeTorrents · 1080p · Sub",
+  url: "magnet:?xt=urn:btih:<40-hex>",   // required non-blank
+  infoHash: "<40-hex>",
+  quality: "1080p",
+  size: "1.4 GiB",
+  language: "Sub",
+  provider: "AnimeTorrents",
+  type: "torrent",
+  seeders: 26,
+  peers: null,
+  subtitles: []
+}
 ```
 
-It still has to run from a connection the site trusts - a home line. GitHub
-Actions and datacenter hosts get the challenge or a refusal, and the clearance
-cookie is bound to the IP that solved it, so it cannot be solved at home and
-used on a runner.
+Nuvio adds its own tracker list; the scraper does not need to.
 
-Season names are not what decides a season. With a TMDB key present the
-harvester asks TMDB how many episodes each season has - the same numbering the
-app shows - and files entries by their size, in release order:
+## Limits
 
-- `Jujutsu Kaisen: Culling Game` has no "season" in its name, but 24 + 23 + 12
-  episodes add up to TMDB's one 59-episode season, so all of it lands in S1 and
-  every episode is playable.
-- `Demon Slayer: Mugen Train Arc`, `Entertainment District Arc` and the rest
-  fill S2–S5 the same way.
-- A season whose episodes do not add up exactly is **left out and named** in
-  the log (`not filed: "..."`). When sizing fails for the whole show, the run
-  prints `warning: TMDB's season sizes do not add up ...` and falls back to the
-  season in each entry's name, exactly as a keyless run does.
-
-The key is read from `tools/.tmdb-key` (one line, gitignored) or the
-`TMDB_API_KEY` environment variable. Without it, seasons are matched by name
-only, which is why an arc-named season used to go missing.
-
-Harvest behaviour worth knowing:
-
-- **Adding shows in bulk** is one line per show in a list file. Run it with
-  `--dry-run` first: it prints the seasons it would fill and how many episodes
-  each would have, opens no play pages and writes nothing. Then run the same
-  command without `--dry-run`; finished shows are skipped and half-done ones are
-  topped up, so it is safe to interrupt.
-- **Building the list** is `node tools/build-show-list.mjs [maxShows] [outFile]`.
-  It asks TMDB for Japanese animation that clears a quality gate (200+ votes at
-  6.5, or 50+ at 7.0 — popularity alone lets a 10/10 from three people through),
-  groups it by genre and writes `shows-curated.txt` in the harvester's format.
-  That gate yields about 1,400 titles; `--include-tail` adds the 20-vote tail to
-  reach 2,000. Delete any line you do not want. Films are written as one row
-  each (`| 1 | 1 | 0`) and grouped last. TMDB has no Romance genre for TV, so
-  romance anime sit under Comedy and Drama.
-- **A film is not a season.** TMDB has it as its own title and the app asks for
-  it at `S1E1`, so it gets its own file and its own line, with the app's title
-  in the last column:
-  `Demon Slayer: Infinity Castle | 1 | 1 | 0 | -1 | Demon Slayer: Kimetsu no Yaiba Infinity Castle`.
-  A film that appears in a show's search results is never folded into a season;
-  the run prints `film not filed: "..."` so it can be added.
-
-- The search hit is picked by **title relevance first, episode count second**:
-  an exact (case/punctuation/doubled-letter folded) title wins, then a title
-  that starts with the term, then the longest run. Sorting by episode count
-  alone once picked *Naruto Shippuden* for "Naruto". Force a hit with
-  `resultIndex` in the list.
-- **The search returns eight hits and cannot page** (`&page=2` comes back as
-  page 1, and the `next_page_url` it advertises answers 403). A franchise with
-  more than eight entries therefore used to lose its later seasons — Attack on
-  Titan's Final Season among them. The `/anime` page lists every show, so the
-  entries the search left out are found there and looked up by name; that costs
-  one request only for the shows with a large family of titles.
-- **One line = one season** by default: the harvester takes one AnimePahe entry
-  and its first `maxEpisodes`. `--all-seasons` instead fills every season TMDB
-  defines, all in the one file, each keyed by the app's season. `--max-eps 0`
-  takes every episode, and a `--max-eps` on the command line overrides the
-  list's `maxEpisodes` column. Shows over 500 TMDB episodes are deferred by
-  default (reported as `defer`); resume them later by passing `--include-over-500`.
-- An entry **named after an arc** ("X: Culling Game", "X: Mugen Train Arc") is
-  filed by size, so it no longer needs a line of its own. A sequel that is a
-  different TMDB show (a spin-off) is not - it has its own `appTitle` line or
-  it is skipped.
-- A mis-picked entry is safe: the index is keyed on the **site's** title, so
-  rows that belong to another show never match and play falls back to a scrape.
-- `--max-eps` above what is stored **tops up only the missing episodes**; it
-  does not re-fetch what is already there. No `--force` needed.
-- The first Cloudflare challenge **stops the whole run** instead of retrying;
-  shows already written stay written, and re-running resumes.
-  `--wait-challenge 300` instead waits up to five minutes for you to tick the
-  box, which is the difference between ten shows a sitting and all of them.
-- Measured pacing: ~0.7s per episode (600ms sleep + one play page). Four
-  12-episode shows take ~45s; 156 shows are ~25-30 minutes. `kwik.cx` is never
-  touched, so the page throttle does not apply.
-
-### Weekly airing shows
-
-A season that is still airing is filed as it stands: the site's list ends
-mid-season, the rows go in for the episodes that exist, and the log marks the
-season `[airing 5/12]`. Next week's run finds the file, sees the stored
-episodes, and fetches only the new ones — no `--force`, no rewriting.
-
-`--airing-only` skips every show TMDB has no next episode for, so a weekly run
-over the whole list costs one TMDB lookup per show and site requests only for
-the ones that actually aired something:
-
-```bash
-node tools/harvest-batch.mjs --file tools/shows-curated.txt --all-seasons \
-  --max-eps 0 --airing-only --profile tools/.chrome-profile --wait-challenge 300
-```
-
-One command a week, about two minutes of TMDB lookups plus one request per new
-episode (~15s per airing show). A show TMDB cannot identify is harvested
-anyway, because skipping it on a failed lookup is how a week goes missing.
-No list to maintain: the curated list is the source and TMDB decides which of
-its shows are running.
-
-### Why there is no daily job on GitHub
-
-A `catalogue.yml` workflow was tried on 2026-11-18 and deleted again: on a
-GitHub runner its Chromium sat on Cloudflare's interstitial for the full 180s
-wait, then quit with `challenge did not clear within 180s`. Datacenter ranges
-(Azure, where runners live) are refused outright, so this is not a scripting
-problem — only a connection Cloudflare trusts gets in, which means a residential
-one.
-
-Ways to fill it unattended that are actually viable:
-
-- `--wait-challenge 300` on the laptop: a challenge pauses the run for up to
-  five minutes while you tick the box, then finishes the whole list.
-- An always-on machine on your own internet (an old PC, a Pi, a spare phone):
-  the same command on a cron, and the catalogue is then never stale.
-- Nothing at all, if you only watch on the TV: a missed episode still plays
-  because the plugin scrapes it live. The catalogue removes the Cloudflare step
-  from repeat plays; it is not what makes playback work.
-
-Either way it maintains the shows in `tools/shows-bulk.txt`; it does not
-discover new anime.
-
-### Limits worth knowing
-
-- **Numbering.** Rows are keyed by the app's own season/episode, because that
-  is the only numbering available without resolving the episode. A season the
-  site numbers continuously (S2E1 listed as episode 26) is shifted
-  automatically: `inferOffset` maps the entry's first episode to e=1. An
-  explicit `episodeOffset` in the list overrides it. A wrong key is a miss,
-  never a wrong episode.
-- **`kwik.cx/e/<id>` throttles**, ~10 page loads in a couple of minutes, then
-  ~1 minute of 403. The CDN does not throttle (8 rapid range requests: all
-  206). Normal watching is far below the limit; a burst reveal is not.
-- **A re-upload kills an id.** That episode scrapes once, and the scrape's
-  `kwik-id` line is the replacement.
-- **Reachability.** The catalogue is read over `raw.githubusercontent.com`.
-  On a network that blocks it, every play is a miss and behaves exactly like
-  the plugin without a catalogue.
+- Most anime torrents are **softsub MKV** (subtitles as a track inside the
+  file), not hardsubbed MP4. Playback depends on Media3/ExoPlayer supporting the
+  codec (HEVC/x265 is common) and rendering the subtitle track.
+- A low-seed release buffers on a TV stick. Debrid is the smooth path.
+- Nyaa's RSS is open, but an ISP/network that blocks `nyaa.si` will fall back to
+  AnimeTosho (or return nothing).
+- Only English-translated releases are searched (`c=1_2`).
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `manifest.json` | Repository manifest read by the app |
-| `animepahe.js` | The scraper plugin |
-| `selftest.js` | Node self-check for the non-trivial logic (`node selftest.js`) |
-| `catalogue/` | Static kwik-id data (see `catalogue/README.md`) |
-| `tools/` | Laptop-side writers for `catalogue/` |
+| `anime-torrent.js` | The scraper (`getStreams`) |
+| `manifest.json` | Repository manifest read by Nuvio |
+| `selftest.js` | Offline checks: matching, hash decoding, result shape |
 
-## Notes
+Run the self-check:
 
-- The plugin reads `TMDB_API_KEY` from the host app at runtime; no key is
-  stored in this repository.
-- Season/episode matching uses the app's own absolute episode number when
-  available, falls back to cumulative TMDB season counting, and skips
-  OVAs/movies/specials so they cannot shift the offset.
-- **Returns the direct MP4 download** and nothing else: the kwik `/e/` page is
-  unpacked to its signed playlist, and the sibling `/mp4/` path (same hash,
-  minus the last segment) is the one progressive, seekable file. The HLS
-  playlist is never offered: it cannot seek or resume in the player. A release
-  with no download is reported as no stream.
-- At most two AnimePahe searches (English title + shortest JP romaji title) and
-  at most two release pages per probe, cached per run, because AnimePahe
-  rate-limits hard. A single 429 is retried once.
-- A catalogue lookup is at most two HTTPS requests (index + show), cached for
-  10 minutes; a failure is cached the same way so a blocked host costs one
-  timeout, not one per play.
+```
+node selftest.js
+```
+
+`tools/` is leftover AnimePahe harvesting tooling and is not used by the
+installed plugin. It is kept only so nothing is lost.
+
+## Rollback
+
+The AnimePahe scraper was archived before removal:
+
+```
+git branch -a                    # backup/animepahe-20261122-203337
+git tag -l                       # animepahe-20261122-203337
+ls ../backups/                   # nuvio-animepahe-*.zip
+```
+
+Restore it with:
+
+```
+git checkout main
+git reset --hard animepahe-20261122-203337
+```
+
+or unpack `../backups/nuvio-animepahe-worktree-20261122-203337.zip` (includes
+untracked files) / `../backups/nuvio-animepahe-20261122-203337.zip` (committed
+HEAD only).
