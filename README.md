@@ -33,7 +33,7 @@ starts `TorrentState.Connecting → Streaming` or asks debrid for a link.
 
 ```
 TMDB (English + romaji titles, season count)
-  -> Nyaa RSS search (Anime / English-translated, seeders first)
+  -> Nyaa RSS + AnimeTosho HTML, queried in parallel (8s cap per request)
   -> strict release matcher
   -> magnet (40-hex infoHash)
 ```
@@ -60,8 +60,9 @@ The matcher is deliberately strict:
 - "The Final Season" is mapped to TMDB's last season.
 - `1080p` ranks first, then `720p`; sub ranks above dub; seeders break ties.
 
-If Nyaa returns nothing, AnimeTosho's HTML search is tried. Its base32 info
-hashes are decoded to the 40-hex form Nuvio requires.
+AnimeTosho's HTML search runs alongside Nyaa and carries the same releases; its
+base32 info hashes are decoded to the 40-hex form Nuvio requires. Running both
+together is what keeps lookups working on networks that block `nyaa.si`.
 
 ## Why only single episodes
 
@@ -99,8 +100,9 @@ Nuvio adds its own tracker list; the scraper does not need to.
   file), not hardsubbed MP4. Playback depends on Media3/ExoPlayer supporting the
   codec (HEVC/x265 is common) and rendering the subtitle track.
 - A low-seed release buffers on a TV stick. Debrid is the smooth path.
-- Nyaa's RSS is open, but an ISP/network that blocks `nyaa.si` will fall back to
-  AnimeTosho (or return nothing).
+- Nyaa's RSS is open, but an ISP/network that blocks `nyaa.si` (connection
+  hangs, or the host resolves to a block page) has no effect here: AnimeTosho is
+  queried in parallel, and every request is capped at 8 seconds.
 - Only English-translated releases are searched (`c=1_2`).
 
 ## Files

@@ -7,9 +7,9 @@
 //     -> strict release matcher (episode token, season guard, batch rejection)
 //     -> one magnet per release -> Nuvio's P2P engine or a debrid provider
 //
-// AnimeTosho's HTML search is the fallback when Nyaa returns nothing (or is
-// unreachable). It carries the same releases under a base32 info hash, which
-// is decoded to the 40-hex form Nuvio expects.
+// AnimeTosho's HTML search runs alongside Nyaa: it carries the same releases
+// under a base32 info hash (decoded to the 40-hex form Nuvio expects) and stays
+// reachable on networks that block Nyaa.
 //
 // Only single-episode releases are returned. Nuvio's plugin bridge hardcodes
 // fileIdx = null, so a batch cannot be resolved to the requested episode.
@@ -19,6 +19,11 @@ var TMDB_BASE = "https://api.themoviedb.org/3";
 var NYAA_URL = "https://nyaa.si/";
 var ANIMETOSHO_URL = "https://animetosho.org/search";
 var MAX_RESULTS = 10;
+
+// Nuvio kills a plugin after 60s. A blocked host (ISP blackhole, firewall)
+// never settles a fetch, so every request needs its own ceiling or the whole
+// lookup dies before any source answers.
+var REQUEST_TIMEOUT_MS = 8000;
 
 var UA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -143,7 +148,20 @@ async function tmdbJson(path) {
         "api_key=" +
         encodeURIComponent(key) +
         "&language=en-US";
-    var res = await fetch(url, { headers: { Accept: "application/json" } });
+    // TMDB resets a connection now and then on this class of network. One
+    // retry turns that into a working lookup instead of "no streams".
+    var res = null;
+    for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+            res = await withTimeout(
+                fetch(url, { headers: { Accept: "application/json" } }),
+                "TMDB " + path
+            );
+            break;
+        } catch (e) {
+            if (attempt === 1) throw e;
+        }
+    }
     if (!res.ok) {
         var why = res.status === 0 && res.statusText ? " (" + res.statusText + ")" : "";
         throw new Error("TMDB HTTP " + res.status + why + " for " + path);
@@ -324,6 +342,32 @@ function scoreOf(candidate, req) {
 // Sources
 // ---------------------------------------------------------------------------
 
+/** Races a promise against a timer so one dead host cannot stall the request. */
+function withTimeout(promise, label) {
+    return new Promise(function (resolve, reject) {
+        var settled = false;
+        var timer = setTimeout(function () {
+            if (settled) return;
+            settled = true;
+            reject(new Error(label + " timed out after " + REQUEST_TIMEOUT_MS + "ms"));
+        }, REQUEST_TIMEOUT_MS);
+        promise.then(
+            function (value) {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(value);
+            },
+            function (error) {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                reject(error);
+            }
+        );
+    });
+}
+
 function parseNyaaRss(xml) {
     var out = [];
     var re = /<item>([\s\S]*?)<\/item>/gi;
@@ -378,12 +422,15 @@ async function nyaaSearch(query) {
         "?page=rss&q=" +
         encodeURIComponent(query) +
         "&c=1_2&f=0&s=seeders&o=desc";
-    var res = await fetch(url, {
-        headers: {
-            "User-Agent": UA,
-            Accept: "application/rss+xml, application/xml, text/xml, */*"
-        }
-    });
+    var res = await withTimeout(
+        fetch(url, {
+            headers: {
+                "User-Agent": UA,
+                Accept: "application/rss+xml, application/xml, text/xml, */*"
+            }
+        }),
+        "Nyaa"
+    );
     if (!res.ok) throw new Error("Nyaa HTTP " + res.status);
     var xml = await res.text();
     if (isCloudflareBlock(xml)) throw new Error("Nyaa blocked by Cloudflare");
@@ -393,9 +440,25 @@ async function nyaaSearch(query) {
 async function animetoshoSearch(query) {
     var url =
         ANIMETOSHO_URL + "?q=" + encodeURIComponent(query) + "&type=torrent&order=seeders";
-    var res = await fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } });
+    var res = await withTimeout(
+        fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } }),
+        "AnimeTosho"
+    );
     if (!res.ok) throw new Error("AnimeTosho HTTP " + res.status);
     return parseAnimeTosho(await res.text());
+}
+
+/** One source/query pair. A failure returns [] so the other sources still
+ *  contribute instead of aborting the lookup. */
+async function searchSource(search, label, query) {
+    try {
+        var found = await search(query);
+        console.log("[AnimeTorrents] " + label + " '" + query + "' -> " + found.length);
+        return found;
+    } catch (e) {
+        console.error("[AnimeTorrents] " + label + " '" + query + "' failed: " + (e && e.message));
+        return [];
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -510,31 +573,24 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
 
         var candidates = [];
         var seen = {};
+
+        // Both sources run together. Nyaa orders by seeders; AnimeTosho mirrors
+        // the same releases behind a host that survives ISP-level Nyaa blocks.
+        // One at a time meant a blocked Nyaa burned the whole 60s plugin budget
+        // before the fallback was ever tried.
+        var jobs = [];
         for (var i = 0; i < queries.length; i++) {
-            try {
-                var found = await nyaaSearch(queries[i]);
-                console.log("[AnimeTorrents] nyaa '" + queries[i] + "' -> " + found.length);
-                addCandidates(found, candidates, seen);
-            } catch (e) {
-                console.error("[AnimeTorrents] nyaa '" + queries[i] + "' failed: " + (e && e.message));
-            }
+            jobs.push(searchSource(nyaaSearch, "nyaa", queries[i]));
+        }
+        for (var j = 0; j < Math.min(queries.length, 2); j++) {
+            jobs.push(searchSource(animetoshoSearch, "animetosho", queries[j]));
+        }
+        var batches = await Promise.all(jobs);
+        for (var b = 0; b < batches.length; b++) {
+            addCandidates(batches[b], candidates, seen);
         }
 
-        // Fallback only when Nyaa produced no matching release: AnimeTosho
-        // mirrors the same torrents and costs one extra request.
         var matched = matchCandidates(candidates, req);
-        if (!matched.length) {
-            for (var j = 0; j < Math.min(queries.length, 2); j++) {
-                try {
-                    var extra = await animetoshoSearch(queries[j]);
-                    console.log("[AnimeTorrents] animetosho '" + queries[j] + "' -> " + extra.length);
-                    addCandidates(extra, candidates, seen);
-                } catch (e) {
-                    console.error("[AnimeTorrents] animetosho '" + queries[j] + "' failed: " + (e && e.message));
-                }
-            }
-            matched = matchCandidates(candidates, req);
-        }
 
         matched.sort(function (a, b) {
             if (b.score !== a.score) return b.score - a.score;

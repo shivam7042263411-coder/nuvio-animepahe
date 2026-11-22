@@ -95,8 +95,8 @@ const sandbox = {
     isNaN,
     parseInt,
     encodeURIComponent,
-    setTimeout: (fn) => { fn(); return 0; },
-    clearTimeout() {},
+    setTimeout: (fn, ms) => setTimeout(fn, ms),
+    clearTimeout: (id) => clearTimeout(id),
     TMDB_API_KEY: "test",
     module: { exports: {} },
     fetch: async (url) => {
@@ -208,7 +208,7 @@ check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
 (async () => {
     const results = await sandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
 
-    check("returns the four real episode 1 releases", results.length, 4);
+    check("returns the real episode 1 releases from both sources", results.length, 5);
     check("1080p sub ranks first", results[0] && results[0].infoHash, HASH.a);
 
     const badUrl = results.filter((r) => !/^magnet:\?xt=urn:btih:[0-9a-f]{40}$/.test(r.url));
@@ -227,6 +227,43 @@ check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
     const fallback = await sandbox.module.exports.getStreams(999, "tv", 1, 1, 1);
     check("fallback: AnimeTosho fills a Nyaa miss", fallback.length, 1);
     check("fallback: decoded 40-hex hash", fallback[0] && fallback[0].infoHash, "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9");
+
+    // A dead host must be bounded: Nyaa is blackholed on this ISP and its fetch
+    // never settles, but the lookup still has to return via AnimeTosho inside
+    // Nuvio's 60s plugin timeout.
+    const hangSource = source.replace("var REQUEST_TIMEOUT_MS = 8000;", "var REQUEST_TIMEOUT_MS = 60;");
+    const hangSandbox = Object.assign({}, sandbox, {
+        module: { exports: {} },
+        fetch: async (url) => {
+            if (url.indexOf("nyaa.si") !== -1) return new Promise(() => {});
+            return sandbox.fetch(url);
+        },
+    });
+    vm.createContext(hangSandbox);
+    vm.runInContext(hangSource, hangSandbox);
+    const hangStart = Date.now();
+    const hung = await hangSandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
+    check("hanging host: still returns streams", hung.length > 0, true);
+    check("hanging host: wait stays bounded", Date.now() - hangStart < 3000, true);
+
+    // One reset of the TMDB connection must not empty the stream list.
+    const flakySandbox = Object.assign({}, sandbox, {
+        module: { exports: {} },
+        fetch: (() => {
+            let failedOnce = false;
+            return async (url) => {
+                if (!failedOnce && url.indexOf("api.themoviedb.org") !== -1 && url.indexOf("/tv/1429?") !== -1) {
+                    failedOnce = true;
+                    throw new Error("connection reset");
+                }
+                return sandbox.fetch(url);
+            };
+        })(),
+    });
+    vm.createContext(flakySandbox);
+    vm.runInContext(source, flakySandbox);
+    const retried = await flakySandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
+    check("TMDB retry: one reset still yields streams", retried.length > 0, true);
 
     console.log(failures.length ? `\n${failures.join("\n")}\n\n${failures.length} FAILED` : "\nALL PASS");
     console.log(`fetch calls: ${fetchCalls}`);
