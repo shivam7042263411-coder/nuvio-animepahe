@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-21",
+  "updated": "2026-11-22",
   "shows": [
     {
       "file": "100-meters.json",
@@ -8,6 +8,13 @@
       "aliases": [],
       "season": 1,
       "year": 2025
+    },
+    {
+      "file": "86-eighty-six.json",
+      "title": "86: Eighty-Six",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
     },
     {
       "file": "a-silent-voice.json",
@@ -255,6 +262,13 @@
       "year": 2025
     },
     {
+      "file": "dr-stone.json",
+      "title": "Dr. STONE",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
       "file": "dragon-ball-daima.json",
       "title": "Dragon Ball DAIMA",
       "aliases": [],
@@ -334,6 +348,13 @@
       "aliases": [],
       "season": 1,
       "year": 2015
+    },
+    {
+      "file": "great-pretender.json",
+      "title": "Great Pretender",
+      "aliases": [],
+      "season": 1,
+      "year": 2020
     },
     {
       "file": "haikyuu.json",
@@ -448,6 +469,15 @@
       "aliases": [],
       "season": 1,
       "year": 2020
+    },
+    {
+      "file": "jojo-s-bizarre-adventure.json",
+      "title": "JoJo's Bizarre Adventure",
+      "aliases": [
+        "JoJo's Bizarre Adventure (2012)"
+      ],
+      "season": 1,
+      "year": 2012
     },
     {
       "file": "jujutsu-kaisen.json",
@@ -686,6 +716,13 @@
       "year": 2021
     },
     {
+      "file": "shangri-la-frontier.json",
+      "title": "Shangri-La Frontier",
+      "aliases": [],
+      "season": 1,
+      "year": 2023
+    },
+    {
       "file": "shikimori-s-not-just-a-cutie.json",
       "title": "Shikimori's Not Just a Cutie",
       "aliases": [],
@@ -733,6 +770,13 @@
       "aliases": [],
       "season": 1,
       "year": 2024
+    },
+    {
+      "file": "summer-time-rendering.json",
+      "title": "Summer Time Rendering",
+      "aliases": [],
+      "season": 1,
+      "year": 2022
     },
     {
       "file": "sword-art-online.json",
@@ -840,6 +884,13 @@
       "year": 2022
     },
     {
+      "file": "the-promised-neverland.json",
+      "title": "The Promised Neverland",
+      "aliases": [],
+      "season": 1,
+      "year": 2019
+    },
+    {
       "file": "the-rising-of-the-shield-hero.json",
       "title": "The Rising of the Shield Hero",
       "aliases": [],
@@ -872,6 +923,13 @@
     {
       "file": "the-world-s-finest-assassin-gets-reincarnated-in-another-world-as-an-aristocrat.json",
       "title": "The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+      "aliases": [],
+      "season": 1,
+      "year": 2021
+    },
+    {
+      "file": "to-your-eternity.json",
+      "title": "To Your Eternity",
       "aliases": [],
       "season": 1,
       "year": 2021
