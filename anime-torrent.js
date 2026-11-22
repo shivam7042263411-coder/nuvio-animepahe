@@ -364,7 +364,10 @@ function episodeInfo(title) {
 
 function matchesRequest(title, req) {
     if (isBatch(title)) return false;
-    if (/\b(ova|oad|special|specials|recap|picture drama|chibi|junior high)\b/i.test(title)) return false;
+    // "OADs"/"OVAs" are plural in many release names, so the noun needs its own
+    // boundary: \boad\b does not match "OADs", which let specials through.
+    if (/\b(?:ova|oad)s?\b/i.test(title)) return false;
+    if (/\b(?:special|specials|recap|picture drama|chibi|junior high)\b/i.test(title)) return false;
     if (/\b(kanketsu|final chapter|final chapters)\b/i.test(title) || /完结篇|完結編|前篇|後篇/.test(title)) return false;
     if (!isRelevant(title, req.titles)) return false;
 
@@ -382,8 +385,16 @@ function matchesRequest(title, req) {
                 (req.absoluteEpisode != null && ep.absolute === req.absoluteEpisode)));
     if (!epOk) return false;
 
-    // "The Final Season" carries no number; map it to TMDB's last season.
-    if (/\bfinal season\b/i.test(title) && req.lastSeason && req.season !== req.lastSeason) return false;
+    // "The Final Season" carries no number. Map it to TMDB's last season, and
+    // otherwise reject it: Kitsu-resolved anime never report a last season, so
+    // a season-1 request was accepting "The Final Season Part 2 - E01".
+    if (/\bfinal season\b/i.test(title)) {
+        var asksFinal = false;
+        for (var f = 0; f < req.titles.length; f++) {
+            if (/\bfinal season\b/i.test(req.titles[f])) { asksFinal = true; break; }
+        }
+        if (!asksFinal && !(req.lastSeason != null && req.season === req.lastSeason)) return false;
+    }
 
     if (ep.season != null) return ep.season === req.season;
     if (hints.length) return hints.indexOf(req.season) !== -1;
@@ -587,6 +598,19 @@ function addCandidates(list, out, seen) {
     }
 }
 
+/**
+ * Drops releases with no seeders when a live alternative exists. A dead torrent
+ * never fetches metadata, so the player sits on "fetching torrent metadata"
+ * until the engine gives up.
+ */
+function dropDeadReleases(list) {
+    var live = [];
+    for (var i = 0; i < list.length; i++) {
+        if (toInt(list[i].seeders, 0) > 0) live.push(list[i]);
+    }
+    return live.length ? live : list;
+}
+
 function matchCandidates(candidates, req) {
     var matched = [];
     for (var i = 0; i < candidates.length; i++) {
@@ -666,7 +690,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             }
         }
 
-        await querySource(animetoshoSearch, "animetosho", 2);
+        await querySource(animetoshoSearch, "animetosho", queries.length);
         var matched = matchCandidates(candidates, req);
 
         if (!matched.length) {
@@ -678,6 +702,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             if (b.score !== a.score) return b.score - a.score;
             return toInt(b.seeders, 0) - toInt(a.seeders, 0);
         });
+        matched = dropDeadReleases(matched);
 
         for (var n = 0; n < matched.length && results.length < MAX_RESULTS; n++) {
             results.push(makeResult(matched[n]));

@@ -228,6 +228,23 @@ check(
     sandbox.matchesRequest("Attack on Titan The Final Season - 01 [1080p]", Object.assign({}, REQ, { season: 4 })),
     true
 );
+check(
+    "match: OADs (plural) rejected",
+    sandbox.matchesRequest("Shingeki no Kyojin OADs - 01 - ENG 1080p WEB H.264 (FUNi).mkv", REQ),
+    false
+);
+check(
+    "match: final season part 2 rejected for season 1",
+    sandbox.matchesRequest(
+        "Shingeki no Kyojin: The Final Season Part 2 - E01 [1080p x265 HEVC]",
+        Object.assign({}, REQ, { lastSeason: null })
+    ),
+    false
+);
+// A zero-seeder release never fetches metadata, so it must not sit in the list
+// next to a live one; it is kept only when it is all that matched.
+check("dead releases: dropped when a live one exists", sandbox.dropDeadReleases([{ seeders: 0 }, { seeders: 5 }]).length, 1);
+check("dead releases: kept when every release is dead", sandbox.dropDeadReleases([{ seeders: 0 }]).length, 1);
 
 // --- hash decoding ---------------------------------------------------------
 check(
@@ -277,7 +294,7 @@ check(
     check("every infoHash is 40 lowercase hex", badHash.length, 0);
     check("no blank urls", results.filter((r) => !r.url).length, 0);
     check("no fileIdx is emitted", results.filter((r) => "fileIdx" in r).length, 0);
-    check("no batches/OVAs/wrong episodes", results.filter((r) => /batch|ova|S02E05|01-25/i.test(r.title)).length, 0);
+    check("no batches/OVAs/OADs/wrong episodes", results.filter((r) => /batch|ova|oad|S02E05|01-25|final season/i.test(r.title)).length, 0);
     check("duplicate hash deduped", results.filter((r) => r.infoHash === ATS_MAIN).length, 1);
     check("sub and dub both labelled", [results.some((r) => r.language === "Sub"), results.some((r) => r.language === "Dub")], [true, true]);
     check("results are torrent type", results.every((r) => r.type === "torrent"), true);
