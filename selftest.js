@@ -1215,6 +1215,63 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [30, "1,2,3,4,5,6,7,8,9,10,11,12", Array.from({ length: 18 }, (_, i) => i + 1).join(",")]
     );
+    // Real output, 2026-11-22: "86 Eighty-Six Part 2" lists its special as
+    // 17.5 between 17 and 18, and the slice refused the whole show (11 of 23
+    // episodes kept). A fractional number is a special, not an episode, so it
+    // is skipped and the list still covers the season.
+    const eightyPool = [
+        { title: "86 Eighty-Six", session: "p1", year: 2021, episodes: 11, type: "TV" },
+        { title: "86 Eighty-Six Part 2", session: "p2", year: 2021, episodes: 12, type: "TV" },
+    ];
+    const eightyFetch = async (url) => {
+        if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: eightyPool }) };
+        if (url.includes("m=release")) {
+            const part2 = url.includes("id=p2");
+            const data = [];
+            if (!part2) for (let i = 1; i <= 11; i++) data.push({ episode: String(i), session: "a" + i });
+            else
+                for (let i = 12; i <= 23; i++) {
+                    if (i === 18) data.push({ episode: "17.5", session: "special" });
+                    data.push({ episode: String(i), session: "b" + i });
+                }
+            return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+        }
+        return { status: 200, ok: true, text: async () => '<button data-src="/e/AA1080" data-audio="jpn">1080p</button>' };
+    };
+    const eighty = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "86: Eighty-Six", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false,
+        seasons: [{ n: 1, episodes: 23, year: "2021" }],
+    }))(eightyFetch, FakeDom, (fn) => fn());
+    check(
+        "a fractional episode number is a special, not a hole in the list",
+        [eighty.error || null, eighty.rows.length, eighty.rows.map((r) => r.e).join(",")],
+        [null, 23, Array.from({ length: 23 }, (_, i) => i + 1).join(",")]
+    );
+    // The same shortening is refused when the seasons need the episodes the
+    // dropped number would have supplied: then the site does count it.
+    const shortList = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "One Piece", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false,
+        seasons: [{ n: 1, episodes: 12, year: "1999" }, { n: 2, episodes: 18, year: null }],
+    }))(
+        async (url) => {
+            if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: longPool }) };
+            if (url.includes("m=release")) {
+                const data = [{ episode: "0.5", session: "pre" }];
+                for (let i = 1; i <= 29; i++) data.push({ episode: String(i), session: "s" + i });
+                return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+            }
+            return fakeFetch(url);
+        },
+        FakeDom,
+        (fn) => fn()
+    );
+    check(
+        "a shortened list that no longer covers the seasons is still refused",
+        typeof shortList.error === "string" && shortList.error.indexOf("short release list") === 0,
+        true
+    );
     // Real output, 2026-11-20: Naruto's search pool also carries "Naruto
     // Shippuden" (500 episodes, a TMDB show of its own), so the entry sums
     // could never equal TMDB's 52/52/54/62 and all 220 episodes landed in

@@ -627,13 +627,19 @@ export function harvestScript(show) {
       }
       if (page >= (j.last_page || 1)) break;
     }
+    // The site numbers a special with a fraction beside the episodes it belongs
+    // to ("86 Eighty-Six Part 2" lists 17, 17.5, 18). TMDB counts whole
+    // episodes, so 17.5 is not an episode of the season and walking it would
+    // shift every episode after it. It is dropped, and the check below holds the
+    // shortened list to the episodes the seasons actually need.
+    const whole = eps.filter((e) => Number.isInteger(Number(e.episode)));
     // A sliced entry is walked by position: its nth listed episode becomes the
     // app's nth episode of the season. That is only sound when the list has no
     // holes - a missing episode would shift every later one. One Piece is 1180
     // episodes in a single entry, so this is exactly where a hole would hurt
     // most. Refuse to slice a list with a gap rather than store wrong episodes.
     if (parts.some((p) => p.from != null)) {
-      const nums = eps.map((e) => Number(e.episode));
+      const nums = whole.map((e) => Number(e.episode));
       const hole = nums.findIndex((n, i) => i > 0 && n !== nums[i - 1] + 1);
       if (hole !== -1) {
         return {
@@ -644,30 +650,44 @@ export function harvestScript(show) {
           rows,
         };
       }
+      // Dropping a fractional number must not leave the entry shorter than the
+      // seasons it fills: that would mean the site counts it as an episode and
+      // every episode after it would be filed one off.
+      const need = Math.max(...parts.map((p) => (p.to == null ? 0 : p.to)));
+      if (need > whole.length) {
+        return {
+          error:
+            'short release list for "' + (parts[0].title || session) + '": seasons need ' +
+            need + ' episode(s), the list has ' + whole.length + '; refusing to slice it',
+          show: showOf(),
+          rows,
+        };
+      }
     }
     for (const plan of parts) {
       // Single-entry mode keeps the site's own numbering (gaps stay gaps).
       let off = offset;
       if (!allSeasons && off === null) {
-        off = inferOffset(null, eps.map((e) => Number(e.episode)).filter((n) => n >= 1 && Number.isFinite(n)));
+        off = inferOffset(null, whole.map((e) => Number(e.episode)).filter((n) => n >= 1 && Number.isFinite(n)));
       }
       const from = plan.from != null ? Math.max(1, plan.from) : 1;
       const to = plan.to != null ? plan.to : Infinity;
       let taken = 0;
-      for (let pos = 1; pos <= eps.length; pos++) {
+      for (let pos = 1; pos <= whole.length; pos++) {
         if (pos < from || pos > to) continue;
         if (maxEps > 0 && taken >= maxEps) break;
         taken++;
         const appEp = allSeasons
           ? (seasonBase[plan.season] || 0) + (pos - from + 1)
-          : Number(eps[pos - 1].episode) - off;
+          : Number(whole[pos - 1].episode) - off;
+
         // Already stored: count it, but do not spend a request.
         if (!force && have.indexOf(plan.season + '/' + appEp) !== -1) {
           skipped++;
           continue;
         }
         if (!dryRun) {
-          const pr = await fetchLimited('/play/' + session + '/' + eps[pos - 1].session);
+          const pr = await fetchLimited('/play/' + session + '/' + whole[pos - 1].session);
           if (!pr) return { error: 'throttled', show: showOf(), rows };
           const html = await pr.text();
           // One challenge is the signal to stop the whole batch, not skip a show.
