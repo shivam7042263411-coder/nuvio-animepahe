@@ -1,0 +1,66 @@
+# The shows you asked for first. Harvested on its own, ahead of the big list.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+# The full list is tools/shows-priority.txt; this file is its top section.
+
+86: Eighty-Six | 0 | 1 | 0
+Summer Time Rendering | 0 | 1 | 0
+Dr. STONE | 0 | 1 | 0
+JoJo's Bizarre Adventure | 0 | 1 | 0
+The Promised Neverland | 0 | 1 | 0
+Great Pretender | 0 | 1 | 0
+To Your Eternity | 0 | 1 | 0
+Shangri-La Frontier | 0 | 1 | 0
+Bleach | 0 | 1 | 0
+Noragami | 0 | 1 | 0
+Death Parade | 0 | 1 | 0
+Fairy Tail | 0 | 1 | 0
+Kuroko's Basketball | 0 | 1 | 0
+Fighting Spirit | 0 | 1 | 0
+Slam Dunk | 0 | 1 | 0
+From Me to You: Kimi ni Todoke | 0 | 1 | 0
+Tsukigakirei | 0 | 1 | 0
+ReLIFE | 0 | 1 | 0
+Undead Unluck | 0 | 1 | 0
+Hunter x Hunter | 0 | 1 | 0
+Dororo | 0 | 1 | 0
+Golden Kamuy | 0 | 1 | 0
+Beyond the Boundary | 0 | 1 | 0
+Fate/stay night [Unlimited Blade Works] | 0 | 1 | 0
+Fate/stay night: Heaven's Feel I. Presage Flower | 0 | 1 | 0
+Fate/stay night: Heaven's Feel II. Lost Butterfly | 0 | 1 | 0
+Fate/stay night: Heaven's Feel III. Spring Song | 0 | 1 | 0
+Fate/Zero | 0 | 1 | 0
+Lord El-Melloi II's Case Files {Rail Zeppelin} Grace note | 0 | 1 | 0
+Fate/strange Fake: Whispers of Dawn | 0 | 1 | 0
+Fate/strange Fake | 0 | 1 | 0
+Fate/Grand Order - First Order | 0 | 1 | 0
+Fate/Grand Order the Movie: Divine Realm of the Round Table: Camelot 1 Wandering; Agateram | 0 | 1 | 0
+Fate/Grand Order: Divine Realm of the Round Table - Camelot - Paladin; Agateram | 0 | 1 | 0
+Fate/Grand Order Absolute Demonic Front: Babylonia | 0 | 1 | 0
+Fate/Grand Order Final Singularity – Grand Temple of Time: Solomon | 0 | 1 | 0
+Dorohedoro | 0 | 1 | 0
+A Sign of Affection | 0 | 1 | 0
+Golden Time | 0 | 1 | 0
+Lovely Complex | 0 | 1 | 0
+Masamune-kun's Revenge | 0 | 1 | 0
+Call of the Night | 0 | 1 | 0
+Vivy: Fluorite Eye's Song | 0 | 1 | 0
+Akame ga Kill! | 0 | 1 | 0
+The God of High School | 0 | 1 | 0
+Samurai Champloo | 0 | 1 | 0
+Chitose Is in the Ramune Bottle | 0 | 1 | 0
+Monster | 0 | 1 | 0
+Tengoku Daimakyo | 0 | 1 | 0
+Agents of the Four Seasons Dance of Spring | 0 | 1 | 0
+Josee, the Tiger and the Fish | 0 | 1 | 0
+The Garden of Words | 0 | 1 | 0
+Ride Your Wave | 0 | 1 | 0
+The Anthem of the Heart | 0 | 1 | 0
+Her Blue Sky | 0 | 1 | 0
+Hello World | 0 | 1 | 0
+5 Centimeters per Second | 0 | 1 | 0
+Neon Genesis Evangelion | 0 | 1 | 0
+Cowboy Bebop | 0 | 1 | 0
+Code Geass: Lelouch of the Rebellion | 0 | 1 | 0
+Made in Abyss | 0 | 1 | 0
+Bubble | 0 | 1 | 0
