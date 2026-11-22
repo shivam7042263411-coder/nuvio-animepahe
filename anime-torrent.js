@@ -3,12 +3,13 @@
 //
 // Pipeline:
 //   content id (Kitsu / IMDb / TMDB) -> titles (+ season count)
-//     -> AnimeTosho HTML search (Nyaa only when AnimeTosho finds nothing)
+//     -> AnimeTosho HTML search
 //     -> strict release matcher (episode token, season guard, batch rejection)
 //     -> one magnet per release -> Nuvio's P2P engine or a debrid provider
 //
-// AnimeTosho carries Nyaa's releases under a base32 info hash (decoded to the
-// 40-hex form Nuvio expects) and stays reachable on networks that block Nyaa.
+// AnimeTosho mirrors Nyaa (plus TokyoTosho/AniDex/nekoBT) and stays reachable
+// on networks that block Nyaa, so it is the only source. Magnets arrive in
+// base32 and are decoded to the 40-hex btih Nuvio expects.
 //
 // Only single-episode releases are returned. Nuvio's plugin bridge hardcodes
 // fileIdx = null, so a batch cannot be resolved to the requested episode.
@@ -16,7 +17,6 @@
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
 var KITSU_BASE = "https://kitsu.io/api/edge";
-var NYAA_URL = "https://nyaa.si/";
 var ANIMETOSHO_URL = "https://animetosho.org/search";
 var MAX_RESULTS = 10;
 
@@ -31,10 +31,6 @@ var UA =
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
-
-function escapeRegExp(value) {
-    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 function stripTags(value) {
     return String(value == null ? "" : value).replace(/<[^>]*>/g, "");
@@ -53,15 +49,6 @@ function decodeEntities(value) {
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
         .replace(/&amp;/g, "&");
-}
-
-function tagText(block, tag) {
-    var re = new RegExp(
-        "<" + escapeRegExp(tag) + "[^>]*>([\\s\\S]*?)</" + escapeRegExp(tag) + ">",
-        "i"
-    );
-    var m = String(block).match(re);
-    return m ? decodeEntities(stripTags(m[1])).trim() : null;
 }
 
 function normTitle(value) {
@@ -93,17 +80,6 @@ function isRelevant(title, variants) {
         if (v && padded.indexOf(" " + v + " ") !== -1) return true;
     }
     return false;
-}
-
-function isCloudflareBlock(text) {
-    if (!text) return false;
-    var t = String(text);
-    return (
-        t.indexOf("Just a moment") !== -1 ||
-        t.indexOf("Sorry, you have been blocked") !== -1 ||
-        t.indexOf("Attention Required! | Cloudflare") !== -1 ||
-        t.indexOf("cf-error-details") !== -1
-    );
 }
 
 function pad2(n) {
@@ -452,26 +428,6 @@ function withTimeout(promise, label) {
     });
 }
 
-function parseNyaaRss(xml) {
-    var out = [];
-    var re = /<item>([\s\S]*?)<\/item>/gi;
-    var m;
-    while ((m = re.exec(String(xml)))) {
-        var block = m[1];
-        var title = tagText(block, "title");
-        var hash = String(tagText(block, "nyaa:infoHash") || "").toLowerCase();
-        if (!title || !/^[0-9a-f]{40}$/.test(hash)) continue;
-        out.push({
-            title: title,
-            hash: hash,
-            seeders: toInt(tagText(block, "nyaa:seeders"), 0),
-            size: tagText(block, "nyaa:size"),
-            source: "Nyaa"
-        });
-    }
-    return out;
-}
-
 function parseAnimeTosho(html) {
     var out = [];
     var chunks = String(html).split('class="home_list_entry');
@@ -498,27 +454,6 @@ function parseAnimeTosho(html) {
         });
     }
     return out;
-}
-
-async function nyaaSearch(query) {
-    var url =
-        NYAA_URL +
-        "?page=rss&q=" +
-        encodeURIComponent(query) +
-        "&c=1_2&f=0&s=seeders&o=desc";
-    var res = await withTimeout(
-        fetch(url, {
-            headers: {
-                "User-Agent": UA,
-                Accept: "application/rss+xml, application/xml, text/xml, */*"
-            }
-        }),
-        "Nyaa"
-    );
-    if (!res.ok) throw new Error("Nyaa HTTP " + res.status);
-    var xml = await res.text();
-    if (isCloudflareBlock(xml)) throw new Error("Nyaa blocked by Cloudflare");
-    return parseNyaaRss(xml);
 }
 
 async function animetoshoSearch(query) {
@@ -673,12 +608,11 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         var candidates = [];
         var seen = {};
 
-        // AnimeTosho first: it mirrors Nyaa (plus TokyoTosho/AniDex/nekoBT) and
-        // answers every time. Nyaa is only tried when AnimeTosho matched
-        // nothing, because a blocked host never settles its fetch and the
-        // QuickJS runtime keeps the evaluation alive while that async job is
-        // outstanding -- querying Nyaa up front burned the full 60s plugin
-        // budget even though AnimeTosho already had the release.
+        // Only AnimeTosho is queried. A blocked host never settles its fetch and
+        // the QuickJS runtime keeps the evaluation alive while that async job is
+        // outstanding, so one fallback to an unreachable source (nyaa.si here)
+        // burned the full 60s plugin budget and discarded results the scraper
+        // had already produced. AnimeTosho mirrors Nyaa, so there is no loss.
         async function querySource(search, label, count) {
             var jobs = [];
             for (var i = 0; i < Math.min(queries.length, count); i++) {
@@ -692,11 +626,6 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
 
         await querySource(animetoshoSearch, "animetosho", queries.length);
         var matched = matchCandidates(candidates, req);
-
-        if (!matched.length) {
-            await querySource(nyaaSearch, "nyaa", queries.length);
-            matched = matchCandidates(candidates, req);
-        }
 
         matched.sort(function (a, b) {
             if (b.score !== a.score) return b.score - a.score;

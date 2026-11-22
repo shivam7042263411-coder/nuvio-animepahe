@@ -76,15 +76,16 @@ The matcher is deliberately strict:
 - "The Final Season" is mapped to TMDB's last season.
 - `1080p` ranks first, then `720p`; sub ranks above dub; seeders break ties.
 
-AnimeTosho is the primary source: it mirrors Nyaa (plus TokyoTosho, AniDex and
+AnimeTosho is the only source: it mirrors Nyaa (plus TokyoTosho, AniDex and
 nekoBT) and its base32 info hashes are decoded to the 40-hex form Nuvio
-requires. Nyaa's RSS is queried only when AnimeTosho matched nothing.
+requires.
 
-The order matters. Nuvio's QuickJS runtime keeps a plugin evaluation alive until
-every `fetch` it started settles, and its `fetch` cannot be cancelled. A
-blackholed host (ISP block) never settles, so asking Nyaa first cost the whole
-60s plugin budget and the results were discarded — the "no stream found"/timeout
-bug. With AnimeTosho first, a blocked Nyaa is never contacted on the happy path.
+Dropping a direct Nyaa query matters. Nuvio's QuickJS runtime keeps a plugin
+evaluation alive until every `fetch` it started settles, and its `fetch` cannot
+be cancelled. A blackholed host (ISP block) never settles, so one fallback to a
+blocked `nyaa.si` burned the whole 60s plugin budget and the results were
+discarded — the "no stream found"/timeout bug. Since AnimeTosho carries the same
+releases, querying it alone loses nothing and always returns.
 
 ## Why only single episodes
 
@@ -122,10 +123,11 @@ Nuvio adds its own tracker list; the scraper does not need to.
   file), not hardsubbed MP4. Playback depends on Media3/ExoPlayer supporting the
   codec (HEVC/x265 is common) and rendering the subtitle track.
 - A low-seed release buffers on a TV stick. Debrid is the smooth path.
-- A network that blocks `nyaa.si` is handled: AnimeTosho answers first, and Nyaa
-  is never contacted while it does. If AnimeTosho also has no match, the Nyaa
-  attempt is capped at 8 seconds and yields nothing on a blocked network.
-- Only English-translated releases are searched (`c=1_2`).
+- A network that blocks `nyaa.si` is unaffected: nothing but AnimeTosho (and
+  TMDB/Kitsu for ids) is ever contacted, so a blocked host cannot hold the
+  lookup open. When AnimeTosho has no match for an episode, the list is simply
+  empty — no timeout.
+- Only single-episode English-translated releases are searched.
 
 ## Files
 

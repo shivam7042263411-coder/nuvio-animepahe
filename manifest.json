@@ -1,14 +1,14 @@
 {
   "name": "Nuvio Anime Torrents",
-  "version": "1.0.6",
-  "description": "Torrent source for NuvioTV. Strict per-episode matching from Nyaa RSS with an AnimeTosho fallback; returns 40-hex magnets for Nuvio's P2P engine or a debrid provider.",
+  "version": "1.0.7",
+  "description": "Torrent source for NuvioTV. Strict per-episode matching from AnimeTosho; returns 40-hex magnets for Nuvio's P2P engine or a debrid provider.",
   "author": "Nuvio Community",
   "scrapers": [
     {
       "id": "anime-torrent",
       "name": "Anime Torrents",
-      "description": "Per-episode anime magnets from Nyaa (1080p preferred), AnimeTosho fallback",
-      "version": "1.0.6",
+      "description": "Per-episode anime magnets from AnimeTosho (1080p preferred, live releases first)",
+      "version": "1.0.7",
       "filename": "anime-torrent.js",
       "supportedTypes": [
         "movie",
