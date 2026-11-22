@@ -44,8 +44,9 @@ clean_chrome() {
 }
 
 # Start slow. 1200ms is the proven-smooth rate for a healthy connection, but a
-# connection that just took two 429s needs more room than that to recover.
-SEED=2500
+# connection that just took two 429s needs more room than that to recover. GAP
+# lets a delayed restart pick a slower start than a fresh one.
+SEED="${GAP:-2500}"
 stale=0
 echo "=== harvest-all start $(date '+%F %T') list=$LIST (pid $$)" >> "$LOG"
 while :; do
