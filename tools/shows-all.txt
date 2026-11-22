@@ -1,7 +1,7 @@
-# All anime to harvest, one line per show, in run order.
+# All anime to harvest. One line per show, in run order.
 # term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
-# Built 2026-11-22 from shows-priority.txt then shows-auto-tail.txt.
-# 0 in maxEpisodes = every episode the site has.
+# Ordered 2026-11-22: the main walk, then the ones that failed and are retried last.
+# resultIndex 4 = retry-last queue (started, failed, wrote nothing).
 86: Eighty-Six | 0 | 1 | 0
 Summer Time Rendering | 0 | 1 | 0
 Dr. STONE | 0 | 1 | 0
@@ -10,7 +10,6 @@ The Promised Neverland | 0 | 1 | 0
 Great Pretender | 0 | 1 | 0
 To Your Eternity | 0 | 1 | 0
 Shangri-La Frontier | 0 | 1 | 0
-Bleach | 0 | 1 | 0
 Noragami | 0 | 1 | 0
 Death Parade | 0 | 1 | 0
 Fairy Tail | 0 | 1 | 0
@@ -2010,3 +2009,4 @@ Doraemon: Nobita in the Wan-Nyan Spacetime Odyssey | 1 | 1 | 0
 Doraemon: Nobita and the Tin Labyrinth | 1 | 1 | 0
 Crayon Shinchan the Movie: The Storm Called: The Battle of the Warring States | 1 | 1 | 0
 Crayon Shinchan the Movie: The Legend Called: Dance! Amigo! | 1 | 1 | 0
+Bleach | 0 | 1 | 0
