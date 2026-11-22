@@ -1,0 +1,7 @@
+# The shows the first-picks run left unfinished, harvested on their own.
+# 86 tops up (11 of 23 stored), Bleach stored nothing. Delete this file once
+# both are complete; tools/shows-first.txt still holds the rest.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+
+86: Eighty-Six | 0 | 1 | 0
+Bleach | 0 | 1 | 0
