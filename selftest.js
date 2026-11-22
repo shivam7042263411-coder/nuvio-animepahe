@@ -6,6 +6,7 @@ const path = require("path");
 const vm = require("vm");
 
 const source = fs.readFileSync(path.join(__dirname, "anime-torrent.js"), "utf8");
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "manifest.json"), "utf8"));
 
 const TMDB_TV = JSON.stringify({
     name: "Attack on Titan",
@@ -124,6 +125,14 @@ function check(name, actual, expected) {
     if (!ok) failures.push(`${name}: got ${JSON.stringify(actual)}, want ${JSON.stringify(expected)}`);
     console.log(`${ok ? "PASS" : "FAIL"}  ${name}`);
 }
+
+// --- manifest --------------------------------------------------------------
+// The Compose Multiplatform app filters scrapers by supportedPlatforms and its
+// platform keys are "android"/"ios" only, so any allow-list risks 0 providers.
+check("manifest: one scraper", manifest.scrapers.length, 1);
+check("manifest: scraper points at anime-torrent.js", manifest.scrapers[0].filename, "anime-torrent.js");
+check("manifest: no platform allow-list", manifest.scrapers[0].supportedPlatforms, undefined);
+check("manifest: not disabled on a platform", manifest.scrapers[0].disabledPlatforms, undefined);
 
 const REQ = {
     titles: ["Attack on Titan", "Shingeki no Kyojin"],
