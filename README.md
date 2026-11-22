@@ -1,7 +1,7 @@
 # Nuvio Anime Torrents plugin
 
-A torrent scraper for the Nuvio app (plugin format, QuickJS). It turns a TMDB
-show/episode into per-episode magnets that Nuvio plays through its built-in P2P
+A torrent scraper for the Nuvio app (plugin format, QuickJS). It turns a show or
+anime episode into per-episode magnets that Nuvio plays through its built-in P2P
 engine or resolves instantly through a debrid provider.
 
 This replaces the earlier AnimePahe scraper. The install URL is unchanged.
@@ -29,10 +29,26 @@ cached magnet becomes a direct HTTP stream with no peer wait.
 Torrent results are labelled **AnimeTorrents**. Select one and Nuvio either
 starts `TorrentState.Connecting → Streaming` or asks debrid for a link.
 
+## Content ids
+
+Nuvio passes the plugin whatever id the active metadata provider uses, not just
+a TMDB number, so all three namespaces are resolved before searching:
+
+| Id | Resolved via |
+|----|--------------|
+| `209867`, `tmdb:209867` | TMDB directly |
+| `tt22248376` (IMDb) | TMDB `/find` |
+| `kitsu:46474:1` (anime) | Kitsu API for the title |
+
+The Kitsu path is the one that matters for anime: anime metadata is per-season,
+so the season number lives in the title ("Attack on Titan Season 2") while the
+app always reports season 1. Those titles also carry the romaji name (`Sousou no
+Frieren`) that Nyaa releases actually use.
+
 ## How it works
 
 ```
-TMDB (English + romaji titles, season count)
+content id -> titles + season count
   -> Nyaa RSS + AnimeTosho HTML, queried in parallel (8s cap per request)
   -> strict release matcher
   -> magnet (40-hex infoHash)

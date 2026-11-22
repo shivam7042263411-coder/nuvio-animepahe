@@ -28,6 +28,21 @@ const TMDB_OTHER = JSON.stringify({
     number_of_seasons: 1,
     seasons: [{ season_number: 1 }],
 });
+// IMDb ids resolve to a TMDB id before the normal titles path.
+const TMDB_FIND = JSON.stringify({
+    tv_results: [{ id: 1429, name: "Attack on Titan" }],
+    movie_results: [],
+});
+// Kitsu entries are per-season; en_jp is the romaji release groups use.
+const KITSU_AOT = JSON.stringify({
+    data: {
+        attributes: {
+            canonicalTitle: "Attack on Titan",
+            titles: { en: "Attack on Titan", en_jp: "Shingeki no Kyojin", ja_jp: "進撃の巨人" },
+            startDate: "2013-04-07",
+        },
+    },
+});
 
 const HASH = {
     a: "1111111111111111111111111111111111111111",
@@ -104,6 +119,8 @@ const sandbox = {
         let body = "{}";
         const other = url.indexOf("/tv/999") !== -1;
         if (url.indexOf("/alternative_titles") !== -1) body = other ? '{"results":[]}' : TMDB_ALT;
+        else if (url.indexOf("/find/") !== -1) body = TMDB_FIND;
+        else if (url.indexOf("kitsu.io") !== -1) body = KITSU_AOT;
         else if (url.indexOf("api.themoviedb.org") !== -1) body = other ? TMDB_OTHER : TMDB_TV;
         else if (url.indexOf("nyaa.si") !== -1) body = url.indexOf("Bleach") !== -1 ? "<rss><channel></channel></rss>" : NYAA_RSS;
         else if (url.indexOf("animetosho.org") !== -1) body = url.indexOf("Bleach") !== -1 ? ANIMETOSHO_BLEACH : ANIMETOSHO_HTML;
@@ -227,6 +244,19 @@ check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
     const fallback = await sandbox.module.exports.getStreams(999, "tv", 1, 1, 1);
     check("fallback: AnimeTosho fills a Nyaa miss", fallback.length, 1);
     check("fallback: decoded 40-hex hash", fallback[0] && fallback[0].infoHash, "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9");
+
+    // Nuvio passes the meta provider's id, so anime arrives as "kitsu:<id>:<ep>"
+    // and other content as "tt<id>". Both must resolve to search titles rather
+    // than a TMDB 404.
+    const fromKitsu = await sandbox.module.exports.getStreams("kitsu:7442:1", "tv", 1, 1);
+    check("kitsu id: resolves and returns streams", fromKitsu.length, results.length);
+    check("kitsu id: 1080p sub ranks first", fromKitsu[0] && fromKitsu[0].infoHash, HASH.a);
+
+    const fromImdb = await sandbox.module.exports.getStreams("tt22248376", "tv", 1, 1);
+    check("imdb id: resolves via TMDB find", fromImdb.length, results.length);
+
+    const kitsuSeason = await sandbox.kitsuInfo("7442");
+    check("kitsu: romaji title leads queries", sandbox.queryTitles(kitsuSeason)[0], "Shingeki no Kyojin");
 
     // A dead host must be bounded: Nyaa is blackholed on this ISP and its fetch
     // never settles, but the lookup still has to return via AnimeTosho inside

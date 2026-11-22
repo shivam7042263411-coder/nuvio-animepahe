@@ -2,7 +2,7 @@
 // Anime Torrents - NuvioTV plugin (QuickJS / PluginRuntime)
 //
 // Pipeline:
-//   TMDB (titles + season count)
+//   content id (Kitsu / IMDb / TMDB) -> titles (+ season count)
 //     -> Nyaa RSS search (Anime / English-translated, seeders first)
 //     -> strict release matcher (episode token, season guard, batch rejection)
 //     -> one magnet per release -> Nuvio's P2P engine or a debrid provider
@@ -16,6 +16,7 @@
 // =============================================================================
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
+var KITSU_BASE = "https://kitsu.io/api/edge";
 var NYAA_URL = "https://nyaa.si/";
 var ANIMETOSHO_URL = "https://animetosho.org/search";
 var MAX_RESULTS = 10;
@@ -148,10 +149,11 @@ async function tmdbJson(path) {
         "api_key=" +
         encodeURIComponent(key) +
         "&language=en-US";
-    // TMDB resets a connection now and then on this class of network. One
-    // retry turns that into a working lookup instead of "no streams".
+    // TMDB resets a connection now and then on this class of network. Retries
+    // turn that into a working lookup instead of "no streams".
     var res = null;
-    for (var attempt = 0; attempt < 2; attempt++) {
+    var attempts = 3;
+    for (var attempt = 0; attempt < attempts; attempt++) {
         try {
             res = await withTimeout(
                 fetch(url, { headers: { Accept: "application/json" } }),
@@ -159,7 +161,7 @@ async function tmdbJson(path) {
             );
             break;
         } catch (e) {
-            if (attempt === 1) throw e;
+            if (attempt === attempts - 1) throw e;
         }
     }
     if (!res.ok) {
@@ -207,6 +209,72 @@ async function getTmdbInfo(tmdbId, mediaType) {
     });
 
     return { kind: kind, titles: titles, jpTitles: jpTitles, year: year || null, lastSeason: lastSeason || null };
+}
+
+// ---------------------------------------------------------------------------
+// Content ids
+//
+// Nuvio hands the plugin whatever id the active meta provider uses, not a bare
+// TMDB number: "209867" / "tmdb:209867" (TMDB), "tt22248376" (IMDb), and for
+// anime "kitsu:46474:1" (Kitsu id + episode). Each namespace has to resolve to
+// the same title/season shape or every lookup 404s against TMDB.
+// ---------------------------------------------------------------------------
+
+function asciiTitles(values) {
+    var out = [];
+    for (var i = 0; i < values.length; i++) {
+        var v = values[i] && String(values[i]).trim();
+        if (v && isAscii(v) && out.indexOf(v) === -1) out.push(v);
+    }
+    return out;
+}
+
+/** Kitsu entries are one season each; en_jp is the romaji Nyaa groups use. */
+async function kitsuInfo(kitsuId) {
+    var res = await withTimeout(
+        fetch(KITSU_BASE + "/anime/" + encodeURIComponent(kitsuId), {
+            headers: { Accept: "application/vnd.api+json" }
+        }),
+        "Kitsu"
+    );
+    if (!res.ok) throw new Error("Kitsu HTTP " + res.status);
+    var body = await res.json();
+    var attrs = (body && body.data && body.data.attributes) || {};
+    var t = attrs.titles || {};
+    var titles = asciiTitles([t.en_jp, attrs.canonicalTitle, t.en]);
+    var hints = seasonHints(titles.join(" "));
+    return {
+        kind: "tv",
+        titles: titles,
+        jpTitles: asciiTitles([t.en_jp, attrs.canonicalTitle]),
+        year: String(attrs.startDate || "").slice(0, 4) || null,
+        lastSeason: null,
+        // "Attack on Titan Season 2" carries its season in the title while the
+        // app always reports season 1 for a per-season anime entry.
+        seasonHint: hints.length ? hints[0] : null
+    };
+}
+
+async function resolveContent(contentId, mediaType) {
+    var raw = String(contentId == null ? "" : contentId).trim();
+    var kitsu = raw.match(/^kitsu:(\d+)/);
+    if (kitsu) return await kitsuInfo(kitsu[1]);
+
+    var imdb = raw.match(/^(tt\d+)/);
+    if (imdb) {
+        var found = await tmdbJson("/find/" + encodeURIComponent(imdb[1]) + "?external_source=imdb_id");
+        var wantMovie = String(mediaType || "").toLowerCase() === "movie";
+        var tv = (found && found.tv_results) || [];
+        var movies = (found && found.movie_results) || [];
+        var pick = wantMovie ? movies[0] || tv[0] : tv[0] || movies[0];
+        if (!pick || !pick.id) throw new Error("No TMDB match for " + imdb[1]);
+        return await getTmdbInfo(String(pick.id), mediaType);
+    }
+
+    var tmdb = raw.match(/^(?:tmdb[\/:])?(\d+)$/);
+    if (tmdb) return await getTmdbInfo(tmdb[1], mediaType);
+
+    throw new Error("unsupported content id: " + raw);
 }
 
 // ---------------------------------------------------------------------------
@@ -554,17 +622,19 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
     var isMovie = String(mediaType || "").toLowerCase() === "movie";
 
     try {
-        var info = await getTmdbInfo(tmdbId, mediaType);
+        var info = await resolveContent(tmdbId, mediaType);
         var titles = queryTitles(info);
         if (!titles.length) {
-            console.error("[AnimeTorrents] TMDB returned no searchable title for " + mediaType + " " + tmdbId);
+            console.error("[AnimeTorrents] no searchable title for " + mediaType + " " + tmdbId);
             return results;
         }
 
         var req = {
             titles: info.titles,
             isMovie: isMovie,
-            season: toInt(season, 1),
+            // Anime ids are per-season, so the real season number is in the
+            // title ("... Season 2") while the app always reports season 1.
+            season: info.seasonHint || toInt(season, 1),
             episode: toInt(episode, 1),
             absoluteEpisode: absoluteEpisode == null ? null : toInt(absoluteEpisode, null),
             lastSeason: info.lastSeason
