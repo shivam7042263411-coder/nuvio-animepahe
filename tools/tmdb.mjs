@@ -50,6 +50,27 @@ const latinOnly = (v) => {
   return s && !/[^\x00-\x7F]/.test(s);
 };
 
+/** The one search hit that is the term itself. An exact name wins; failing
+ *  that, a title that *starts* with the term ("Demon Slayer" ->
+ *  "Demon Slayer: Kimetsu no Yaiba"), but only when it is the sole such hit -
+ *  two candidates mean a spin-off is in play, and picking one files the other
+ *  show's episodes. */
+export function pickHit(hits, want, nameKey, originalKey) {
+  const exact = (h) =>
+    fold(h[nameKey]) === want ||
+    (latinOnly(h[originalKey]) && fold(h[originalKey]) === want);
+  const hit = (hits || []).find(exact);
+  if (hit) return hit;
+  const prefixed = (hits || []).filter((h) => {
+    const n = fold(h[nameKey]);
+    return (
+      n.indexOf(want + ' ') === 0 ||
+      (latinOnly(h[originalKey]) && fold(h[originalKey]).indexOf(want + ' ') === 0)
+    );
+  });
+  return prefixed.length === 1 ? prefixed[0] : null;
+}
+
 /** The TMDB show behind a list term, or null when nothing matches exactly.
  *  Loose matching would file one show's episodes under another. */
 export function totalEpisodes(show) {
@@ -65,24 +86,7 @@ export async function tmdbShow(term, key) {
   const want = fold(term);
   const search = await get('/search/tv?query=' + encodeURIComponent(term), key);
   const hits = (search && search.results) || [];
-  // An exact name wins. Failing that, a unique title that starts with the term:
-  // the list says "Demon Slayer", TMDB says "Demon Slayer: Kimetsu no Yaiba".
-  // Two candidates means a spin-off is in play, so refuse rather than pick.
-  let hit = hits.find(
-    (h) =>
-      fold(h.name) === want ||
-      (latinOnly(h.original_name) && fold(h.original_name) === want)
-  );
-  if (!hit) {
-    const prefixed = hits.filter((h) => {
-      const n = fold(h.name);
-      return (
-        n.indexOf(want + ' ') === 0 ||
-        (latinOnly(h.original_name) && fold(h.original_name).indexOf(want + ' ') === 0)
-      );
-    });
-    if (prefixed.length === 1) hit = prefixed[0];
-  }
+  const hit = pickHit(hits, want, 'name', 'original_name');
   if (!hit) return null;
 
   const show = await get('/tv/' + hit.id, key);
@@ -109,22 +113,56 @@ export async function tmdbMovie(name, year, key) {
   const want = fold(name);
   const search = await get('/search/movie?query=' + encodeURIComponent(name), key);
   const hits = (search && search.results) || [];
-  const exact = (h) =>
-    fold(h.title) === want ||
-    (latinOnly(h.original_title) && fold(h.original_title) === want);
-  let hit = hits.find(exact);
-  if (!hit) {
-    const prefixed = hits.filter((h) => {
-      const n = fold(h.title);
-      return (
-        n.indexOf(want + ' ') === 0 ||
-        (latinOnly(h.original_title) && fold(h.original_title).indexOf(want + ' ') === 0)
-      );
-    });
-    if (prefixed.length === 1) hit = prefixed[0];
-  }
+  const hit = pickHit(hits, want, 'title', 'original_title');
   if (!hit) return null;
   const released = Number(String(hit.release_date || '').slice(0, 4)) || null;
   if (year && released && Math.abs(released - Number(year)) > 2) return null;
   return { id: hit.id, title: hit.title, year: released };
+}
+
+/** The names worth re-searching for a term: TMDB's other titles for it, latin
+ *  only (a kana title cannot match the site's index), without the term itself,
+ *  deduped by fold. */
+export function extraNames(term, candidates, limit = 6) {
+  const seen = new Set([fold(term)]);
+  const out = [];
+  for (const v of candidates || []) {
+    const s = String(v || '').trim();
+    if (!latinOnly(s)) continue;
+    const f = fold(s);
+    if (!f || seen.has(f)) continue;
+    seen.add(f);
+    out.push(s);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/** Every other name TMDB holds for a term, from both its show and its film
+ *  record: the site may file a term that is a TMDB film under its show, or the
+ *  reverse. A miss the harvester would otherwise call absent is retried with
+ *  these, so a naming difference does not cost a show its entry. */
+export async function tmdbAltNames(term, key) {
+  if (!key) return [];
+  const want = fold(term);
+  const candidates = [];
+  for (const kind of ['tv', 'movie']) {
+    try {
+      const search = await get('/search/' + kind + '?query=' + encodeURIComponent(term), key);
+      const hit = pickHit(
+        (search && search.results) || [],
+        want,
+        kind === 'tv' ? 'name' : 'title',
+        kind === 'tv' ? 'original_name' : 'original_title'
+      );
+      if (!hit) continue;
+      candidates.push(kind === 'tv' ? hit.name : hit.title);
+      candidates.push(kind === 'tv' ? hit.original_name : hit.original_title);
+      const alt = await get('/' + kind + '/' + hit.id + '/alternative_titles', key);
+      for (const t of (alt && (alt.results || alt.titles)) || []) candidates.push(t.title || t.name);
+    } catch {
+      // TMDB unreachable here: the recheck simply has fewer names to try.
+    }
+  }
+  return extraNames(term, candidates);
 }

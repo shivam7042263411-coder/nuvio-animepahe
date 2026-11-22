@@ -53,7 +53,7 @@ import {
   writeShow,
 } from './catalogue-lib.mjs';
 import { harvestScript, fold, isSpecialTitle, seasonMarkerOf } from './harvest-page.mjs';
-import { tmdbKey, tmdbMovie, tmdbShow, totalEpisodes } from './tmdb.mjs';
+import { tmdbAltNames, tmdbKey, tmdbMovie, tmdbShow, totalEpisodes } from './tmdb.mjs';
 
 const TMDB_KEY = tmdbKey();
 if (!TMDB_KEY) {
@@ -94,6 +94,58 @@ async function airingFor(term) {
   // No key, or a term TMDB cannot place: harvest it anyway. Skipping a show
   // because it could not be looked up is how a week of episodes goes missing.
   return !show || show.airing;
+}
+
+/** TMDB's other names for a term, looked up once per run. */
+const altNameCache = new Map();
+async function altNamesFor(term) {
+  if (!TMDB_KEY) return [];
+  if (altNameCache.has(term)) return altNameCache.get(term);
+  let names = [];
+  try {
+    names = await tmdbAltNames(term, TMDB_KEY);
+  } catch (e) {
+    console.error(`  tmdb alt names: ${e.message}`);
+  }
+  altNameCache.set(term, names);
+  return names;
+}
+
+/** A term the site's search did not index is not proof the show is absent: it
+ *  may be filed under another of its TMDB names ("Chitose Is in the Ramune
+ *  Bottle" against the site's romaji). Retry the same plan with each name and
+ *  take the first that resolves. A stop signal (429, challenge) is handed back
+ *  untouched: a rate limit is not a naming problem. */
+async function recheckMiss(show, plan) {
+  for (const alt of await altNamesFor(show.catalogueTitle || show.term)) {
+    console.log(`  recheck ${show.term} as "${alt}"...`);
+    let r;
+    try {
+      r = await evaluate(harvestScript({ ...plan, term: alt }));
+    } catch (e) {
+      console.error(`  recheck failed: ${e.message}`);
+      return null;
+    }
+    if (r && (r.error === 'throttled' || r.error === 'challenge')) return r;
+    if (r && !r.error && r.rows && r.rows.length) {
+      console.log(`  recheck: "${alt}" resolved it`);
+      return r;
+    }
+  }
+  return null;
+}
+
+/** The shows the site had no entry for, kept in a file so a stopped run leaves
+ *  a list to recheck instead of a line buried in the log. */
+function noteMissing(show, why) {
+  const file = join(HERE, 'not-found.txt');
+  let lines = [];
+  try {
+    lines = readFileSync(file, 'utf8').split('\n').filter(Boolean);
+  } catch {}
+  if (lines.some((l) => l.split('|')[0].trim() === show.term)) return;
+  lines.push(`${show.term} | ${show.catalogueTitle || ''} | ${why}`);
+  writeFileSync(file, lines.join('\n') + '\n');
 }
 /** One TMDB lookup per show takes ~0.5s, so 1,400 of them in the harvest loop
  *  would cost ten minutes of waiting. Six at a time brings it to about two. */
@@ -608,6 +660,13 @@ for (let qi = 0; qi < shows.length; qi++) {
       console.log(`  paced: ${pace.requests} request(s), 429 x${pace.limited} -> gap ${minGap}ms`);
     }
   }
+  // A term the site did not index is not proof it is absent: it may be filed
+  // under another of its TMDB names. Retry those before calling it a miss, so a
+  // naming difference does not cost a show its catalogue entry.
+  if (result && result.error && /^no matching entry/.test(result.error)) {
+    const rechecked = await recheckMiss(show, plan);
+    if (rechecked) result = rechecked;
+  }
   if (!result || result.error) {
     // A stop mid-show (a 429, a challenge, a refused hole) still leaves real
     // episodes behind: keep them so the next run tops up instead of starting a
@@ -634,7 +693,9 @@ for (let qi = 0; qi < shows.length; qi++) {
       );
       break;
     }
-    console.error(`  failed: ${result ? result.error : 'no result'}`);
+    const miss = result ? result.error : 'no result';
+    console.error(`  failed: ${miss}`);
+    if (/no matching entry|not found/.test(miss)) noteMissing(show, miss);
     failed++;
     continue;
   }

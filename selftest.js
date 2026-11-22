@@ -760,6 +760,44 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
     check("no offset when the entry starts at episode 1", pageMod.inferOffset(null, [1, 2]), 0);
     check("explicit offset wins over inference", pageMod.inferOffset(12, [26]), 12);
 
+    // --- retrying a miss under TMDB's other names ---------------------------
+    const tmdbMod = await import("./tools/tmdb.mjs");
+    const hitPool = [
+        { name: "Fate/Grand Order Absolute Demonic Front: Babylonia", original_name: "Fate/Grand Order -絶対魔獣戦線バビロニア-" },
+        { name: "Fate/strange Fake", original_name: "Fate/strange Fake" },
+    ];
+    check(
+        "a hit is the term itself, not a shared prefix",
+        tmdbMod.pickHit(hitPool, "fate grand order first order", "name", "original_name"),
+        null
+    );
+    check(
+        "a unique prefixed title answers the term",
+        tmdbMod.pickHit(hitPool, "fate strange fake", "name", "original_name").name,
+        "Fate/strange Fake"
+    );
+    check(
+        "two prefixed candidates are refused, not guessed",
+        tmdbMod.pickHit(
+            [{ name: "Naruto Shippuden" }, { name: "Naruto the Movie" }],
+            "naruto",
+            "name",
+            "original_name"
+        ),
+        null
+    );
+    check(
+        "recheck names: latin only, not the term itself, deduped",
+        tmdbMod.extraNames("Chitose Is in the Ramune Bottle", [
+            "Chitose Is in the Ramune Bottle",
+            "千歳くんはラムネ瓶のなか",
+            "Chiramune",
+            "chiramune",
+            "Chitose-kun wa Ramune Bin no Naka",
+        ]),
+        ["Chiramune", "Chitose-kun wa Ramune Bin no Naka"]
+    );
+
     // --- which app season a search hit belongs to --------------------------
     const show = (title, episodes = 10) => ({ title, episodes, session: title });
     const filed = (term, titles) =>
