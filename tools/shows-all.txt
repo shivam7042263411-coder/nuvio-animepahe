@@ -1,0 +1,2012 @@
+# All anime to harvest, one line per show, in run order.
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+# Built 2026-11-22 from shows-priority.txt then shows-auto-tail.txt.
+# 0 in maxEpisodes = every episode the site has.
+86: Eighty-Six | 0 | 1 | 0
+Summer Time Rendering | 0 | 1 | 0
+Dr. STONE | 0 | 1 | 0
+JoJo's Bizarre Adventure | 0 | 1 | 0
+The Promised Neverland | 0 | 1 | 0
+Great Pretender | 0 | 1 | 0
+To Your Eternity | 0 | 1 | 0
+Shangri-La Frontier | 0 | 1 | 0
+Bleach | 0 | 1 | 0
+Noragami | 0 | 1 | 0
+Death Parade | 0 | 1 | 0
+Fairy Tail | 0 | 1 | 0
+Kuroko's Basketball | 0 | 1 | 0
+Fighting Spirit | 0 | 1 | 0
+Slam Dunk | 0 | 1 | 0
+From Me to You: Kimi ni Todoke | 0 | 1 | 0
+Tsukigakirei | 0 | 1 | 0
+ReLIFE | 0 | 1 | 0
+Undead Unluck | 0 | 1 | 0
+Hunter x Hunter | 0 | 1 | 0
+Dororo | 0 | 1 | 0
+Golden Kamuy | 0 | 1 | 0
+Beyond the Boundary | 0 | 1 | 0
+Fate/stay night [Unlimited Blade Works] | 0 | 1 | 0
+Fate/stay night: Heaven's Feel I. Presage Flower | 0 | 1 | 0
+Fate/stay night: Heaven's Feel II. Lost Butterfly | 0 | 1 | 0
+Fate/stay night: Heaven's Feel III. Spring Song | 0 | 1 | 0
+Fate/Zero | 0 | 1 | 0
+Lord El-Melloi II's Case Files {Rail Zeppelin} Grace note | 0 | 1 | 0
+Fate/strange Fake: Whispers of Dawn | 0 | 1 | 0
+Fate/strange Fake | 0 | 1 | 0
+Fate/Grand Order - First Order | 0 | 1 | 0
+Fate/Grand Order the Movie: Divine Realm of the Round Table: Camelot 1 Wandering; Agateram | 0 | 1 | 0
+Fate/Grand Order: Divine Realm of the Round Table - Camelot - Paladin; Agateram | 0 | 1 | 0
+Fate/Grand Order Absolute Demonic Front: Babylonia | 0 | 1 | 0
+Fate/Grand Order Final Singularity – Grand Temple of Time: Solomon | 0 | 1 | 0
+Dorohedoro | 0 | 1 | 0
+A Sign of Affection | 0 | 1 | 0
+Golden Time | 0 | 1 | 0
+Lovely Complex | 0 | 1 | 0
+Masamune-kun's Revenge | 0 | 1 | 0
+Call of the Night | 0 | 1 | 0
+Vivy: Fluorite Eye's Song | 0 | 1 | 0
+Akame ga Kill! | 0 | 1 | 0
+The God of High School | 0 | 1 | 0
+Samurai Champloo | 0 | 1 | 0
+Chitose Is in the Ramune Bottle | 0 | 1 | 0
+Monster | 0 | 1 | 0
+Tengoku Daimakyo | 0 | 1 | 0
+Agents of the Four Seasons Dance of Spring | 0 | 1 | 0
+Josee, the Tiger and the Fish | 0 | 1 | 0
+The Garden of Words | 0 | 1 | 0
+Ride Your Wave | 0 | 1 | 0
+The Anthem of the Heart | 0 | 1 | 0
+Her Blue Sky | 0 | 1 | 0
+Hello World | 0 | 1 | 0
+5 Centimeters per Second | 0 | 1 | 0
+Neon Genesis Evangelion | 0 | 1 | 0
+Cowboy Bebop | 0 | 1 | 0
+Code Geass: Lelouch of the Rebellion | 0 | 1 | 0
+Made in Abyss | 0 | 1 | 0
+Bubble | 0 | 1 | 0
+Gintama | 0 | 1 | 0
+Yu Yu Hakusho | 0 | 1 | 0
+World Trigger | 0 | 1 | 0
+Ranking of Kings | 0 | 1 | 0
+A Place Further than the Universe | 0 | 1 | 0
+March Comes in Like a Lion | 0 | 1 | 0
+Gurren Lagann | 0 | 1 | 0
+Magi | 0 | 1 | 0
+Durarara!! | 0 | 1 | 0
+Land of the Lustrous | 0 | 1 | 0
+Astra Lost in Space | 0 | 1 | 0
+Delicious in Dungeon | 0 | 1 | 0
+Ascendance of a Bookworm | 0 | 1 | 0
+Log Horizon | 0 | 1 | 0
+D.Gray-man | 0 | 1 | 0
+The Disastrous Life of Saiki K. | 0 | 1 | 0
+Initial D | 0 | 1 | 0
+Hikaru no Go | 0 | 1 | 0
+Chihayafuru | 0 | 1 | 0
+Ace of the Diamond | 0 | 1 | 0
+Run with the Wind | 0 | 1 | 0
+Ping Pong the Animation | 0 | 1 | 0
+Bakuman | 0 | 1 | 0
+Barakamon | 0 | 1 | 0
+Natsume's Book of Friends | 0 | 1 | 0
+Mushi-Shi | 0 | 1 | 0
+Anohana: The Flower We Saw That Day | 0 | 1 | 0
+Clannad | 0 | 1 | 0
+Toradora! | 0 | 1 | 0
+Insomniacs After School | 0 | 1 | 0
+K-On! | 0 | 1 | 0
+The Tatami Galaxy | 0 | 1 | 0
+Beelzebub | 0 | 1 | 0
+Ishura | 0 | 1 | 0
+Claymore | 0 | 1 | 0
+Darker than Black | 0 | 1 | 0
+KONOSUBA - God's blessing on this wonderful world! | 0 | 1 | 0
+Deca-Dence | 0 | 1 | 0
+Aldnoah.Zero | 0 | 1 | 0
+Taisho Otome Fairy Tale | 0 | 1 | 0
+Boarding School Juliet | 0 | 1 | 0
+Maid Sama! | 0 | 1 | 0
+Tada Never Falls in Love | 0 | 1 | 0
+The Ancient Magus' Bride | 0 | 1 | 0
+Kamisama Kiss | 0 | 1 | 0
+Kokoro Connect | 0 | 1 | 0
+Adachi and Shimamura | 0 | 1 | 0
+Sugar Apple Fairy Tale | 0 | 1 | 0
+The World God Only Knows | 0 | 1 | 0
+Engaged to the Unidentified | 0 | 1 | 0
+Amagami SS | 0 | 1 | 0
+Ai Yori Aoshi | 0 | 1 | 0
+Dusk Maiden of Amnesia | 0 | 1 | 0
+Ef: A Tale of Memories | 0 | 1 | 0 | | Ef: A Tale Of Memories & Melodies
+Black Lagoon | 0 | 1 | 0
+Ajin | 0 | 1 | 0
+Drifters | 0 | 1 | 0
+Kabaneri of the Iron Fortress | 0 | 1 | 0
+Baccano! | 0 | 1 | 0
+Blood Blockade Battlefront | 0 | 1 | 0
+Kengan Ashura | 0 | 1 | 0
+Kingdom | 0 | 1 | 0
+Ragna Crimson | 0 | 1 | 0
+Tower of God | 0 | 1 | 0
+Seraph of the End | 0 | 1 | 0
+Kekkaishi | 0 | 1 | 0
+Karakuri Circus | 0 | 1 | 0
+Ushio and Tora | 0 | 1 | 0
+Twin Star Exorcists | 0 | 1 | 0
+The Wrong Way to Use Healing Magic | 0 | 1 | 0
+Re:ZERO -Starting Life in Another World- | 0 | 1 | 0
+Mushoku Tensei: Jobless Reincarnation | 0 | 1 | 0
+InuYasha | 0 | 1 | 0
+Sword Art Online | 0 | 1 | 0
+Welcome to Demon School! Iruma-kun | 0 | 1 | 0
+The Eminence in Shadow | 0 | 1 | 0
+That Time I Got Reincarnated as a Slime | 0 | 1 | 0
+Digimon: Digital Monsters | 0 | 1 | 0
+The Familiar of Zero | 0 | 1 | 0
+Saga of Tanya the Evil | 0 | 1 | 0
+Magic Knight Rayearth | 0 | 1 | 0
+Digimon Adventure: | 0 | 1 | 0
+The Rising of the Shield Hero | 0 | 1 | 0
+Campfire Cooking in Another World with My Absurd Skill | 0 | 1 | 0
+Seirei Gensouki: Spirit Chronicles | 0 | 1 | 0
+Gate | 0 | 1 | 0
+TSUKIMICHI -Moonlit Fantasy- | 0 | 1 | 0
+The Devil Is a Part-Timer! | 0 | 1 | 0
+The Vision of Escaflowne | 0 | 1 | 0
+How Not to Summon a Demon Lord | 0 | 1 | 0
+No Game No Life | 0 | 1 | 0
+I've Been Killing Slimes for 300 Years and Maxed Out My Level | 0 | 1 | 0
+I Got a Cheat Skill in Another World and Became Unrivaled in the Real World, Too | 0 | 1 | 0
+The World's Finest Assassin Gets Reincarnated in Another World as an Aristocrat | 0 | 1 | 0
+Cautious Hero: The Hero Is Overpowered but Overly Cautious | 0 | 1 | 0
+Death March to the Parallel World Rhapsody | 0 | 1 | 0
+So I'm a Spider, So What? | 0 | 1 | 0
+Wise Man's Grandchild | 0 | 1 | 0
+Arifureta: From Commonplace to World's Strongest | 0 | 1 | 0
+My Next Life as a Villainess: All Routes Lead to Doom! | 0 | 1 | 0
+Digimon Fusion | 0 | 1 | 0
+The Twelve Kingdoms | 0 | 1 | 0
+As a Reincarnated Aristocrat, I'll Use My Appraisal Skill to Rise in the World | 0 | 1 | 0
+Fushigi Yugi: The Mysterious Play | 0 | 1 | 0
+Reincarnated as a Sword | 0 | 1 | 0
+The Faraway Paladin | 0 | 1 | 0
+Harem in the Labyrinth of Another World | 0 | 1 | 0
+How a Realist Hero Rebuilt the Kingdom | 0 | 1 | 0
+I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability | 0 | 1 | 0
+By the Grace of the Gods | 0 | 1 | 0
+In Another World with My Smartphone | 0 | 1 | 0
+The Most Heretical Last Boss Queen: From Villainess to Savior | 0 | 1 | 0
+The Saint's Magic Power Is Omnipotent | 0 | 1 | 0
+Farming Life in Another World | 0 | 1 | 0
+Digimon Frontier | 0 | 1 | 0
+Skeleton Knight in Another World | 0 | 1 | 0
+Moribito: Guardian of the Spirit | 0 | 1 | 0
+Uncle from Another World | 0 | 1 | 0
+Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs | 0 | 1 | 0
+The Fruit of Evolution: Before I Knew It, My Life Had It Made | 0 | 1 | 0
+Chillin' in Another World with Level 2 Super Cheat Powers | 0 | 1 | 0
+Suicide Squad Isekai | 0 | 1 | 0
+Why Raeliana Ended Up at the Duke's Mansion | 0 | 1 | 0
+The Slime Diaries | 0 | 1 | 0
+Restaurant to Another World | 0 | 1 | 0
+Kakuriyo -Bed & Breakfast for Spirits- | 0 | 1 | 0
+The Weakest Tamer Began a Journey to Pick Up Trash | 0 | 1 | 0
+Loner Life in Another World | 0 | 1 | 0
+The Aristocrat's Otherworldly Adventure: Serving Gods Who Go Too Far | 0 | 1 | 0
+The Magical Revolution of the Reincarnated Princess and the Genius Young Lady | 0 | 1 | 0
+ZENSHU | 0 | 1 | 0
+Grimgar of Fantasy and Ash | 0 | 1 | 0
+Knight's & Magic | 0 | 1 | 0
+Parallel World Pharmacy | 0 | 1 | 0
+Re:Monster | 0 | 1 | 0
+Failure Frame: I Became the Strongest and Annihilated Everything with Low-Level Spells | 0 | 1 | 0
+My One-Hit Kill Sister | 0 | 1 | 0
+Combatants Will Be Dispatched! | 0 | 1 | 0
+Handyman Saitou in Another World | 0 | 1 | 0
+I'm in Love with the Villainess | 0 | 1 | 0
+Possibly the Greatest Alchemist of All Time | 0 | 1 | 0
+Villainess Level 99: I May Be the Hidden Boss But I'm Not the Demon Lord | 0 | 1 | 0
+The Water Magician | 0 | 1 | 0
+Black Summoner | 0 | 1 | 0
+No Longer Allowed in Another World | 0 | 1 | 0
+The 8th Son? Are You Kidding Me? | 0 | 1 | 0
+Am I Actually the Strongest? | 0 | 1 | 0
+My Status as an Assassin Obviously Exceeds the Hero's | 0 | 1 | 0
+My Isekai Life: I Gained a Second Character Class and Became the Strongest Sage in the World! | 0 | 1 | 0
+I'll Become a Villainess Who Goes Down in History | 0 | 1 | 0
+Demon Lord, Retry! | 0 | 1 | 0
+Now and Then, Here and There | 0 | 1 | 0
+Pokémon | 0 | 1 | 0
+One Piece | 0 | 1 | 0
+Doraemon | 0 | 1 | 0
+Dragon Ball Super: Beerus | 0 | 1 | 0
+Dragon Ball Z | 0 | 1 | 0
+JUJUTSU KAISEN | 0 | 1 | 0
+Naruto Shippūden | 0 | 1 | 0
+Naruto | 0 | 1 | 0
+Ranma ½ | 0 | 1 | 0
+Frieren: Beyond Journey's End | 0 | 1 | 0
+Yu-Gi-Oh! Duel Monsters | 0 | 1 | 0
+SPY x FAMILY | 0 | 1 | 0
+Tokyo Revengers | 0 | 1 | 0
+Sailor Moon | 0 | 1 | 0
+Attack on Titan | 0 | 1 | 0
+Fullmetal Alchemist: Brotherhood | 0 | 1 | 0
+Bakugan Battle Brawlers | 0 | 1 | 0
+Black Clover | 0 | 1 | 0
+High School DxD | 0 | 1 | 0
+Beyblade Burst | 0 | 1 | 0
+Solo Leveling | 0 | 1 | 0
+Overlord | 0 | 1 | 0
+Hamtaro | 0 | 1 | 0
+Cardcaptor Sakura | 0 | 1 | 0
+Bungo Stray Dogs | 0 | 1 | 0
+Mob Psycho 100 | 0 | 1 | 0
+Beyblade | 0 | 1 | 0
+Blue Exorcist | 0 | 1 | 0
+Saint Seiya | 0 | 1 | 0
+Soul Eater | 0 | 1 | 0
+Rurouni Kenshin | 0 | 1 | 0
+Saint Seiya Omega | 0 | 1 | 0
+Chainsaw Man | 0 | 1 | 0
+One-Punch Man | 0 | 1 | 0
+Date A Live | 0 | 1 | 0
+The Misfit of Demon King Academy | 0 | 1 | 0
+The Irregular at Magic High School | 0 | 1 | 0
+BLUE LOCK | 0 | 1 | 0
+Hell's Paradise | 0 | 1 | 0
+Kaiju No. 8 | 0 | 1 | 0
+Assassination Classroom | 0 | 1 | 0
+Dragon Ball Super | 0 | 1 | 0
+Dan Da Dan | 0 | 1 | 0
+Ranma1/2 | 0 | 1 | 0
+Cells at Work! | 0 | 1 | 0
+MASHLE: MAGIC AND MUSCLES | 0 | 1 | 0
+Yu-Gi-Oh! GX | 0 | 1 | 0
+EDENS ZERO | 0 | 1 | 0
+Super Dragon Ball Heroes | 0 | 1 | 0
+Kenichi: The Mightiest Disciple | 0 | 1 | 0
+Baki Hanma | 0 | 1 | 0
+Redo of Healer | 0 | 1 | 0
+WIND BREAKER | 0 | 1 | 0
+Sonic X | 0 | 1 | 0
+Blood+ | 0 | 1 | 0
+Psycho-Pass | 0 | 1 | 0
+SHAMAN KING | 0 | 1 | 0
+NieR:Automata Ver1.1a | 0 | 1 | 0
+Dragon Ball DAIMA | 0 | 1 | 0
+Fullmetal Alchemist | 0 | 1 | 0
+The Seven Deadly Sins: Four Knights of the Apocalypse | 0 | 1 | 0
+SAKAMOTO DAYS | 0 | 1 | 0
+Dragon Ball Z Kai | 0 | 1 | 0
+BAKI | 0 | 1 | 0
+My Hero Academia | 0 | 1 | 0
+Mazinger Z | 0 | 1 | 0
+Berserk | 0 | 1 | 0
+Zoids: Chaotic Century | 0 | 1 | 0
+Gachiakuta | 0 | 1 | 0
+86 EIGHTY-SIX | 0 | 1 | 0
+Parasyte -the maxim- | 0 | 1 | 0
+Kill la Kill | 0 | 1 | 0
+Demon Slayer: Kimetsu no Yaiba | 0 | 1 | 0
+Ghost in the Shell: Stand Alone Complex | 0 | 1 | 0
+The Case Study of Vanitas | 0 | 1 | 0
+Sword Art Online Alternative: Gun Gale Online | 0 | 1 | 0
+Goblin Slayer | 0 | 1 | 0
+Record of Ragnarok | 0 | 1 | 0
+The Testament of Sister New Devil | 0 | 1 | 0
+Guilty Crown | 0 | 1 | 0
+Yona of the Dawn | 0 | 1 | 0
+High School of the Dead | 0 | 1 | 0
+Powerpuff Girls Z | 0 | 1 | 0
+Baki the Grappler | 0 | 1 | 0
+Future Boy Conan | 0 | 1 | 0
+Fate/stay night | 0 | 1 | 0
+Lycoris Recoil | 0 | 1 | 0
+FLCL | 0 | 1 | 0
+Danganronpa: The Animation | 0 | 1 | 0
+The Future Diary | 0 | 1 | 0
+Akashic Records of Bastard Magic Instructor | 0 | 1 | 0
+Banana Fish | 0 | 1 | 0
+Digimon Tamers | 0 | 1 | 0
+GANTZ | 0 | 1 | 0
+Dinosaur King | 0 | 1 | 0
+Terra Formars | 0 | 1 | 0
+Vinland Saga | 0 | 1 | 0
+Captain Tsubasa: Road to 2002 | 0 | 1 | 0
+Zom 100: Bucket List of the Dead | 0 | 1 | 0
+Vampire Knight | 0 | 1 | 0
+Saint Seiya: The Lost Canvas | 0 | 1 | 0
+SK8 the Infinity | 0 | 1 | 0
+Boruto: Naruto Next Generations | 0 | 1 | 0
+Our Last Crusade or the Rise of a New World | 0 | 1 | 0
+TRIGUN | 0 | 1 | 0
+MEGALOBOX | 0 | 1 | 0
+Devilman Crybaby | 0 | 1 | 0
+Plunderer | 0 | 1 | 0
+Angel Beats! | 0 | 1 | 0
+Elfen Lied | 0 | 1 | 0
+Fire Force | 0 | 1 | 0
+Hybrid x Heart Magias Academy Ataraxia | 0 | 1 | 0
+BLOOD-C | 0 | 1 | 0
+Wolf's Rain | 0 | 1 | 0
+Hellsing | 0 | 1 | 0
+Deadman Wonderland | 0 | 1 | 0
+BNA | 0 | 1 | 0
+Attack on Titan: Junior High | 0 | 1 | 0
+Dragonaut: The Resonance | 0 | 1 | 0
+Space Cobra | 0 | 1 | 0
+Angels of Death | 0 | 1 | 0
+Gleipnir | 0 | 1 | 0
+Black Bullet | 0 | 1 | 0
+The Asterisk War | 0 | 1 | 0
+Saint Seiya: Soul of Gold | 0 | 1 | 0
+The Hidden Dungeon Only I Can Enter | 0 | 1 | 0
+High-Rise Invasion | 0 | 1 | 0
+Devil May Cry | 0 | 1 | 0
+AIKa | 0 | 1 | 0
+Saint Seiya: Saintia Sho | 0 | 1 | 0
+Triage X | 0 | 1 | 0
+RESIDENT EVIL: Infinite Darkness | 0 | 1 | 0
+Yasuke | 0 | 1 | 0
+The Seven Deadly Sins | 0 | 1 | 0
+Devils' Line | 0 | 1 | 0
+Btooom! | 0 | 1 | 0
+Noblesse | 0 | 1 | 0
+Cagaster of an Insect Cage | 0 | 1 | 0
+Supernatural: The Anime Series | 0 | 1 | 0
+Is It Wrong to Try to Pick Up Girls in a Dungeon? | 0 | 1 | 0
+Dragon Ball | 0 | 1 | 0
+Pokémon Origins | 0 | 1 | 0
+Are You Lost? | 0 | 1 | 0
+Japan Sinks: 2020 | 0 | 1 | 0
+Dragon Ball GT | 0 | 1 | 0
+Dragon's Dogma | 0 | 1 | 0
+Inuyashiki | 0 | 1 | 0
+Lupin the 3rd | 0 | 1 | 0
+Pokémon Horizons | 0 | 1 | 0
+REBORN! | 0 | 1 | 0
+Fist of the North Star | 0 | 1 | 0
+Mission: Yozakura Family | 0 | 1 | 0
+Mobile Suit Gundam SEED | 0 | 1 | 0
+A Certain Scientific Railgun | 0 | 1 | 0
+Yu-Gi-Oh! Zexal | 0 | 1 | 0
+Shakugan no Shana | 0 | 1 | 0
+Science Ninja Team Gatchaman | 0 | 1 | 0
+Yu-Gi-Oh! 5D's | 0 | 1 | 0
+Tomorrow's Joe | 0 | 1 | 0
+Eureka Seven | 0 | 1 | 0
+The Mysterious Cities of Gold | 0 | 1 | 0
+Mobile Suit Gundam: The Witch from Mercury | 0 | 1 | 0
+City Hunter | 0 | 1 | 0
+UFO Robot Grendizer | 0 | 1 | 0
+Slayers | 0 | 1 | 0
+Go! Go! Loser Ranger! | 0 | 1 | 0
+Dragon Quest: The Adventure of Dai | 0 | 1 | 0
+Girls und Panzer | 0 | 1 | 0
+Tougen Anki | 0 | 1 | 0
+Yashahime: Princess Half-Demon | 0 | 1 | 0
+Nadia: The Secret of Blue Water | 0 | 1 | 0
+Saint Seiya: The Hades Chapter | 0 | 1 | 0
+Chained Soldier | 0 | 1 | 0
+Nura: Rise of the Yokai Clan | 0 | 1 | 0
+Mobile Suit Gundam 00 | 0 | 1 | 0
+Eyeshield 21 | 0 | 1 | 0
+The Qwaser of Stigmata | 0 | 1 | 0
+The Heroic Legend of Arslan | 0 | 1 | 0
+The Legend of the Galactic Heroes: Die Neue These | 0 | 1 | 0
+Mobile Suit Zeta Gundam | 0 | 1 | 0
+Last Exile | 0 | 1 | 0
+BASTARD‼ -Heavy Metal, Dark Fantasy- | 0 | 1 | 0
+Sekirei | 0 | 1 | 0
+Mobile Suit Gundam Wing | 0 | 1 | 0
+BAKI-DOU: The Invincible Samurai | 0 | 1 | 0
+Basilisk | 0 | 1 | 0
+Daemons of the Shadow Realm | 0 | 1 | 0
+Wistoria: Wand and Sword | 0 | 1 | 0
+The Fable | 0 | 1 | 0
+Monster Rancher | 0 | 1 | 0
+Panty & Stocking with Garterbelt | 0 | 1 | 0
+Star Blazers: Space Battleship Yamato 2199 | 0 | 1 | 0
+Maken-Ki! Battling Venus | 0 | 1 | 0
+Samurai Pizza Cats | 0 | 1 | 0
+Samurai 7 | 0 | 1 | 0
+Ultimate Muscle: The Kinnikuman Legacy | 0 | 1 | 0
+Mobile Suit Gundam GQuuuuuuX | 0 | 1 | 0
+Tekkaman Blade | 0 | 1 | 0
+My Hero Academia: Vigilantes | 0 | 1 | 0
+BOFURI: I Don't Want to Get Hurt, so I'll Max Out My Defense. | 0 | 1 | 0
+Starzinger | 0 | 1 | 0
+Blade of the Immortal | 0 | 1 | 0
+Rage of Bahamut | 0 | 1 | 0
+K | 0 | 1 | 0
+Zenki | 0 | 1 | 0
+Space Dandy | 0 | 1 | 0
+Mobile Suit Gundam | 0 | 1 | 0
+BLACK TORCH | 0 | 1 | 0
+Medabots | 0 | 1 | 0
+Mobile Suit Gundam: Iron-Blooded Orphans | 0 | 1 | 0
+Godzilla Singular Point | 0 | 1 | 0
+Spice and Wolf: MERCHANT MEETS THE WISE WOLF | 0 | 1 | 0
+Tokyo Mew Mew | 0 | 1 | 0
+The Iceblade Sorcerer Shall Rule the World | 0 | 1 | 0
+PERSONA5 the Animation | 0 | 1 | 0
+Infinite Stratos | 0 | 1 | 0
+RADIANT | 0 | 1 | 0
+Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside | 0 | 1 | 0
+A Returner's Magic Should Be Special | 0 | 1 | 0
+Vivy -Fluorite Eye's Song- | 0 | 1 | 0
+The Greatest Demon Lord Is Reborn as a Typical Nobody | 0 | 1 | 0
+The Adventures of Tom Sawyer | 0 | 1 | 0
+takt op.Destiny | 0 | 1 | 0
+From Old Country Bumpkin to Master Swordsman | 0 | 1 | 0
+Street Fighter II: V | 0 | 1 | 0
+Kamikaze Kaitou Jeanne | 0 | 1 | 0
+Fate/Apocrypha | 0 | 1 | 0
+Little Witch Academia | 0 | 1 | 0
+Arpeggio of Blue Steel: Ars Nova | 0 | 1 | 0
+Super Dimension Fortress Macross | 0 | 1 | 0
+Gargantia on the Verdurous Planet | 0 | 1 | 0
+Digimon Data Squad | 0 | 1 | 0
+Accel World | 0 | 1 | 0
+Chrono Crusade | 0 | 1 | 0
+Gungrave | 0 | 1 | 0
+Clevatess | 0 | 1 | 0
+Sherlock Hound | 0 | 1 | 0
+The Wonderful Adventures of Nils | 0 | 1 | 0
+Buddy Daddies | 0 | 1 | 0
+Trinity Blood | 0 | 1 | 0
+THE GHOST IN THE SHELL | 0 | 1 | 0
+TRIGUN STAMPEDE | 0 | 1 | 0
+The Elusive Samurai | 0 | 1 | 0
+Space Pirate Captain Harlock | 0 | 1 | 0
+Gunbuster | 0 | 1 | 0
+Keep Your Hands Off Eizouken! | 0 | 1 | 0
+Astro Boy | 0 | 1 | 0
+Yu-Gi-Oh! | 0 | 1 | 0
+Marriage Toxin | 0 | 1 | 0
+B'T X | 0 | 1 | 0
+PERSONA 4 the Animation | 0 | 1 | 0
+Kemono Jihen | 0 | 1 | 0
+Knights of Sidonia | 0 | 1 | 0
+ULTRAMAN | 0 | 1 | 0
+Akudama Drive | 0 | 1 | 0
+KILL BLUE | 0 | 1 | 0
+The Unaware Atelier Meister | 0 | 1 | 0
+YU-NO: A Girl Who Chants Love at the Bound of This World | 0 | 1 | 0
+Assault Lily BOUQUET | 0 | 1 | 0
+My Gift Lvl 9999 Unlimited Gacha: Backstabbed in a Backwater Dungeon, I'm Out for Revenge! | 0 | 1 | 0
+Tenjho Tenge | 0 | 1 | 0
+Great Mazinger | 0 | 1 | 0
+Jormungand | 0 | 1 | 0
+The Idaten Deities Know Only Peace | 0 | 1 | 0
+Lupin the Third: The Woman Called Fujiko Mine | 0 | 1 | 0
+King's Raid: Successors of the Will | 0 | 1 | 0
+ID: INVADED | 0 | 1 | 0
+The Witch and the Beast | 0 | 1 | 0
+Mazinger Edition Z: The Impact! | 0 | 1 | 0
+Jack-of-All-Trades, Party of None | 0 | 1 | 0
+Demon King Daimao | 0 | 1 | 0
+Air Gear | 0 | 1 | 0
+Witch Craft Works | 0 | 1 | 0
+The Legend of the Legendary Heroes | 0 | 1 | 0
+Girls' Last Tour | 0 | 1 | 0
+Yuuna and the Haunted Hot Springs | 0 | 1 | 0
+Chillin' in My 30s After Getting Fired From the Demon King's Army | 0 | 1 | 0
+Wandering Witch: The Journey of Elaina | 0 | 1 | 0
+Ghost in the Shell: Arise - Alternative Architecture | 0 | 1 | 0
+Chivalry of a Failed Knight | 0 | 1 | 0
+Steel Jeeg | 0 | 1 | 0
+Tales of Wedding Rings | 0 | 1 | 0
+Scarlet Nexus | 0 | 1 | 0
+X | 0 | 1 | 0
+Hell Teacher Nube | 0 | 1 | 0
+Manyu Scroll | 0 | 1 | 0
+B: The Beginning | 0 | 1 | 0
+No. 6 | 0 | 1 | 0
+Bubblegum Crisis | 0 | 1 | 0
+KONOSUBA – An Explosion on This Wonderful World! | 0 | 1 | 0
+Devil Lady | 0 | 1 | 0
+SSSS.DYNAZENON | 0 | 1 | 0
+Record of Grancrest War | 0 | 1 | 0
+Cross Ange: Rondo of Angels and Dragons | 0 | 1 | 0
+Sentenced to Be a Hero | 0 | 1 | 0
+SSSS.GRIDMAN | 0 | 1 | 0
+Cyborg Kuro-chan | 0 | 1 | 0
+Gangsta. | 0 | 1 | 0
+Disney Twisted-Wonderland: The Animation | 0 | 1 | 0
+Witchblade | 0 | 1 | 0
+The Brilliant Healer's New Life in the Shadows | 0 | 1 | 0
+Blast of Tempest | 0 | 1 | 0
+So, I Can't Play H! | 0 | 1 | 0
+HEROMAN | 0 | 1 | 0
+Queen Millennia | 0 | 1 | 0
+Servamp | 0 | 1 | 0
+If It's for My Daughter, I'd Even Defeat a Demon Lord | 0 | 1 | 0
+Katanagatari | 0 | 1 | 0
+I Parry Everything | 0 | 1 | 0
+Maoyu: Archenemy & Hero | 0 | 1 | 0
+Saikano | 0 | 1 | 0
+Kaiba | 0 | 1 | 0
+Ōban Star-Racers | 0 | 1 | 0
+Beast Tamer | 0 | 1 | 0
+Orient | 0 | 1 | 0
+Ben-To | 0 | 1 | 0
+Night Head 2041 | 0 | 1 | 0
+Record of Lodoss War | 0 | 1 | 0
+To the Abandoned Sacred Beasts | 0 | 1 | 0
+Iron Man | 0 | 1 | 0
+Super Crooks | 0 | 1 | 0
+Juni Taisen: Zodiac War | 0 | 1 | 0
+Taboo Tattoo | 0 | 1 | 0
+Undefeated Bahamut Chronicle | 0 | 1 | 0
+The Ossan Newbie Adventurer, Trained to Death by the Most Powerful Party, Became Invincible | 0 | 1 | 0
+Recovery of an MMO Junkie | 0 | 1 | 0
+Kino's Journey | 0 | 1 | 0
+Aria the Scarlet Ammo | 0 | 1 | 0
+Peach Boy Riverside | 0 | 1 | 0
+An Archdemon's Dilemma: How to Love Your Elf Bride | 0 | 1 | 0
+Revue Starlight | 0 | 1 | 0
+The World is Still Beautiful | 0 | 1 | 0
+The Kingdoms of Ruin | 0 | 1 | 0
+Ninja Scroll: The Series | 0 | 1 | 0
+Drifting Dragons | 0 | 1 | 0
+Cells at Work! CODE BLACK | 0 | 1 | 0
+Somali and the Forest Spirit | 0 | 1 | 0
+Azur Lane | 0 | 1 | 0
+Izetta: The Last Witch | 0 | 1 | 0
+Absolute Duo | 0 | 1 | 0
+Gonna Be the Twin-Tail!! | 0 | 1 | 0
+Love of Kill | 0 | 1 | 0
+Darwin's Game | 0 | 1 | 0
+Blade | 0 | 1 | 0
+Killing Bites | 0 | 1 | 0
+WorldEnd: What are you doing at the end of the world? Are you busy? Will you save us? | 0 | 1 | 0
+Level E | 0 | 1 | 0
+[C] The Money of Soul and Possibility Control | 0 | 1 | 0
+ViVid Strike！ | 0 | 1 | 0
+Full Dive: This Ultimate Next-Gen Full Dive RPG Is Even Shittier Than Real Life! | 0 | 1 | 0
+Fate/Extra Last Encore | 0 | 1 | 0
+May I Ask for One Final Thing? | 0 | 1 | 0
+Magi: Adventure of Sinbad | 0 | 1 | 0
+X-Men | 0 | 1 | 0
+My Unique Skill Makes Me OP Even at Level 1 | 0 | 1 | 0
+Black Rock Shooter: Dawn Fall | 0 | 1 | 0
+BURN THE WITCH | 0 | 1 | 0
+Dream Eater Merry | 0 | 1 | 0
+Devil Survivor 2: The Animation | 0 | 1 | 0
+Vampire in the Garden | 0 | 1 | 0
+Kino's Journey -the Beautiful World- the Animated Series | 0 | 1 | 0
+Onimusha | 0 | 1 | 0
+11eyes | 0 | 1 | 0
+AIKa ZERO | 0 | 1 | 0
+The Orbital Children | 0 | 1 | 0
+Suppose a Kid from the Last Dungeon Boonies Moved to a Starter Town? | 0 | 1 | 0
+Chainsaw Man - The Compilation | 0 | 1 | 0
+Levius | 0 | 1 | 0
+The Dungeon of Black Company | 0 | 1 | 0
+Sirius the Jaeger | 0 | 1 | 0
+The Unwanted Undead Adventurer | 0 | 1 | 0
+Shigurui: Death Frenzy | 0 | 1 | 0
+SAND LAND: THE SERIES | 0 | 1 | 0
+Alderamin on the Sky | 0 | 1 | 0
+Anti-Magic Academy: The 35th Test Platoon | 0 | 1 | 0
+Pokémon Generations | 0 | 1 | 0
+Gudetama: An Eggcellent Adventure | 0 | 1 | 0
+Riddle Story of Devil | 0 | 1 | 0
+Battle Game in 5 Seconds | 0 | 1 | 0
+Ulysses: Jeanne d'Arc and the Alchemist Knight | 0 | 1 | 0
+Hellsing: The Dawn | 0 | 1 | 0
+Macross Plus | 0 | 1 | 0
+Magical Warfare | 0 | 1 | 0
+Burn! Top Striker | 0 | 1 | 0
+Speed Racer | 0 | 1 | 0
+3000 Leagues in Search of Mother | 0 | 1 | 0
+Inazuma Eleven | 0 | 1 | 0
+Death Note | 0 | 1 | 0
+Tokyo Ghoul | 0 | 1 | 0
+To Love Ru | 0 | 1 | 0
+A Certain Magical Index | 0 | 1 | 0
+Black Butler | 0 | 1 | 0
+My Happy Marriage | 0 | 1 | 0
+Hell Girl | 0 | 1 | 0
+Miss Kobayashi's Dragon Maid | 0 | 1 | 0
+Toilet-Bound Hanako-kun | 0 | 1 | 0
+Sailor Moon Crystal | 0 | 1 | 0
+Steins;Gate | 0 | 1 | 0
+xxxHOLiC | 0 | 1 | 0
+In/Spectre | 0 | 1 | 0
+Violet Evergarden | 0 | 1 | 0
+The Melancholy of Haruhi Suzumiya | 0 | 1 | 0
+DARLING in the FRANXX | 0 | 1 | 0
+Rosario + Vampire | 0 | 1 | 0
+Puella Magi Madoka Magica | 0 | 1 | 0
+Chobits | 0 | 1 | 0
+Steins;Gate 0 | 0 | 1 | 0
+Ergo Proxy | 0 | 1 | 0
+ZOMBIE LAND SAGA | 0 | 1 | 0
+Witch Hat Atelier | 0 | 1 | 0
+Orange | 0 | 1 | 0
+Shiki | 0 | 1 | 0
+Charlotte | 0 | 1 | 0
+World's End Harem | 0 | 1 | 0
+Serial Experiments Lain | 0 | 1 | 0
+Interspecies Reviewers | 0 | 1 | 0
+Plastic Memories | 0 | 1 | 0
+PLUTO | 0 | 1 | 0
+Takopi's Original Sin | 0 | 1 | 0
+Hellsing Ultimate | 0 | 1 | 0
+Peter Grill and the Philosopher's Time | 0 | 1 | 0
+Paranoia Agent | 0 | 1 | 0
+7SEEDS | 0 | 1 | 0
+Mieruko-chan | 0 | 1 | 0
+Girls Bravo | 0 | 1 | 0
+Blood Lad | 0 | 1 | 0
+Junji Ito Collection | 0 | 1 | 0
+The Helpful Fox Senko-san | 0 | 1 | 0
+Magical DoReMi | 0 | 1 | 0
+Dr. Slump | 0 | 1 | 0
+Fruits Basket | 0 | 1 | 0
+Moomin | 0 | 1 | 0
+Full Metal Panic! | 0 | 1 | 0
+Legend of the Galactic Heroes | 0 | 1 | 0
+Revolutionary Girl Utena | 0 | 1 | 0
+Tsubasa RESERVoir CHRoNiCLE | 0 | 1 | 0
+Witch Watch | 0 | 1 | 0
+Ghost Stories | 0 | 1 | 0
+The Duke of Death and His Maid | 0 | 1 | 0
+Ah! My Goddess | 0 | 1 | 0
+Chainsmoker Cat | 0 | 1 | 0
+Nagi-Asu: A Lull in the Sea | 0 | 1 | 0
+Gushing Over Magical Girls | 0 | 1 | 0
+Daa! Daa! Daa! UFO Baby | 0 | 1 | 0
+From the New World | 0 | 1 | 0
+Higurashi: When They Cry - NEW | 0 | 1 | 0
+Sonny Boy | 0 | 1 | 0
+Baka and Test: Summon the Beasts | 0 | 1 | 0
+Snow White with the Red Hair | 0 | 1 | 0
+Spice and Wolf | 0 | 1 | 0
+The Summer Hikaru Died | 0 | 1 | 0
+Shadows House | 0 | 1 | 0
+CAROLE & TUESDAY | 0 | 1 | 0
+Vermeil in Gold | 0 | 1 | 0
+God Eater | 0 | 1 | 0
+Captain Future | 0 | 1 | 0
+Grimm's Fairy Tale Classics | 0 | 1 | 0
+Penguindrum | 0 | 1 | 0
+Amagi Brilliant Park | 0 | 1 | 0
+Undead Murder Farce | 0 | 1 | 0
+Gankutsuou | 0 | 1 | 0
+Planetes | 0 | 1 | 0
+Secrets of the Silent Witch | 0 | 1 | 0
+The Genius Prince's Guide to Raising a Nation Out of Debt | 0 | 1 | 0
+Tatsuki Fujimoto 17-26 | 0 | 1 | 0
+Myriad Colors Phantom World | 0 | 1 | 0
+Talentless Nana | 0 | 1 | 0
+Haibane Renmei | 0 | 1 | 0
+IRODUKU: The World in Colors | 0 | 1 | 0
+I'm the Villainess, So I'm Taming the Final Boss | 0 | 1 | 0
+The Warrior Princess and the Barbaric King | 0 | 1 | 0
+I'm Quitting Heroing | 0 | 1 | 0
+7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy! | 0 | 1 | 0
+Berserk of Gluttony | 0 | 1 | 0
+Mononoke | 0 | 1 | 0
+The "Hentai" Prince and the Stony Cat | 0 | 1 | 0
+Sleepy Princess in the Demon Castle | 0 | 1 | 0
+The Ogre's Bride | 0 | 1 | 0
+Ya Boy Kongming! | 0 | 1 | 0
+The Day I Became a God | 0 | 1 | 0
+Nina the Starry Bride | 0 | 1 | 0
+DARK MOON: THE BLOOD ALTAR | 0 | 1 | 0
+Rozen Maiden | 0 | 1 | 0
+Cat Planet Cuties | 0 | 1 | 0
+Flying Witch | 0 | 1 | 0
+The Great Jahy Will Not Be Defeated! | 0 | 1 | 0
+CLASSROOM FOR HEROES | 0 | 1 | 0
+Outlaw Star | 0 | 1 | 0
+DNA² | 0 | 1 | 0
+Campione! | 0 | 1 | 0
+The Do-Over Damsel Conquers the Dragon Emperor | 0 | 1 | 0
+Interviews with Monster Girls | 0 | 1 | 0
+Kiznaiver | 0 | 1 | 0
+Waiting in the Summer | 0 | 1 | 0
+SCHOOL-LIVE! | 0 | 1 | 0
+My Deer Friend Nokotan | 0 | 1 | 0
+Ground Control to Psychoelectric Girl | 0 | 1 | 0
+Problem Children Are Coming from Another World, Aren't They? | 0 | 1 | 0
+Inu X Boku Secret Service | 0 | 1 | 0
+Children of the Whales | 0 | 1 | 0
+exception | 0 | 1 | 0
+Hinamatsuri | 0 | 1 | 0
+Anime-Gataris | 0 | 1 | 0
+The Ancient Magus' Bride: Those Awaiting a Star | 0 | 1 | 0
+How to Keep a Mummy | 0 | 1 | 0
+Time of Eve | 0 | 1 | 0
+The Grimm Variations | 0 | 1 | 0
+A Certain Scientific Accelerator | 0 | 1 | 0
+Gundam: Requiem for Vengeance | 0 | 1 | 0
+Detective Conan | 0 | 1 | 0
+Monogatari | 0 | 1 | 0
+Haikyu!! | 0 | 1 | 0
+Zatch Bell! | 0 | 1 | 0
+Rent-a-Girlfriend | 0 | 1 | 0
+Kaguya-sama: Love Is War | 0 | 1 | 0
+My Dress-Up Darling | 0 | 1 | 0
+Tsuredure Children | 0 | 1 | 0
+Rascal Does Not Dream of Bunny Girl Senpai | 0 | 1 | 0
+Captain Tsubasa | 0 | 1 | 0
+Uzaki-chan Wants to Hang Out! | 0 | 1 | 0
+Great Teacher Onizuka | 0 | 1 | 0
+My Teen Romantic Comedy SNAFU | 0 | 1 | 0
+The 100 Girlfriends Who Really, Really, Really, Really, REALLY Love You | 0 | 1 | 0
+Your Lie in April | 0 | 1 | 0
+Food Wars! Shokugeki no Soma | 0 | 1 | 0
+Teasing Master Takagi-san | 0 | 1 | 0
+Free! | 0 | 1 | 0
+The Dangers in My Heart | 0 | 1 | 0
+Grand Blue Dreaming | 0 | 1 | 0
+Love, Chunibyo & Other Delusions! | 0 | 1 | 0
+TONIKAWA: Over the Moon for You | 0 | 1 | 0
+DON'T TOY WITH ME, MISS NAGATORO | 0 | 1 | 0
+Nisekoi | 0 | 1 | 0
+The Quintessential Quintuplets | 0 | 1 | 0
+Horimiya | 0 | 1 | 0
+Yuri!!! on Ice | 0 | 1 | 0
+BOCCHI THE ROCK! | 0 | 1 | 0
+Himouto! Umaru-chan | 0 | 1 | 0
+Prison School | 0 | 1 | 0
+Ouran High School Host Club | 0 | 1 | 0
+Komi Can't Communicate | 0 | 1 | 0
+Hyouka | 0 | 1 | 0
+Shikimori's Not Just a Cutie | 0 | 1 | 0
+Alya Sometimes Hides Her Feelings in Russian | 0 | 1 | 0
+My Love Story with Yamada-kun at Lv999 | 0 | 1 | 0
+My Love Story!! | 0 | 1 | 0
+Blue Spring Ride | 0 | 1 | 0
+Daily Lives of High School Boys | 0 | 1 | 0
+The Way of the Househusband | 0 | 1 | 0
+Welcome to the N-H-K | 0 | 1 | 0
+We Never Learn: BOKUBEN | 0 | 1 | 0
+ORESUKI Are you the only one who loves me? | 0 | 1 | 0
+Golden Boy | 0 | 1 | 0
+Sankarea: Undying Love | 0 | 1 | 0
+Haven't You Heard? I'm Sakamoto | 0 | 1 | 0
+Dagashi Kashi | 0 | 1 | 0
+ODDTAXI | 0 | 1 | 0
+My First Girlfriend Is a Gal | 0 | 1 | 0
+My Little Monster | 0 | 1 | 0
+Seton Academy: Join the Pack! | 0 | 1 | 0
+BLEND-S | 0 | 1 | 0
+Romantic Killer | 0 | 1 | 0
+Real Girl | 0 | 1 | 0
+Yamada-kun and the Seven Witches | 0 | 1 | 0
+AHO-GIRL | 0 | 1 | 0
+WATAMOTE ~No Matter How I Look at It, It's You Guys Fault I'm Not Popular!~ | 0 | 1 | 0
+My Girlfriend Is Shobitch | 0 | 1 | 0
+Kiss Him, Not Me | 0 | 1 | 0
+Magical Sempai | 0 | 1 | 0
+Harukana Receive | 0 | 1 | 0
+Our Love Has Always Been 10 Centimeters Apart. | 0 | 1 | 0
+Hensuki: Are You Willing to Fall in Love With a Pervert, As Long As She's a Cutie? | 0 | 1 | 0
+How Heavy Are the Dumbbells You Lift? | 0 | 1 | 0
+Crayon Shin-chan | 0 | 1 | 0
+The Prince of Tennis | 0 | 1 | 0
+Yowamushi Pedal | 0 | 1 | 0
+Laid-Back Camp | 0 | 1 | 0
+The Angel Next Door Spoils Me Rotten | 0 | 1 | 0
+You and I Are Polar Opposites | 0 | 1 | 0
+WORKING!! | 0 | 1 | 0
+Lucky Star | 0 | 1 | 0
+Non Non Biyori | 0 | 1 | 0
+SHIROBAKO | 0 | 1 | 0
+Love Live! School Idol Project | 0 | 1 | 0
+Umamusume: Pretty Derby | 0 | 1 | 0
+Aharen-san wa Hakarenai | 0 | 1 | 0
+A Couple of Cuckoos | 0 | 1 | 0
+Smoking Behind the Supermarket with You | 0 | 1 | 0
+YuruYuri: Happy Go Lily | 0 | 1 | 0
+Makeine: Too Many Losing Heroines! | 0 | 1 | 0
+School Rumble | 0 | 1 | 0
+Azumanga Daioh | 0 | 1 | 0
+Nichijou: My Ordinary Life | 0 | 1 | 0
+Tanaka-kun Is Always Listless | 0 | 1 | 0
+His and Her Circumstances | 0 | 1 | 0
+The Café Terrace and Its Goddesses | 0 | 1 | 0
+The Pet Girl of Sakurasou | 0 | 1 | 0
+Please Teacher! | 0 | 1 | 0
+2.5 Dimensional Seduction | 0 | 1 | 0
+Horimiya: The Missing Pieces | 0 | 1 | 0
+Girlfriend, Girlfriend | 0 | 1 | 0
+Heaven's Lost Property | 0 | 1 | 0
+ONIMAI: I'm Now Your Sister! | 0 | 1 | 0
+NEW GAME! | 0 | 1 | 0
+Monthly Girls' Nozaki-kun | 0 | 1 | 0
+Haganai: I Don't Have Many Friends | 0 | 1 | 0
+Science Fell in Love, So I Tried to Prove It | 0 | 1 | 0
+I Made Friends with the Second Prettiest Girl in My Class | 0 | 1 | 0
+Skip and Loafer | 0 | 1 | 0
+My Senpai Is Annoying | 0 | 1 | 0
+Sasaki and Miyano | 0 | 1 | 0
+Captain Tsubasa J | 0 | 1 | 0
+Iwa Kakeru! Sport Climbing Girls | 0 | 1 | 0
+Silver Spoon | 0 | 1 | 0
+Tonari no Seki-kun: The Master of Killing Time | 0 | 1 | 0
+Tomo-chan Is a Girl! | 0 | 1 | 0
+Tamon's B-Side | 0 | 1 | 0
+Go for It, Nakamura-kun!! | 0 | 1 | 0
+After the Rain | 0 | 1 | 0
+Tamako Market | 0 | 1 | 0
+Hi Score Girl | 0 | 1 | 0
+The Girl I Like Forgot Her Glasses | 0 | 1 | 0
+Kageki Shojo!! | 0 | 1 | 0
+A Condition Called Love | 0 | 1 | 0
+Kakushigoto | 0 | 1 | 0
+Asobi Asobase - workshop of fun - | 0 | 1 | 0
+Dealing with Mikadono Sisters Is a Breeze | 0 | 1 | 0
+Yarichin Bitch Club | 0 | 1 | 0
+Wotakoi: Love Is Hard for Otaku | 0 | 1 | 0
+SHIMONETA: A Boring World Where the Concept of Dirty Jokes Doesn't Exist | 0 | 1 | 0
+Hello! Sandybell | 0 | 1 | 0
+There's No Freaking Way I'll Be Your Lover! Unless... | 0 | 1 | 0
+More than a Married Couple, but Not Lovers | 0 | 1 | 0
+The Shiunji Family Children | 0 | 1 | 0
+MoonPhase | 0 | 1 | 0
+The Disappearance of Nagato Yuki-chan | 0 | 1 | 0
+GAMERS! | 0 | 1 | 0
+Love After World Domination | 0 | 1 | 0
+Lovely★Complex | 0 | 1 | 0
+Aggretsuko | 0 | 1 | 0
+A Sister's All You Need | 0 | 1 | 0
+Sweetness & Lightning | 0 | 1 | 0
+Hitoribocchi no Marumaruseikatsu | 0 | 1 | 0
+Case Closed: The Culprit Hanzawa | 0 | 1 | 0
+Pseudo Harem | 0 | 1 | 0
+Paradise Kiss | 0 | 1 | 0
+Our Dating Story: The Experienced You and the Inexperienced Me | 0 | 1 | 0
+Seiren | 0 | 1 | 0
+Welcome to the Ballroom | 0 | 1 | 0
+A Good Librarian Like a Good Shepherd | 0 | 1 | 0
+School Babysitters | 0 | 1 | 0
+WATATEN!: an Angel Flew Down to Me | 0 | 1 | 0
+The Disastrous Life of Saiki K.: Reawakened | 0 | 1 | 0
+The Comic Artist and His Assistants | 0 | 1 | 0
+Hokkaido Gals Are Super Adorable! | 0 | 1 | 0
+Shomin Sample | 0 | 1 | 0
+Actually, I Am... | 0 | 1 | 0
+Miss Caretaker of Sunohara-sou | 0 | 1 | 0
+Yamada's First Time: B Gata H Kei | 0 | 1 | 0
+Mother of the Goddess' Dormitory | 0 | 1 | 0
+Burning Kabaddi | 0 | 1 | 0
+The Maid I Hired Recently Is Mysterious | 0 | 1 | 0
+Anne Happy♪ | 0 | 1 | 0
+I Can't Understand What My Husband Is Saying | 0 | 1 | 0
+Brothers Conflict | 0 | 1 | 0
+My Mental Choices Are Completely Interfering with my School Romantic Comedy | 0 | 1 | 0
+Ao-chan Can't Study! | 0 | 1 | 0
+O Maidens in Your Savage Season | 0 | 1 | 0
+Magical Girl Ore | 0 | 1 | 0
+Handa-kun | 0 | 1 | 0
+Kotaro Lives Alone | 0 | 1 | 0
+Detroit Metal City | 0 | 1 | 0
+Mr. Nobunaga's Young Bride | 0 | 1 | 0
+Rilakkuma and Kaoru | 0 | 1 | 0
+Please Put Them On, Takamine-san | 0 | 1 | 0
+The Apothecary Diaries | 0 | 1 | 0
+BEASTARS | 0 | 1 | 0
+Classroom of the Elite | 0 | 1 | 0
+NANA | 0 | 1 | 0
+Higurashi: When They Cry | 0 | 1 | 0
+【OSHI NO KO】 | 0 | 1 | 0
+Candy Candy | 0 | 1 | 0
+The Fragrant Flower Blooms with Dignity | 0 | 1 | 0
+Heidi: Girl of the Alps | 0 | 1 | 0
+The Rose of Versailles | 0 | 1 | 0
+Platinum End | 0 | 1 | 0
+Kakegurui | 0 | 1 | 0
+ERASED | 0 | 1 | 0
+91 Days | 0 | 1 | 0
+Higehiro: After Being Rejected, I Shaved and Took in a High School Runaway | 0 | 1 | 0
+Another | 0 | 1 | 0
+Usagi Drop | 0 | 1 | 0
+Domestic Girlfriend | 0 | 1 | 0
+given | 0 | 1 | 0
+Terror in Resonance | 0 | 1 | 0
+The Ramparts of Ice | 0 | 1 | 0
+Sound! Euphonium | 0 | 1 | 0
+Blue Box | 0 | 1 | 0
+Ahiru no Sora | 0 | 1 | 0
+Kaiji | 0 | 1 | 0
+Medalist | 0 | 1 | 0
+Anne of Green Gables | 0 | 1 | 0
+Orb: On the Movements of the Earth | 0 | 1 | 0
+Days with My Stepsister | 0 | 1 | 0
+Princess Sarah | 0 | 1 | 0
+Love Through a Prism | 0 | 1 | 0
+Descending Stories | 0 | 1 | 0
+Gosick | 0 | 1 | 0
+Beck: Mongolian Chop Squad | 0 | 1 | 0
+Kono Oto Tomare!: Sounds of Life | 0 | 1 | 0
+Nobody's Boy: Remi | 0 | 1 | 0
+NIPPON SANGOKU: The Three Nations of the Crimson Sun | 0 | 1 | 0
+In the Clear Moonlit Dusk | 0 | 1 | 0
+SING "YESTERDAY" FOR ME | 0 | 1 | 0
+Remake Our Life! | 0 | 1 | 0
+Bloom Into You | 0 | 1 | 0
+ACCA: 13-Territory Inspection Dept. | 0 | 1 | 0
+Flower Angel | 0 | 1 | 0
+Tomodachi Game | 0 | 1 | 0
+Say "I Love You." | 0 | 1 | 0
+Stars Align | 0 | 1 | 0
+Arte | 0 | 1 | 0
+Young Black Jack | 0 | 1 | 0
+Berserk: The Golden Age Arc – Memorial Edition | 0 | 1 | 0
+Happy Sugar Life | 0 | 1 | 0
+Kids on the Slope | 0 | 1 | 0
+Blue Period | 0 | 1 | 0
+Rainbow | 0 | 1 | 0
+Smile Down the Runway | 0 | 1 | 0
+Peach Girl: Super Pop Love Hurricane | 0 | 1 | 0
+Ōoku: The Inner Chambers | 0 | 1 | 0
+Broken Blade | 0 | 1 | 0
+King's Game: The Animation | 0 | 1 | 0
+Magical Girl Site | 0 | 1 | 0
+Tokyo Magnitude 8.0 | 0 | 1 | 0
+Moriarty the Patriot | 0 | 1 | 0
+The Millionaire Detective – Balance: UNLIMITED | 0 | 1 | 0
+My Home Hero | 0 | 1 | 0
+KAKEGURUI TWIN | 0 | 1 | 0
+Thus Spoke Kishibe Rohan | 0 | 1 | 0
+Aoashi | 0 | 1 | 0
+Theatre of Darkness: Yamishibai | 0 | 1 | 0
+Vicky the Viking | 0 | 1 | 0
+Poco's Udon World | 0 | 1 | 0
+Pokémon Concierge | 0 | 1 | 0
+King Arthur and the Knights of the Round Table | 0 | 1 | 0
+Pokémon Chronicles | 0 | 1 | 0
+AIKa R-16 Virgin Mission | 0 | 1 | 0
+Dotto! Koni-chan | 0 | 1 | 0
+Spirited Away | 1 | 1 | 0
+Demon Slayer: Kimetsu no Yaiba Infinity Castle | 1 | 1 | 0
+Howl's Moving Castle | 1 | 1 | 0
+Your Name. | 1 | 1 | 0
+Chainsaw Man - The Movie: Reze Arc | 1 | 1 | 0
+Princess Mononoke | 1 | 1 | 0
+My Neighbor Totoro | 1 | 1 | 0
+Warriors of the Wind | 1 | 1 | 0
+The Boy and the Heron | 1 | 1 | 0
+Kiki's Delivery Service | 1 | 1 | 0
+A Silent Voice: The Movie | 1 | 1 | 0
+Demon Slayer -Kimetsu no Yaiba- The Movie: Mugen Train | 1 | 1 | 0
+Castle in the Sky | 1 | 1 | 0
+Ponyo | 1 | 1 | 0
+Perfect Blue | 1 | 1 | 0
+Akira | 1 | 1 | 0
+Suzume | 1 | 1 | 0
+Weathering with You | 1 | 1 | 0
+Neon Genesis Evangelion: The End of Evangelion | 1 | 1 | 0
+The Cat Returns | 1 | 1 | 0
+Arrietty | 1 | 1 | 0
+Look Back | 1 | 1 | 0
+Ghost in the Shell | 1 | 1 | 0
+Jujutsu Kaisen 0 | 1 | 1 | 0
+Black Clover: Sword of the Wizard King | 1 | 1 | 0
+Porco Rosso | 1 | 1 | 0
+Whisper of the Heart | 1 | 1 | 0
+The Wind Rises | 1 | 1 | 0
+Pom Poko | 1 | 1 | 0
+The Tale of The Princess Kaguya | 1 | 1 | 0
+Evangelion: 3.0+1.0 Thrice Upon a Time | 1 | 1 | 0
+Paprika | 1 | 1 | 0
+The Castle of Cagliostro | 1 | 1 | 0
+Violet Evergarden: The Movie | 1 | 1 | 0
+The Girl Who Leapt Through Time | 1 | 1 | 0
+Wolf Children | 1 | 1 | 0
+Resident Evil: Death Island | 1 | 1 | 0
+Pokémon: The First Movie | 1 | 1 | 0
+HAIKYU!! The Dumpster Battle | 1 | 1 | 0
+Maquia: When the Promised Flower Blooms | 1 | 1 | 0
+Pokémon the Movie 2000 | 1 | 1 | 0
+Dou kyu sei – Classmates | 1 | 1 | 0
+I Want to Eat Your Pancreas | 1 | 1 | 0
+Street Fighter II: The Animated Movie | 1 | 1 | 0
+The Quintessential Quintuplets Movie | 1 | 1 | 0
+When Marnie Was There | 1 | 1 | 0
+Resident Evil: Vendetta | 1 | 1 | 0
+Only Yesterday | 1 | 1 | 0
+From Up on Poppy Hill | 1 | 1 | 0
+Evangelion: 1.0 You Are (Not) Alone | 1 | 1 | 0
+Rascal Does Not Dream of a Dreaming Girl | 1 | 1 | 0
+Tales from Earthsea | 1 | 1 | 0
+Dragon Ball Z: Cooler's Revenge | 1 | 1 | 0
+Evangelion: 2.0 You Can (Not) Advance | 1 | 1 | 0
+One Piece Film Red | 1 | 1 | 0
+The Last: Naruto the Movie | 1 | 1 | 0
+Ghost in the Shell 2: Innocence | 1 | 1 | 0
+Dragon Ball Super: Super Hero | 1 | 1 | 0
+Dragon Ball Z: Battle of Gods | 1 | 1 | 0
+Attack on Titan: THE LAST ATTACK | 1 | 1 | 0
+Millennium Actress | 1 | 1 | 0
+Dragon Ball Z: Broly - The Legendary Super Saiyan | 1 | 1 | 0
+OVERLORD: The Sacred Kingdom | 1 | 1 | 0
+A Whisker Away | 1 | 1 | 0
+Belle | 1 | 1 | 0
+The Tunnel to Summer, the Exit of Goodbyes | 1 | 1 | 0
+Tokyo Godfathers | 1 | 1 | 0
+Pokémon the Movie: I Choose You! | 1 | 1 | 0
+My Neighbors the Yamadas | 1 | 1 | 0
+Detective Conan: The Time Bombed Skyscraper | 1 | 1 | 0
+Detective Conan: The Phantom of Baker Street | 1 | 1 | 0
+Dragon Ball Z: Resurrection 'F' | 1 | 1 | 0
+Summer Wars | 1 | 1 | 0
+The First Slam Dunk | 1 | 1 | 0
+Batman Ninja vs. Yakuza League | 1 | 1 | 0
+The Boy and the Beast | 1 | 1 | 0
+Dragon Ball: Curse of the Blood Rubies | 1 | 1 | 0
+Resident Evil: Degeneration | 1 | 1 | 0
+Vampire Hunter D: Bloodlust | 1 | 1 | 0
+My Hero Academia: You're Next | 1 | 1 | 0
+Mary and The Witch's Flower | 1 | 1 | 0
+Made in Abyss: Dawn of the Deep Soul | 1 | 1 | 0
+Godzilla: City on the Edge of Battle | 1 | 1 | 0
+Road to Ninja: Naruto the Movie | 1 | 1 | 0
+Cowboy Bebop: The Movie | 1 | 1 | 0
+SPY x FAMILY CODE: White | 1 | 1 | 0
+That Time I Got Reincarnated as a Slime the Movie: Scarlet Bond | 1 | 1 | 0
+Dragon Ball Z: Fusion Reborn | 1 | 1 | 0
+Mirai | 1 | 1 | 0
+Dragon Ball Z: Broly - Second Coming | 1 | 1 | 0
+My Hero Academia: Two Heroes | 1 | 1 | 0
+No Game No Life: Zero | 1 | 1 | 0
+Resident Evil: Damnation | 1 | 1 | 0
+Children Who Chase Lost Voices | 1 | 1 | 0
+Metropolis | 1 | 1 | 0
+Puella Magi Madoka Magica the Movie -Rebellion- | 1 | 1 | 0
+KONOSUBA – God's blessing on this wonderful world! Legend of Crimson | 1 | 1 | 0
+Pokémon the Movie: Secrets of the Jungle | 1 | 1 | 0
+Violet Evergarden: Eternity and the Auto Memory Doll | 1 | 1 | 0
+Pokémon Heroes | 1 | 1 | 0
+Angel's Egg | 1 | 1 | 0
+Sword Art Online the Movie: Ordinal Scale | 1 | 1 | 0
+Naruto the Movie: Ninja Clash in the Land of Snow | 1 | 1 | 0
+Pokémon: The Rise of Darkrai | 1 | 1 | 0
+Dragon Ball Z: Wrath of the Dragon | 1 | 1 | 0
+Sword Art Online the Movie – Progressive – Scherzo of Deep Night | 1 | 1 | 0
+Dragon Ball Z: Dead Zone | 1 | 1 | 0
+Detective Conan: Captured in Her Eyes | 1 | 1 | 0
+Naruto Shippuden the Movie: The Will of Fire | 1 | 1 | 0
+Dragon Ball Z: Lord Slug | 1 | 1 | 0
+Neon Genesis Evangelion: Death and Rebirth | 1 | 1 | 0
+Ninja Scroll | 1 | 1 | 0
+My Hero Academia: Heroes Rising | 1 | 1 | 0
+Boruto: Naruto the Movie | 1 | 1 | 0
+One Piece Film: Z | 1 | 1 | 0
+My Hero Academia: World Heroes' Mission | 1 | 1 | 0
+Dragon Ball Z: The History of Trunks | 1 | 1 | 0
+Sword of the Stranger | 1 | 1 | 0
+BLUE LOCK THE MOVIE -EPISODE NAGI- | 1 | 1 | 0
+Vampire Hunter D | 1 | 1 | 0
+Pokémon the Movie: Mewtwo Strikes Back - Evolution | 1 | 1 | 0
+Dragon Ball Z: Bojack Unbound | 1 | 1 | 0
+Detective Conan: The Last Wizard of the Century | 1 | 1 | 0
+Pokémon: Giratina and the Sky Warrior | 1 | 1 | 0
+Pokémon: Lucario and the Mystery of Mew | 1 | 1 | 0
+Sword Art Online the Movie - Progressive - Aria of a Starless Night | 1 | 1 | 0
+Fullmetal Alchemist the Movie: Conqueror of Shamballa | 1 | 1 | 0
+Evangelion: 3.0 You Can (Not) Redo | 1 | 1 | 0
+Dragon Ball Z: Bardock - The Father of Goku | 1 | 1 | 0
+Fireworks | 1 | 1 | 0
+In This Corner of the World | 1 | 1 | 0
+Pokémon: Arceus and the Jewel of Life | 1 | 1 | 0
+Pokémon the Movie: The Power of Us | 1 | 1 | 0
+Dragon Ball Z: Super Android 13! | 1 | 1 | 0
+Yu-Gi-Oh!: The Dark Side of Dimensions | 1 | 1 | 0
+One Piece Film: GOLD | 1 | 1 | 0
+One Piece: The Movie | 1 | 1 | 0
+One Piece Film: Strong World | 1 | 1 | 0
+Pokémon the Movie: Hoopa and the Clash of Ages | 1 | 1 | 0
+Naruto Shippuden the Movie: Blood Prison | 1 | 1 | 0
+Pokémon: Destiny Deoxys | 1 | 1 | 0
+Case Closed: Countdown to Heaven | 1 | 1 | 0
+Saint Seiya: Legend of Crimson Youth | 1 | 1 | 0
+Naruto the Movie: Guardians of the Crescent Moon Kingdom | 1 | 1 | 0
+Dragon Ball: Mystical Adventure | 1 | 1 | 0
+Dragon Ball Z: The Tree of Might | 1 | 1 | 0
+Saint Seiya: Evil Goddess Eris | 1 | 1 | 0
+Jin-Roh: The Wolf Brigade | 1 | 1 | 0
+Naruto Shippuden the Movie | 1 | 1 | 0
+Final Fantasy VII: Advent Children | 1 | 1 | 0
+Words Bubble Up Like Soda Pop | 1 | 1 | 0
+Altered Carbon: Resleeved | 1 | 1 | 0
+Penguin Highway | 1 | 1 | 0
+Belladonna of Sadness | 1 | 1 | 0
+Berserk: The Golden Age Arc III - The Advent | 1 | 1 | 0
+Saint Seiya: Legend of Sanctuary | 1 | 1 | 0
+One Piece: Clockwork Island Adventure | 1 | 1 | 0
+Memories | 1 | 1 | 0
+Naruto Shippuden the Movie: Bonds | 1 | 1 | 0
+The Place Promised in Our Early Days | 1 | 1 | 0
+Redline | 1 | 1 | 0
+Stand by Me Doraemon | 1 | 1 | 0
+Naruto Shippuden the Movie: The Lost Tower | 1 | 1 | 0
+Dragon Ball: Sleeping Princess in Devil's Castle | 1 | 1 | 0
+Baki Hanma VS Kengan Ashura | 1 | 1 | 0
+Pokémon: Zoroark - Master of Illusions | 1 | 1 | 0
+Berserk: The Golden Age Arc I - The Egg of the King | 1 | 1 | 0
+Demon Slayer: Kimetsu no Yaiba - Sibling's Bond | 1 | 1 | 0
+Is It Wrong to Try to Pick Up Girls in a Dungeon?: Arrow of the Orion | 1 | 1 | 0
+Bleach the Movie: Fade to Black | 1 | 1 | 0
+Dragon Ball GT: A Hero's Legacy | 1 | 1 | 0
+Patema Inverted | 1 | 1 | 0
+Pokémon 3: The Movie | 1 | 1 | 0
+A Letter to Momo | 1 | 1 | 0
+Tekkonkinkreet | 1 | 1 | 0
+Cardcaptor Sakura: The Sealed Card | 1 | 1 | 0
+Re:ZERO -Starting Life in Another World- Memory Snow | 1 | 1 | 0
+Blood: The Last Vampire | 1 | 1 | 0
+Night Is Short, Walk On Girl | 1 | 1 | 0
+Dragon Ball: Episode of Bardock | 1 | 1 | 0
+Pokémon: Jirachi Wish Maker | 1 | 1 | 0
+The Seven Deadly Sins: Cursed by Light | 1 | 1 | 0
+Drifting Home | 1 | 1 | 0
+Dragon Ball Z: The World's Strongest | 1 | 1 | 0
+Naruto the Movie: Legend of the Stone of Gelel | 1 | 1 | 0
+Kingsglaive: Final Fantasy XV | 1 | 1 | 0
+Promare | 1 | 1 | 0
+One Piece: Chopper's Kingdom in the Strange Animal Island | 1 | 1 | 0
+Death Note Relight 1: Visions of a God | 1 | 1 | 0
+Pokémon the Movie: Volcanion and the Mechanical Marvel | 1 | 1 | 0
+Steamboy | 1 | 1 | 0
+Ghost in the Shell: The New Movie | 1 | 1 | 0
+The Seven Deadly Sins: Grudge of Edinburgh Part 2 | 1 | 1 | 0
+Children of the Sea | 1 | 1 | 0
+Case Closed: The Fourteenth Target | 1 | 1 | 0
+Berserk: The Golden Age Arc II - The Battle for Doldrey | 1 | 1 | 0
+Tamako Love Story | 1 | 1 | 0
+Lupin III: The First | 1 | 1 | 0
+Saint Seiya: Warriors of the Final Holy Battle | 1 | 1 | 0
+Fairy Tail: Dragon Cry | 1 | 1 | 0
+Wicked City | 1 | 1 | 0
+Bleach the Movie: Memories of Nobody | 1 | 1 | 0
+Goblin Slayer: Goblin's Crown | 1 | 1 | 0
+One Piece: Baron Omatsuri and the Secret Island | 1 | 1 | 0
+Steins;Gate: The Movie - Load Region of Déjà Vu | 1 | 1 | 0
+One Piece: Dead End Adventure | 1 | 1 | 0
+BLAME! | 1 | 1 | 0
+Fullmetal Alchemist: The Sacred Star of Milos | 1 | 1 | 0
+Saga of Tanya the Evil: The Movie | 1 | 1 | 0
+Stand by Me Doraemon 2 | 1 | 1 | 0
+GANTZ:O | 1 | 1 | 0
+Bleach the Movie: Hell Verse | 1 | 1 | 0
+Kizumonogatari Part 1: Tekketsu | 1 | 1 | 0
+Hunter x Hunter: The Last Mission | 1 | 1 | 0
+Ghost in the Shell 2.0 | 1 | 1 | 0
+Dragon Ball: The Path to Power | 1 | 1 | 0
+Digimon Adventure: Last Evolution Kizuna | 1 | 1 | 0
+One Piece: Giant Mecha Soldier of Karakuri Castle | 1 | 1 | 0
+Pokémon the Movie: Diancie and the Cocoon of Destruction | 1 | 1 | 0
+Origin: Spirits of the Past | 1 | 1 | 0
+The Disappearance of Haruhi Suzumiya | 1 | 1 | 0
+Dragon Ball Z: Plan to Eradicate the Super Saiyans | 1 | 1 | 0
+Kizumonogatari Part 3: Reiketsu | 1 | 1 | 0
+Saint Seiya: The Heated Battle of the Gods | 1 | 1 | 0
+Re:ZERO -Starting Life in Another World- The Frozen Bond | 1 | 1 | 0
+anohana: The Flower We Saw That Day - The Movie | 1 | 1 | 0
+Colorful | 1 | 1 | 0
+Modest Heroes | 1 | 1 | 0
+NiNoKuni | 1 | 1 | 0
+Saint Seiya Heaven Chapter: Overture | 1 | 1 | 0
+Mind Game | 1 | 1 | 0
+Barefoot Gen | 1 | 1 | 0
+One Piece: Curse of the Sacred Sword | 1 | 1 | 0
+Death Note Relight 2: L's Successors | 1 | 1 | 0
+Mazinger Z: Infinity | 1 | 1 | 0
+Pokémon the Movie: White - Victini and Zekrom | 1 | 1 | 0
+Bleach the Movie: The DiamondDust Rebellion | 1 | 1 | 0
+Bungo Stray Dogs: Dead Apple | 1 | 1 | 0
+Kizumonogatari Part 2: Nekketsu | 1 | 1 | 0
+One Piece: Stampede | 1 | 1 | 0
+Inuyasha the Movie: Affections Touching Across Time | 1 | 1 | 0
+Appleseed | 1 | 1 | 0
+Pokémon: Mewtwo Returns | 1 | 1 | 0
+Trigun: Badlands Rumble | 1 | 1 | 0
+Patlabor: The Movie | 1 | 1 | 0
+Voices of a Distant Star | 1 | 1 | 0
+Fairy Tail: Phoenix Priestess | 1 | 1 | 0
+The Seven Deadly Sins: Grudge of Edinburgh Part 1 | 1 | 1 | 0
+One Piece: Adventure of Nebulandia | 1 | 1 | 0
+Ghost in the Shell: Stand Alone Complex - Solid State Society | 1 | 1 | 0
+TEKKEN: Blood Vengeance | 1 | 1 | 0
+Dragon Ball Super: Broly | 1 | 1 | 0
+Battle Angel | 1 | 1 | 0
+Ghost in the Shell: Arise - Border 1: Ghost Pain | 1 | 1 | 0
+Dragon Quest: Your Story | 1 | 1 | 0
+Hunter x Hunter: Phantom Rouge | 1 | 1 | 0
+PSYCHO-PASS: The Movie | 1 | 1 | 0
+La Maison en Petits Cubes | 1 | 1 | 0
+Slayers Return | 1 | 1 | 0
+Appleseed Alpha | 1 | 1 | 0
+She and Her Cat | 1 | 1 | 0
+The Seven Deadly Sins: Prisoners of the Sky | 1 | 1 | 0
+High School of the Dead: Drifters of the Dead | 1 | 1 | 0
+Grave of the Fireflies | 1 | 1 | 0
+Hotarubi no Mori e | 1 | 1 | 0
+That Time I Got Reincarnated as a Slime the Movie: Tears of the Azure Sea | 1 | 1 | 0
+Cosmic Princess Kaguya! | 1 | 1 | 0
+Detective Conan: Black Iron Submarine | 1 | 1 | 0
+Kaiju No. 8: Mission Recon | 1 | 1 | 0
+Detective Conan: One-Eyed Flashback | 1 | 1 | 0
+Mononoke the Movie: The Phantom in the Rain | 1 | 1 | 0
+Mobile Suit Gundam Hathaway | 1 | 1 | 0
+Detective Conan: The Raven Chaser | 1 | 1 | 0
+Detective Conan: The Private Eyes' Requiem | 1 | 1 | 0
+100 METERS | 1 | 1 | 0
+JUJUTSU KAISEN: Hidden Inventory / Premature Death - The Movie | 1 | 1 | 0
+Doraemon: Nobita's New Dinosaur | 1 | 1 | 0
+Rascal Does Not Dream of a Knapsack Kid | 1 | 1 | 0
+Detective Conan: The Lost Ship in the Sky | 1 | 1 | 0
+Detective Conan: Quarter of Silence | 1 | 1 | 0
+Doraemon: Nobita's Treasure Island | 1 | 1 | 0
+Detective Conan: Magician of the Silver Sky | 1 | 1 | 0
+Crayon Shinchan the Movie: The Storm Called: The Adult Empire Strikes Back | 1 | 1 | 0
+Doraemon: Nobita's New Great Adventure Into the Underworld - The Seven Magic Users | 1 | 1 | 0
+Doraemon: Nobita's Chronicle of the Moon Exploration | 1 | 1 | 0
+COLORFUL STAGE! The Movie: A Miku Who Can't Sing | 1 | 1 | 0
+maboroshi | 1 | 1 | 0
+Miss Kobayashi's Dragon Maid: A lonely dragon wants to be loved | 1 | 1 | 0
+Inu-Oh | 1 | 1 | 0
+Doraemon: Nobita and the New Steel Troops: Winged Angels | 1 | 1 | 0
+Mobile Suit Gundam SEED FREEDOM | 1 | 1 | 0
+Sailor Moon S the Movie: Hearts in Ice | 1 | 1 | 0
+Detective Conan: Crossroad in the Ancient Capital | 1 | 1 | 0
+Liz and the Blue Bird | 1 | 1 | 0
+Kaguya-sama: Love Is War -The First Kiss That Never Ends- | 1 | 1 | 0
+One Piece: Episode of Chopper Plus: Bloom in the Winter, Miracle Cherry Blossom | 1 | 1 | 0
+Teasing Master Takagi-san: The Movie | 1 | 1 | 0
+Puella Magi Madoka Magica the Movie Part I: Beginnings | 1 | 1 | 0
+Puella Magi Madoka Magica the Movie Part II: Eternal | 1 | 1 | 0
+Revolutionary Girl Utena: The Movie | 1 | 1 | 0
+Gintama: The Final Chapter - Be Forever Yorozuya | 1 | 1 | 0
+Code Geass: Lelouch of the Re;surrection | 1 | 1 | 0
+Night on the Galactic Railroad | 1 | 1 | 0
+My Oni Girl | 1 | 1 | 0
+Inuyasha the Movie 2: The Castle Beyond the Looking Glass | 1 | 1 | 0
+Mobile Suit Gundam: Char's Counterattack | 1 | 1 | 0
+Gurren Lagann the Movie: The Lights in the Sky Are Stars | 1 | 1 | 0
+Macross: Do You Remember Love? | 1 | 1 | 0
+Lonely Castle in the Mirror | 1 | 1 | 0
+Doraemon: Nobita and the Galaxy Super-express | 1 | 1 | 0
+One Piece "3D2Y": Overcome Ace's Death! Luffy's Vow to his Friends | 1 | 1 | 0
+The Stranger by the Shore | 1 | 1 | 0
+Cardcaptor Sakura: The Movie | 1 | 1 | 0
+Summer Days with Coo | 1 | 1 | 0
+Kuroko's Basketball the Movie: Last Game | 1 | 1 | 0
+Crayon Shinchan the Movie: The Secret Treasure of Buri Buri Kingdom | 1 | 1 | 0
+The Imaginary | 1 | 1 | 0
+The Princess and the Pilot | 1 | 1 | 0
+Gurren Lagann The Movie: Childhood's End | 1 | 1 | 0
+Gintama: The Movie | 1 | 1 | 0
+Laid-Back Camp the Movie | 1 | 1 | 0
+Inuyasha the Movie 4: Fire on the Mystic Island | 1 | 1 | 0
+Crayon Shinchan the Movie: The Great Adventure in Henderland | 1 | 1 | 0
+Rascal Does Not Dream of a Sister Venturing Out | 1 | 1 | 0
+Kabaneri of the Iron Fortress: The Battle of Unato | 1 | 1 | 0
+Doraemon: Nobita's Dinosaur | 1 | 1 | 0
+Gintama: The Very Final | 1 | 1 | 0
+Pompo the Cinephile | 1 | 1 | 0
+K-ON! The Movie | 1 | 1 | 0
+Giovanni's Island | 1 | 1 | 0
+One Piece: Heart of Gold | 1 | 1 | 0
+Doraemon: Nobita's Dorabian Nights | 1 | 1 | 0
+Okko's Inn | 1 | 1 | 0
+Crayon Shinchan the Movie: Pursuit of the Balls of Darkness | 1 | 1 | 0
+Fortune Favors Lady Nikuko | 1 | 1 | 0
+Inuyasha the Movie 3: Swords of an Honorable Ruler | 1 | 1 | 0
+One Piece: Episode of Skypiea | 1 | 1 | 0
+Pretty Guardian Sailor Moon Eternal the Movie Part 1 | 1 | 1 | 0
+Samurai X: The Motion Picture | 1 | 1 | 0
+Made in Abyss: Journey's Dawn | 1 | 1 | 0
+Love, Chunibyo & Other Delusions! Rikka Version | 1 | 1 | 0
+Summer Ghost | 1 | 1 | 0
+Love, Chunibyo & Other Delusions! Take On Me | 1 | 1 | 0
+Goodbye, Don Glees! | 1 | 1 | 0
+Sing a Bit of Harmony | 1 | 1 | 0
+The Girl from the Other Side | 1 | 1 | 0
+Crayon Shinchan the Movie: Serious Battle! Robot Dad Strikes Back | 1 | 1 | 0
+Patlabor 2: The Movie | 1 | 1 | 0
+Doraemon: Nobita's Little Star Wars | 1 | 1 | 0
+Ranma 1/2 the Movie 2: Nihao My Concubine | 1 | 1 | 0
+Ranma 1/2 the Movie: Big Trouble in Nekonron, China | 1 | 1 | 0
+Haikyu!! The Movie: Battle of Concepts | 1 | 1 | 0
+Sailor Moon R: The Movie - The Promise of the Rose | 1 | 1 | 0
+Persona3 THE MOVIE #1 Spring of Birth | 1 | 1 | 0
+Crayon Shinchan the Movie: My Moving Story! Cactus Attack! | 1 | 1 | 0
+Revival of Evangelion | 1 | 1 | 0
+Blue Exorcist: The Movie | 1 | 1 | 0
+Blue Giant | 1 | 1 | 0
+Crayon Shinchan the Movie: Super-Dimension! The Storm Called My Bride | 1 | 1 | 0
+Sound! Euphonium the Movie - Our Promise: A Brand New Day | 1 | 1 | 0
+The Moment You Fall in Love | 1 | 1 | 0
+Lupin the Third: The Mystery of Mamo | 1 | 1 | 0
+The Testament of Sister New Devil: Departures | 1 | 1 | 0
+Blood-C: The Last Dark | 1 | 1 | 0
+Psycho-Pass 3: First Inspector | 1 | 1 | 0
+Ghost in the Shell: Arise - Border 2: Ghost Whispers | 1 | 1 | 0
+Comet in Moominland | 1 | 1 | 0
+The Case of Hana & Alice | 1 | 1 | 0
+Sailor Moon SuperS: The Movie - Black Dream Hole | 1 | 1 | 0
+The Garden of Sinners: A Study in Murder - Part 2 | 1 | 1 | 0
+Naruto OVA 12: The Day Naruto Became Hokage | 1 | 1 | 0
+Buddha: The Great Departure | 1 | 1 | 0
+Black Butler: Book of the Atlantic | 1 | 1 | 0
+Monsters 103 Mercies Dragon Damnation | 1 | 1 | 0
+Made in Abyss: Wandering Twilight | 1 | 1 | 0
+Our War Game | 1 | 1 | 0
+Beyond the Boundary: I'll Be Here – Future | 1 | 1 | 0
+Yo-kai Watch: The Movie | 1 | 1 | 0
+Lupin the 3rd: Goemon's Blood Spray | 1 | 1 | 0
+Love Live! The School Idol Movie | 1 | 1 | 0
+Yu Yu Hakusho: The Movie - Poltergeist Report | 1 | 1 | 0
+Gauche the Cellist | 1 | 1 | 0
+Doraemon: Nobita and the Windmasters | 1 | 1 | 0
+Date A Live: Mayuri Judgement | 1 | 1 | 0
+Trinity Seven: Eternity Library & Alchemic Girl | 1 | 1 | 0
+Crayon Shinchan the Movie: Action Kamen VS Leotard Devil | 1 | 1 | 0
+Digimon Adventure 02: The Beginning | 1 | 1 | 0
+Pretty Guardian Sailor Moon Cosmos the Movie Part 1 | 1 | 1 | 0
+Pretty Guardian Sailor Moon Eternal the Movie Part 2 | 1 | 1 | 0
+Devilman - Volume 3: Devilman Apocalypse | 1 | 1 | 0
+Pretty Guardian Sailor Moon Cosmos the Movie Part 2 | 1 | 1 | 0
+New Dimension! Crayon Shinchan the Movie: Battle of Supernatural Powers ~Flying Sushi~ | 1 | 1 | 0
+Trinity Seven: Heaven's Library & Crimson Lord | 1 | 1 | 0
+Ghost in the Shell: Stand Alone Complex 2nd GIG - Individual Eleven | 1 | 1 | 0
+The Garden of Sinners: Paradox Spiral | 1 | 1 | 0
+I've Always Liked You | 1 | 1 | 0
+Lupin the IIIrd: Fujiko's Lie | 1 | 1 | 0
+Stormy Night | 1 | 1 | 0
+Professor Layton and the Eternal Diva | 1 | 1 | 0
+Mobile Suit Gundam III: Encounters in Space | 1 | 1 | 0
+Mobile Suit Gundam II: Soldiers of Sorrow | 1 | 1 | 0
+Little Witch Academia: The Enchanted Parade | 1 | 1 | 0
+Gundam Wing: The Endless Waltz | 1 | 1 | 0
+The Garden of Sinners: Future Gospel | 1 | 1 | 0
+Mei and the Kittenbus | 1 | 1 | 0
+One Piece Episode of Merry: The Tale of One More Friend | 1 | 1 | 0
+Initial D Legend 2: Racer | 1 | 1 | 0
+Naruto OVA 9: Chunin Exam on Fire! and Naruto vs. Konohamaru! | 1 | 1 | 0
+Asura | 1 | 1 | 0
+Initial D Legend 3: Dream | 1 | 1 | 0
+One Piece: Strong World Episode 0 | 1 | 1 | 0
+Mai Mai Miracle | 1 | 1 | 0
+Buddha 2: The Endless Journey | 1 | 1 | 0
+Lupin the Third: Jigen's Gravestone | 1 | 1 | 0
+Devilman - Volume 1: The Birth | 1 | 1 | 0
+Heart and Yummie | 1 | 1 | 0
+Dead Leaves | 1 | 1 | 0
+Black Butler: Book of Murder | 1 | 1 | 0
+Inazuma Eleven the Movie: The Ultimate Force, Team Ogre, Attacks! | 1 | 1 | 0
+Clannad: The Motion Picture | 1 | 1 | 0
+Hal | 1 | 1 | 0
+Saint☆Young Men | 1 | 1 | 0
+Kase-san and Morning Glories | 1 | 1 | 0
+Legend of the Galactic Heroes: My Conquest Is the Sea of Stars | 1 | 1 | 0
+Urusei Yatsura: Beautiful Dreamer | 1 | 1 | 0
+Date A Bullet: Nightmare or Queen | 1 | 1 | 0
+Initial D Legend 1: Awakening | 1 | 1 | 0
+Time of EVE: The Movie | 1 | 1 | 0
+Digimon Adventure tri. Part 5: Coexistence | 1 | 1 | 0
+Fatal Fury: The Motion Picture | 1 | 1 | 0
+Naruto: The Lost Story - Mission: Protect the Waterfall Village! | 1 | 1 | 0
+Tokyo Ghoul: Jack | 1 | 1 | 0
+Halo Legends | 1 | 1 | 0
+Mushi-Shi: The Next Chapter - Drops of Bells | 1 | 1 | 0
+Captain Tsubasa Movie 01: The Great Competition of Europe | 1 | 1 | 0
+On-Gaku: Our Sound | 1 | 1 | 0
+Heaven's Lost Property Final – The Movie: Eternally My Master | 1 | 1 | 0
+Ranma 1/2: Team Ranma vs. the Legendary Phoenix | 1 | 1 | 0
+See Me After Class | 1 | 1 | 0
+Ajin: Demi-Human – Compel | 1 | 1 | 0
+Naruto OVA 7: Naruto, the Genie, and the Three Wishes, Believe It! | 1 | 1 | 0
+Yu Yu Hakusho: The Movie - The Golden Seal | 1 | 1 | 0
+Highlander: The Search for Vengeance | 1 | 1 | 0
+Someone's Gaze | 1 | 1 | 0
+Mask Danshi wa Koishitakunai noni | 1 | 1 | 0
+Orange: Future | 1 | 1 | 0
+Cat Soup | 1 | 1 | 0
+Captain Tsubasa Movie 04: The Great World Competition!! The Junior World Cup | 1 | 1 | 0
+Death Billiards | 1 | 1 | 0
+Candy Candy: The Movie | 1 | 1 | 0
+Leave it to Kero! | 1 | 1 | 0
+Naruto OVA 8: Naruto x UT | 1 | 1 | 0
+Puparia | 1 | 1 | 0
+The Story of Heidi | 1 | 1 | 0
+ME!ME!ME! | 1 | 1 | 0
+Naruto to Boruto: The Live 2019 | 1 | 1 | 0
+Isekai Quartet | 0 | 1 | 0
+The Beginning After the End | 0 | 1 | 0
+I'm Standing on a Million Lives | 0 | 1 | 0
+Reborn as a Vending Machine, I Now Wander the Dungeon | 0 | 1 | 0
+In the Land of Leadale | 0 | 1 | 0
+KamiKatsu: Working for God in a Godless World | 0 | 1 | 0
+Aesthetica of a Rogue Hero | 0 | 1 | 0
+Outbreak Company | 0 | 1 | 0
+Didn't I Say to Make My Abilities Average in the Next Life?! | 0 | 1 | 0
+Ninja Boy Rantaro | 0 | 1 | 0
+Ninja Hattori-kun | 0 | 1 | 0
+Toriko | 0 | 1 | 0
+MegaMan NT Warrior | 0 | 1 | 0
+Beyblade: Metal Fight Beyblade | 0 | 1 | 0
+Strike the Blood | 0 | 1 | 0
+Yu-Gi-Oh! Arc-V | 0 | 1 | 0
+Shugo Chara! | 0 | 1 | 0
+Aquarion | 0 | 1 | 0
+Blue Dragon | 0 | 1 | 0
+Utawarerumono | 0 | 1 | 0
+The Exiled Heavy Knight Knows How to Game the System | 0 | 1 | 0
+.hack | 0 | 1 | 0
+Magical Girl Lyrical Nanoha | 0 | 1 | 0
+Bakusou Kyoudai Let's & Go!! | 0 | 1 | 0
+Superb Song of the Valkyries: Symphogear | 0 | 1 | 0
+Digimon Beatbreak | 0 | 1 | 0
+Ikki Tousen | 0 | 1 | 0
+Yu-Gi-Oh! VRAINS | 0 | 1 | 0
+Pretty Cure | 0 | 1 | 0
+MF GHOST | 0 | 1 | 0
+GeGeGe no Kitaro | 0 | 1 | 0
+Kirby: Right Back at Ya! | 0 | 1 | 0
+Mermaid Melody: Pichi Pichi Pitch | 0 | 1 | 0
+Digimon Ghost Game | 0 | 1 | 0
+Space Battleship Yamato | 0 | 1 | 0
+TIGER & BUNNY | 0 | 1 | 0
+Fate/kaleid liner Prisma Illya | 0 | 1 | 0
+Mobile Suit Gundam ZZ | 0 | 1 | 0
+Cyborg 009 | 0 | 1 | 0
+The Law of Ueki | 0 | 1 | 0
+FAIRY TAIL 100 YEARS QUEST | 0 | 1 | 0
+Yo-kai Watch | 0 | 1 | 0
+Samurai Girls | 0 | 1 | 0
+Princess Connect! Re:Dive | 0 | 1 | 0
+YAIBA: Samurai Legend | 0 | 1 | 0
+Tiger Mask | 0 | 1 | 0
+Glitter Force | 0 | 1 | 0
+Macross Frontier | 0 | 1 | 0
+Kinnikuman | 0 | 1 | 0
+T・P BON | 0 | 1 | 0
+Romeo's Blue Skies | 0 | 1 | 0
+Mobile Fighter G Gundam | 0 | 1 | 0
+Wedding Peach | 0 | 1 | 0
+Galaxy Express 999 | 0 | 1 | 0
+Transformers: Armada | 0 | 1 | 0
+Monster Hunter Stories: Ride On | 0 | 1 | 0
+Sorcerous Stabber Orphen | 0 | 1 | 0
+Patlabor: The TV Series | 0 | 1 | 0
+Sengoku Youko | 0 | 1 | 0
+My-Hime | 0 | 1 | 0
+Birdy the Mighty: Decode | 0 | 1 | 0
+Cat's Eye | 0 | 1 | 0
+Glitter Force Doki Doki | 0 | 1 | 0
+Ronin Warriors | 0 | 1 | 0
+Record of Lodoss War: Chronicles of the Heroic Knight | 0 | 1 | 0
+RahXephon | 0 | 1 | 0
+Seven Mortal Sins | 0 | 1 | 0
+Re:Creators | 0 | 1 | 0
+GetBackers | 0 | 1 | 0
+Dog Days | 0 | 1 | 0
+New PANTY & STOCKING with GARTERBELT | 0 | 1 | 0
+Helck | 0 | 1 | 0
+Haré+Guu | 0 | 1 | 0
+Black Cat | 0 | 1 | 0
+Tsugumomo | 0 | 1 | 0
+Macross 7 | 0 | 1 | 0
+Freezing | 0 | 1 | 0
+Unnamed Memory | 0 | 1 | 0
+Pandora Hearts | 0 | 1 | 0
+Kuma Kuma Kuma Bear | 0 | 1 | 0
+A Wild Last Boss Appeared! | 0 | 1 | 0
+MAO | 0 | 1 | 0
+Bubblegum Crisis Tokyo 2040 | 0 | 1 | 0
+HELL MODE: The Hardcore Gamer Dominates in Another World with Garbage Balancing | 0 | 1 | 0
+Alfred J. Kwak | 0 | 1 | 0
+Corpse Princess | 0 | 1 | 0
+Gatchaman Crowds | 0 | 1 | 0
+Phantom: Requiem for the Phantom | 0 | 1 | 0
+The Legend of Zorro | 0 | 1 | 0
+Rave Master | 0 | 1 | 0
+Dead Mount Death Play | 0 | 1 | 0
+Blue Seed | 0 | 1 | 0
+Transformers: Energon | 0 | 1 | 0
+The Jungle Book: The Adventures of Mowgli | 0 | 1 | 0
+Sindbad the Sailor | 0 | 1 | 0
+Metallic Rouge | 0 | 1 | 0
+The Wonderful Wizard of Oz | 0 | 1 | 0
+Marvel Disk Wars: The Avengers | 0 | 1 | 0
+Noein: To Your Other Self | 0 | 1 | 0
+Is It Wrong to Try to Pick Up Girls in a Dungeon? On the Side: Sword Oratoria | 0 | 1 | 0
+Those Who Hunt Elves | 0 | 1 | 0
+Fuuto PI | 0 | 1 | 0
+SUPER HxEROS | 0 | 1 | 0
+The Big O | 0 | 1 | 0
+Valvrave the Liberator | 0 | 1 | 0
+The Swiss Family Robinson: Flone of the Mysterious Island | 0 | 1 | 0
+Ladies versus Butlers! | 0 | 1 | 0
+Star Wars: Visions Presents - The Ninth Jedi | 0 | 1 | 0
+New Saga | 0 | 1 | 0
+Buso Renkin | 0 | 1 | 0
+Fist of the North Star: HOKUTO NO KEN | 0 | 1 | 0
+HIGH CARD | 0 | 1 | 0
+Kämpfer | 0 | 1 | 0
+Noir | 0 | 1 | 0
+Dance in the Vampire Bund | 0 | 1 | 0
+Mobile Suit Gundam: The 08th MS Team | 0 | 1 | 0
+The Sacred Blacksmith | 0 | 1 | 0
+Witch Hunter Robin | 0 | 1 | 0
+The Reincarnation of the Strongest Exorcist in Another World | 0 | 1 | 0
+The Demon Sword Master of Excalibur Academy | 0 | 1 | 0
+Super Pig | 0 | 1 | 0
+Michiko & Hatchin | 0 | 1 | 0
+Reborn to Master the Blade: From Hero-King to Extraordinary Squire ♀ | 0 | 1 | 0
+Transformers: Cybertron | 0 | 1 | 0
+Hakkenden: Eight Dogs of the East | 0 | 1 | 0
+Final Fantasy: Unlimited | 0 | 1 | 0
+Valkyrie Drive: Mermaid | 0 | 1 | 0
+ATRI -My Dear Moments- | 0 | 1 | 0
+Tales of Zestiria the X | 0 | 1 | 0
+Nyaight of the Living Cat | 0 | 1 | 0
+Stigma of the Wind | 0 | 1 | 0
+Scrapped Princess | 0 | 1 | 0
+SHIBOYUGI: Playing Death Games to Put Food on the Table | 0 | 1 | 0
+Good Bye, Dragon Life | 0 | 1 | 0
+BACK ARROW | 0 | 1 | 0
+I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic | 0 | 1 | 0
+Gunslinger Girl | 0 | 1 | 0
+Hakuoki | 0 | 1 | 0
+Eden of the East | 0 | 1 | 0
+Ron Kamonohashi's Forbidden Deductions | 0 | 1 | 0
+From Overshadowed to Overpowered: Second Reincarnation of a Talentless Sage | 0 | 1 | 0
+Shenmue the Animation | 0 | 1 | 0
+Tokyo Ravens | 0 | 1 | 0
+Dirty Pair | 0 | 1 | 0
+Ranking of Kings: The Treasure Chest of Courage | 0 | 1 | 0
+s-CRY-ed | 0 | 1 | 0
+Revenger | 0 | 1 | 0
+No Guns Life | 0 | 1 | 0
+Tojima Wants to Be a Kamen Rider | 0 | 1 | 0
+The Demon Prince of Momochi House | 0 | 1 | 0
+Yoroi-Shinden Samurai Troopers | 0 | 1 | 0
+Magical Shopping Arcade Abenobashi | 0 | 1 | 0
+Mobile Suit Gundam 0083: Stardust Memory | 0 | 1 | 0
+Malevolent Spirits: Mononogatari | 0 | 1 | 0
+Dino Mech Gaiking | 0 | 1 | 0
+My Daughter Left the Nest and Returned an S-Rank Adventurer | 0 | 1 | 0
+I Became a Legend After My 10 Year-Long Last Stand | 0 | 1 | 0
+Chaika - The Coffin Princess | 0 | 1 | 0
+Sarazanmai | 0 | 1 | 0
+The Red Ranger Becomes an Adventurer in Another World | 0 | 1 | 0
+Excel Saga | 0 | 1 | 0
+Bye Bye, Earth | 0 | 1 | 0
+The Frontier Lord Begins with Zero Subjects | 0 | 1 | 0
+Wolverine | 0 | 1 | 0
+Dolls' Frontline | 0 | 1 | 0
+The Mystic Archives of Dantalian | 0 | 1 | 0
+Hinomaru Sumo | 0 | 1 | 0
+Superbook | 0 | 1 | 0
+Armed Girl's Machiavellism | 0 | 1 | 0
+Yozakura Quartet: Hana no Uta | 0 | 1 | 0
+Reign of the Seven Spellblades | 0 | 1 | 0
+D.Gray-man Hallow | 0 | 1 | 0
+Tenchi Muyo! Tenchi Universe | 0 | 1 | 0
+Bogus Skill «Fruitmaster» ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~ | 0 | 1 | 0
+Lord Marksman and Vanadis | 0 | 1 | 0
+Scooped Up by an S-Rank Adventurer! | 0 | 1 | 0
+Train to the End of the World | 0 | 1 | 0
+Shironeko Project: Zero Chronicle | 0 | 1 | 0
+Devilman | 0 | 1 | 0
+Macross Zero | 0 | 1 | 0
+D.N.Angel | 0 | 1 | 0
+UQ Holder! | 0 | 1 | 0
+SWORD GAI: The Animation | 0 | 1 | 0
+The Executioner and Her Way of Life | 0 | 1 | 0
+Keijo!!!!!!!! | 0 | 1 | 0
+The Great Cleric | 0 | 1 | 0
+Code:Breaker | 0 | 1 | 0
+Moonrise | 0 | 1 | 0
+Listeners | 0 | 1 | 0
+Otherside Picnic | 0 | 1 | 0
+Treasure Island | 0 | 1 | 0
+ASSASSINS PRIDE | 0 | 1 | 0
+Ayakashi Triangle | 0 | 1 | 0
+The Most Notorious "Talker" Runs the World's Greatest Clan | 0 | 1 | 0
+Comet Lucifer | 0 | 1 | 0
+The Honor at Magic High School | 0 | 1 | 0
+Flip Flappers | 0 | 1 | 0
+Cop Craft | 0 | 1 | 0
+The Severing Crime Edge | 0 | 1 | 0
+Bucky - The Incredible Kid | 0 | 1 | 0
+I Couldn't Become a Hero, So I Reluctantly Decided to Get a Job | 0 | 1 | 0
+Ronja, the Robber's Daughter | 0 | 1 | 0
+BUCCHIGIRI?! | 0 | 1 | 0
+Alice & Zoroku | 0 | 1 | 0
+Lunar Legend Tsukihime | 0 | 1 | 0
+Noble Reincarnation: Born Blessed, So I'll Obtain Ultimate Power | 0 | 1 | 0
+Even Given the Worthless "Appraiser" Class, I'm Actually the Strongest | 0 | 1 | 0
+Dirty Pair Flash | 0 | 1 | 0
+I May Be a Guild Receptionist, but I'll Solo Any Boss to Clock Out on Time | 0 | 1 | 0
+Canaan | 0 | 1 | 0
+Easygoing Territory Defense by the Optimistic Lord | 0 | 1 | 0
+Omamori Himari | 0 | 1 | 0
+Viral Hit | 0 | 1 | 0
+Silver Fang: The Shooting Star Gin | 0 | 1 | 0
+The Daily Life of a Middle-Aged Online Shopper in Another World | 0 | 1 | 0
+Schwarzes Marken | 0 | 1 | 0
+SANDA | 0 | 1 | 0
+Rokka: Braves of the Six Flowers | 0 | 1 | 0
+Code Geass: Rozé of the Recapture | 0 | 1 | 0
+Princess Principal | 0 | 1 | 0
+Space Patrol Luluco | 0 | 1 | 0
+Tenchi Muyo! War on Geminar | 0 | 1 | 0
+The Strongest Job Is Apparently Not a Hero or a Sage, But an Appraiser (Provisional)! | 0 | 1 | 0
+Ningen Fushin: Adventurers Who Don't Believe in Humanity Will Save the World | 0 | 1 | 0
+An Adventurer's Daily Grind at Age 29 | 0 | 1 | 0
+Appare-Ranman! | 0 | 1 | 0
+The Strongest Sage with the Weakest Crest | 0 | 1 | 0
+Urusei Yatsura | 0 | 1 | 0
+Aikatsu! | 0 | 1 | 0
+Sgt. Frog | 0 | 1 | 0
+Aria | 0 | 1 | 0
+Space Brothers | 0 | 1 | 0
+Magia Record: Puella Magi Madoka Magica Side Story | 0 | 1 | 0
+Hozuki's Coolheadedness | 0 | 1 | 0
+Kimagure Orange Road | 0 | 1 | 0
+Nukitashi: The Animation | 0 | 1 | 0
+The Demon Girl Next Door | 0 | 1 | 0
+Sacrificial Princess and the King of Beasts | 0 | 1 | 0
+Gundam Build Fighters | 0 | 1 | 0
+Kaleido Star | 0 | 1 | 0
+Ghost Sweeper Mikami | 0 | 1 | 0
+Puniru Is a Kawaii Slime | 0 | 1 | 0
+The Too-Perfect Saint: Tossed Aside by My Fiancé and Sold to Another Kingdom | 0 | 1 | 0
+Tenchi Muyo! | 0 | 1 | 0
+Den-noh Coil | 0 | 1 | 0
+Wonder Egg Priority | 0 | 1 | 0
+Let This Grieving Soul Retire | 0 | 1 | 0
+DRAGON PILOT: Hisone and Masotan | 0 | 1 | 0
+Yuuki Yuuna Is a Hero | 0 | 1 | 0
+Sasaki and Peeps | 0 | 1 | 0
+Raven of the Inner Palace | 0 | 1 | 0
+Princess Tutu | 0 | 1 | 0
+Umineko: When They Cry | 0 | 1 | 0
+Mistress Kanan Is Devilishly Easy | 0 | 1 | 0
+Ai Tenchi Muyo! | 0 | 1 | 0
+Squid Girl | 0 | 1 | 0
+Texhnolyze | 0 | 1 | 0
+Martian Successor Nadesico | 0 | 1 | 0
+My Bride is a Mermaid | 0 | 1 | 0
+Though I Am an Inept Villainess | 0 | 1 | 0
+Robotics;Notes | 0 | 1 | 0
+The Vampire Dies in No Time | 0 | 1 | 0
+Bokurano | 0 | 1 | 0
+Sparks of Tomorrow | 0 | 1 | 0
+Monster Musume: Everyday Life with Monster Girls | 0 | 1 | 0
+Kanokon | 0 | 1 | 0
+Casshern Sins | 0 | 1 | 0
+The Darwin Incident | 0 | 1 | 0
+KOWLOON GENERIC ROMANCE | 0 | 1 | 0
+The Gorilla God's Go-To Girl | 0 | 1 | 0
+07-Ghost | 0 | 1 | 0
+Mobile Suit Gundam Unicorn | 0 | 1 | 0
+GNOSIA | 0 | 1 | 0
+Tis Time for "Torture," Princess | 0 | 1 | 0
+Garo: The Animation | 0 | 1 | 0
+My-Otome | 0 | 1 | 0
+Always a Catch! | 0 | 1 | 0
+YATAGARASU: The Raven Does Not Choose Its Master | 0 | 1 | 0
+BBK/BRNK | 0 | 1 | 0
+The Heike Story | 0 | 1 | 0
+Junji Ito Maniac: Japanese Tales of the Macabre | 0 | 1 | 0
+Dimension W | 0 | 1 | 0
+Apocalypse Hotel | 0 | 1 | 0
+Air | 0 | 1 | 0
+Nyarko-san: Another Crawling Chaos | 0 | 1 | 0
+The Magical Girl and the Evil Lieutenant Used to Be Archenemies | 0 | 1 | 0
+The Tower of Druaga: The Aegis of Uruk | 0 | 1 | 0
+The Morose Mononokean | 0 | 1 | 0
+The Classroom of a Black Cat and a Witch | 0 | 1 | 0
+Goodbye, Lara | 0 | 1 | 0
+From Bureaucrat to Villainess: Dad's Been Reincarnated! | 0 | 1 | 0
+Isekai Office Worker: The Other World's Books Depend on the Bean Counter | 0 | 1 | 0
+Sword of the Demon Hunter | 0 | 1 | 0
+Endo and Kobayashi Live! The Latest on Tsundere Villainess Lieselotte | 0 | 1 | 0
+Carnival Phantasm | 0 | 1 | 0
+Love Flops | 0 | 1 | 0
+Sound of the Sky | 0 | 1 | 0
+The Foolish Angel Dances with the Devil | 0 | 1 | 0
+Occult Academy | 0 | 1 | 0
+KAIJU GIRL CARAMELISE | 0 | 1 | 0
+Sagrada Reset | 0 | 1 | 0
+Irina: The Vampire Cosmonaut | 0 | 1 | 0
+DEAD DEAD DEMONS DEDEDEDE DESTRUCTION | 0 | 1 | 0
+Ghost Hound | 0 | 1 | 0
+Life with an Ordinary Guy Who Reincarnated into a Total Fantasy Knockout | 0 | 1 | 0
+The Ice Guy and His Cool Female Colleague | 0 | 1 | 0
+MARS RED | 0 | 1 | 0
+Arcadia of My Youth: Endless Orbit SSX | 0 | 1 | 0
+The Cat and the Dragon | 0 | 1 | 0
+Tearmoon Empire | 0 | 1 | 0
+Welcome to Japan, Ms. Elf! | 0 | 1 | 0
+The Vexations of a Shut-In Vampire Princess | 0 | 1 | 0
+Kokkoku: Moment by Moment | 0 | 1 | 0
+Once Upon a Witch's Death | 0 | 1 | 0
+The Masterful Cat Is Depressed Again Today | 0 | 1 | 0
+Konohana Kitan | 0 | 1 | 0
+The Villainess Is Adored by the Prince of the Neighbor Kingdom | 0 | 1 | 0
+With You, Our Love Will Make It Through | 0 | 1 | 0
+An Observation Log of My Fiancée Who Calls Herself a Villainess | 0 | 1 | 0
+Welcome to the Outcast's Restaurant! | 0 | 1 | 0
+GOOD NIGHT WORLD | 0 | 1 | 0
+Magimoji Rurumo | 0 | 1 | 0
+Akuma Kun | 0 | 1 | 0
+Mysterious Girlfriend X | 0 | 1 | 0
+My Melody & Kuromi | 0 | 1 | 0
+The Titan's Bride | 0 | 1 | 0
+Pokémon: Twilight Wings | 0 | 1 | 0
+Ayakashi: Samurai Horror Tales | 0 | 1 | 0
+The Holy Grail of Eris | 0 | 1 | 0
+The Ambition of Oda Nobuna | 0 | 1 | 0
+Mobile Suit Gundam Unicorn RE:0096 | 0 | 1 | 0
+AOKANA: Four Rhythm Across the Blue | 0 | 1 | 0
+A Centaur's Life | 0 | 1 | 0
+Pass the Monster Meat, Milady! | 0 | 1 | 0
+I'm Giving the Disgraced Noble Lady I Rescued a Crash Course in Naughtiness | 0 | 1 | 0
+Chibi Maruko-chan | 0 | 1 | 0
+Mr. Osomatsu | 0 | 1 | 0
+Ikkyū-san | 0 | 1 | 0
+Chi's Sweet Home | 0 | 1 | 0
+Maison Ikkoku | 0 | 1 | 0
+Hayate the Combat Butler | 0 | 1 | 0
+Touch | 0 | 1 | 0
+Baby Steps | 0 | 1 | 0
+Minami-ke | 0 | 1 | 0
+Marmalade Boy | 0 | 1 | 0
+The aquatope on white sand | 0 | 1 | 0
+Nodame Cantabile | 0 | 1 | 0
+Sayonara Zetsubou Sensei | 0 | 1 | 0
+Saekano: How to Raise a Boring Girlfriend | 0 | 1 | 0
+Oreimo | 0 | 1 | 0
+Yakitate!! Japan | 0 | 1 | 0
+Little Busters! | 0 | 1 | 0
+Is the Order a Rabbit? | 0 | 1 | 0
+Sakura Quest | 0 | 1 | 0
+Rising Impact | 0 | 1 | 0
+Drop Kick on My Devil!! | 0 | 1 | 0
+Big Windup! | 0 | 1 | 0
+mono | 0 | 1 | 0
+Seitokai Yakuindomo | 0 | 1 | 0
+Kodocha | 0 | 1 | 0
+Bottom-Tier Character Tomozaki | 0 | 1 | 0
+Love Hina | 0 | 1 | 0
+Cooking Master Boy | 0 | 1 | 0
+Honey and Clover | 0 | 1 | 0
+Hana-Kimi | 0 | 1 | 0
+KissXSis | 0 | 1 | 0
+Genshiken | 0 | 1 | 0
+Cross Game | 0 | 1 | 0
+Fire in His Fingertips | 0 | 1 | 0
+CITY THE ANIMATION | 0 | 1 | 0
+Pop Team Epic | 0 | 1 | 0
+A Star Brighter than the Sun | 0 | 1 | 0
+Tying the Knot with an Amagami Sister | 0 | 1 | 0
+Hanasaku Iroha: Blossoms for Tomorrow | 0 | 1 | 0
+Arakawa Under the Bridge | 0 | 1 | 0
+LoveLive! Superstar!! | 0 | 1 | 0
+Please Take My Brother Away | 0 | 1 | 0
+My Daddy Long Legs | 0 | 1 | 0
+RE-MAIN | 0 | 1 | 0
+Citrus | 0 | 1 | 0
+Medaka Box | 0 | 1 | 0
+Mahoromatic | 0 | 1 | 0
+Play It Cool, Guys | 0 | 1 | 0
+Uta no Prince-sama | 0 | 1 | 0
+Kubo Won't Let Me Be Invisible | 0 | 1 | 0
+Kanon | 0 | 1 | 0
+Place to Place | 0 | 1 | 0
+BIRDIE WING -Golf Girls' Story- | 0 | 1 | 0
+ALL OUT!! | 0 | 1 | 0
+Princess Lover! | 0 | 1 | 0
+The Knight in the Area | 0 | 1 | 0
+Hungry Heart: Wild Striker | 0 | 1 | 0
+A Galaxy Next Door | 0 | 1 | 0
+The Ryuo's Work is Never Done! | 0 | 1 | 0
+I'm Getting Married to a Girl I Hate in My Class | 0 | 1 | 0
+My Clueless First Friend | 0 | 1 | 0
+Tawawa on Monday | 0 | 1 | 0
+Cromartie High School | 0 | 1 | 0
+Girls Band Cry | 0 | 1 | 0
+Princess Jellyfish | 0 | 1 | 0
+Akebi's Sailor Uniform | 0 | 1 | 0
+Trinity Seven | 0 | 1 | 0
+Solo Camping for Two | 0 | 1 | 0
+Classroom Crisis | 0 | 1 | 0
+ItaKiss | 0 | 1 | 0
+Catch Me at the Ballpark! | 0 | 1 | 0
+Plus-Sized Elf | 0 | 1 | 0
+Akiba Maid War | 0 | 1 | 0
+Bungo Stray Dogs Wan! | 0 | 1 | 0
+Watari-kun's ****** Is About to Collapse | 0 | 1 | 0
+Deaimon: Recipe for Happiness | 0 | 1 | 0
+Do It Yourself!! | 0 | 1 | 0
+My Tiny Senpai | 0 | 1 | 0
+Ruri Rocks | 0 | 1 | 0
+Gals Can't Be Kind to Otaku!? | 0 | 1 | 0
+Hands off: Sawaranaide Kotesashi-kun | 0 | 1 | 0
+Yakuza Fiancé: Raise wa Tanin ga Ii | 0 | 1 | 0
+Diary of Our Days at the Breakwater | 0 | 1 | 0
+Detectives These Days Are Crazy! | 0 | 1 | 0
+Skip Beat! | 0 | 1 | 0
+Student Council's Discretion | 0 | 1 | 0
+Today's Menu for the Emiya Family | 0 | 1 | 0
+Chio's School Road | 0 | 1 | 0
+Kodomo no Jikan | 0 | 1 | 0
+Police in a Pod | 0 | 1 | 0
+Room Camp | 0 | 1 | 0
+The Dinner Table Detective | 0 | 1 | 0
+Food for the Soul | 0 | 1 | 0
+Magic Kaito 1412 | 0 | 1 | 0
+Mitsuboshi Colors | 0 | 1 | 0
+Midori Days | 0 | 1 | 0
+Yano-kun's Ordinary Days | 0 | 1 | 0
+Life Lessons with Uramichi Oniisan | 0 | 1 | 0
+Heroines Run the Show | 0 | 1 | 0
+My Stepmom's Daughter Is My Ex | 0 | 1 | 0
+Love Live! Sunshine!! | 0 | 1 | 0
+Please Twins! | 0 | 1 | 0
+Botan Kamiina Fully Blossoms When Drunk | 0 | 1 | 0
+Strawberry Marshmallow | 0 | 1 | 0
+Super Cub | 0 | 1 | 0
+Koikimo | 0 | 1 | 0
+The Wallflower | 0 | 1 | 0
+A-Channel | 0 | 1 | 0
+I Want to End This Love Game | 0 | 1 | 0
+You are Ms. Servant | 0 | 1 | 0
+Please Tell Me! Galko-chan | 0 | 1 | 0
+Pretty Boy Detective Club | 0 | 1 | 0
+The Yakuza's Guide to Babysitting | 0 | 1 | 0
+Medaka Kuroiwa Is Impervious to My Charms | 0 | 1 | 0
+Babanba Banban Vampire | 0 | 1 | 0
+Ultimate Otaku Teacher | 0 | 1 | 0
+OniAi | 0 | 1 | 0
+Ninja Nonsense | 0 | 1 | 0
+Dash Kappei | 0 | 1 | 0
+Blade Dance of Elementalers | 0 | 1 | 0
+Fight! Kickers | 0 | 1 | 0
+Jimihen!! Jimiko o Kae Chau Jun Isei Kouyuu | 0 | 1 | 0
+One Week Friends | 0 | 1 | 0
+Mr. Villain's Day Off | 0 | 1 | 0
+DAKAICHI -I'm being harassed by the sexiest man of the year- | 0 | 1 | 0
+Wolf Girl & Black Prince | 0 | 1 | 0
+Aoharu x Machinegun | 0 | 1 | 0
+365 Days to the Wedding | 0 | 1 | 0
+Akikan! | 0 | 1 | 0
+Tune In to the Midnight Heart | 0 | 1 | 0
+Bananya | 0 | 1 | 0
+Kinmoza! | 0 | 1 | 0
+Betrothed to My Sister's Ex | 0 | 1 | 0
+Aishiteruze Baby | 0 | 1 | 0
+The Kawai Complex Guide to Manors and Hostel Behavior | 0 | 1 | 0
+The Hill Dyed Rose Madder | 0 | 1 | 0
+Grandpa and Grandma Turn Young Again | 0 | 1 | 0
+Firefly Wedding | 0 | 1 | 0
+Blue Orchestra | 0 | 1 | 0
+LIAR GAME | 0 | 1 | 0
+Anne Shirley | 0 | 1 | 0
+Ace Attorney | 0 | 1 | 0
+The Fruit of Grisaia | 0 | 1 | 0
+Umamusume: Cinderella Gray | 0 | 1 | 0
+Master Keaton | 0 | 1 | 0
+Yosuga no Sora | 0 | 1 | 0
+Tsurune | 0 | 1 | 0
+Honey Lemon Soda | 0 | 1 | 0
+Tonbo! | 0 | 1 | 0
+THE iDOLM@STER | 0 | 1 | 0
+The Piano Forest | 0 | 1 | 0
+Dark Gathering | 0 | 1 | 0
+Akane-banashi | 0 | 1 | 0
+Love Unseen Beneath the Clear Night Sky | 0 | 1 | 0
+Akagi | 0 | 1 | 0
+Dance Dance Danseur | 0 | 1 | 0
+Summer Pockets | 0 | 1 | 0
+JOKER GAME | 0 | 1 | 0
+Tales of Little Women | 0 | 1 | 0
+Bibliophile Princess | 0 | 1 | 0
+Belle and Sebastian | 0 | 1 | 0
+Doctor Elise: The Royal Lady with the Lamp | 0 | 1 | 0
+Giant Killing | 0 | 1 | 0
+Ef: A Tale Of Memories & Melodies | 0 | 1 | 0
+HANEBADO! | 0 | 1 | 0
+White Album 2 | 0 | 1 | 0
+Bokura ga ita | 0 | 1 | 0
+Jaadugar: A Witch in Mongolia | 0 | 1 | 0
+Diabolik Lovers | 0 | 1 | 0
+One Outs | 0 | 1 | 0
+Strawberry Panic | 0 | 1 | 0
+Journal with Witch | 0 | 1 | 0
+Ghost Hunt | 0 | 1 | 0
+Boogiepop and Others | 0 | 1 | 0
+This Monster Wants to Eat Me | 0 | 1 | 0
+Jellyfish Can't Swim in the Night | 0 | 1 | 0
+Just Because! | 0 | 1 | 0
+The Perfect Insider | 0 | 1 | 0
+Wandering Son | 0 | 1 | 0
+Salaryman's Club | 0 | 1 | 0
+Senpai Is an Otokonoko | 0 | 1 | 0
+Sweet Blue Flowers | 0 | 1 | 0
+Boogiepop Phantom | 0 | 1 | 0
+Aoi Bungaku Series | 0 | 1 | 0
+Fuuka | 0 | 1 | 0
+Rumbling Hearts | 0 | 1 | 0
+Flowers of Evil | 0 | 1 | 0
+Kindaichi Case Files | 0 | 1 | 0
+SHOSHIMIN: How to Become Ordinary | 0 | 1 | 0
+Ameku M.D.: Doctor Detective | 0 | 1 | 0
+Major | 0 | 1 | 0
+Adam's Sweet Agony | 0 | 1 | 0
+Sweet Punishment: I'm the Guard's Personal Pet | 0 | 1 | 0
+What She Fell on Was the Tip of My Dick | 0 | 1 | 0
+Harem Camp! | 0 | 1 | 0
+I Want You to Make a Disgusted Face and Show Me Your Underwear | 0 | 1 | 0
+Inazuma Eleven: Ares | 0 | 1 | 0
+Red Baron | 0 | 1 | 0
+SPEED GRAPHER | 0 | 1 | 0
+Hamatora | 0 | 1 | 0
+Tadaima, Okaeri | 0 | 1 | 0
+Detective Conan: Fallen Angel of the Highway | 1 | 1 | 0
+Scarlet | 1 | 1 | 0
+Gintama the Movie 2026: Yoshiwara in Flames | 1 | 1 | 0
+Assassination Classroom the Movie: Our Time | 1 | 1 | 0
+MOBILE SUIT GUNDAM HATHAWAY The Sorcery of Nymph Circe | 1 | 1 | 0
+Lupin the Third: Island of Assassins | 1 | 1 | 0
+Detective Conan: The Million-Dollar Pentagram | 1 | 1 | 0
+Detective Conan: Dimensional Sniper | 1 | 1 | 0
+Detective Conan: The Eleventh Striker | 1 | 1 | 0
+The Colors Within | 1 | 1 | 0
+Detective Conan: Full Score of Fear | 1 | 1 | 0
+Milky☆Subway: The Galactic Limited Express - the Movie | 1 | 1 | 0
+Detective Conan: Private Eye in the Distant Sea | 1 | 1 | 0
+Detective Conan: The Darkest Nightmare | 1 | 1 | 0
+One Piece Heroines | 1 | 1 | 0
+Kite | 1 | 1 | 0
+Doraemon the Movie: Nobita's Sky Utopia | 1 | 1 | 0
+Detective Conan: Jolly Roger in the Deep Azure | 1 | 1 | 0
+Detective Conan: Strategy Above the Depths | 1 | 1 | 0
+Doraemon: Nobita and the Birth of Japan | 1 | 1 | 0
+One Piece: The Desert Princess and the Pirates: Adventure in Alabasta | 1 | 1 | 0
+Royal Space Force - The Wings of Honneamise | 1 | 1 | 0
+Doraemon: Nobita's Great Adventure in the Antarctic Kachi Kochi | 1 | 1 | 0
+One Piece Mugiwara Chase | 1 | 1 | 0
+Umamusume: Pretty Derby - Beginning of a New Era | 1 | 1 | 0
+Doraemon: Nobita and the Island of Miracles – Animal Adventure | 1 | 1 | 0
+Doraemon the Movie: Nobita's Earth Symphony | 1 | 1 | 0
+Mononoke the Movie: Chapter II - The Ashes of Rage | 1 | 1 | 0
+VIRGIN PUNK Clockwork Girl | 1 | 1 | 0
+Ghost Cat Anzu | 1 | 1 | 0
+Little Nemo: Adventures in Slumberland | 1 | 1 | 0
+A Thousand and One Nights | 1 | 1 | 0
+ALL YOU NEED IS KILL | 1 | 1 | 0
+Doraemon: Nobita's Great Battle of the Mermaid King | 1 | 1 | 0
+Pokémon the Movie: Black - Victini and Reshiram | 1 | 1 | 0
+Doraemon: Nobita and the Green Giant Legend | 1 | 1 | 0
+The Sky Crawlers | 1 | 1 | 0
+DEEMO Memorial Keys | 1 | 1 | 0
+Crayon Shinchan the Movie: School Mystery! The Splendid Tenkasu Academy | 1 | 1 | 0
+Doraemon: Nobita and the Legend of the Sun King | 1 | 1 | 0
+Doraemon: Nobita and the Winged Braves | 1 | 1 | 0
+Doraemon the Movie: Nobita's Little Star Wars 2021 | 1 | 1 | 0
+Lu Over the Wall | 1 | 1 | 0
+Haikyu!! the Movie: The End and the Beginning | 1 | 1 | 0
+Doraemon: Nobita's Great Adventure in the South Seas | 1 | 1 | 0
+Doraemon: Nobita's Secret Gadget Museum | 1 | 1 | 0
+Lupin the Third vs. Detective Conan: The Movie | 1 | 1 | 0
+Natsume's Book of Friends the Movie: Ephemeral Bond | 1 | 1 | 0
+Genocidal Organ | 1 | 1 | 0
+Doraemon: Nobita in the Wan-Nyan Spacetime Odyssey | 1 | 1 | 0
+Doraemon: Nobita and the Tin Labyrinth | 1 | 1 | 0
+Crayon Shinchan the Movie: The Storm Called: The Battle of the Warring States | 1 | 1 | 0
+Crayon Shinchan the Movie: The Legend Called: Dance! Amigo! | 1 | 1 | 0
