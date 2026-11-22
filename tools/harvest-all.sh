@@ -53,11 +53,12 @@ while :; do
   echo "=== pass start $(date '+%F %T') rows=$before gap=${SEED}ms" >> "$LOG"
   clean_chrome
   PASS=$(mktemp)
+  # tee, not a file that is cat'd afterwards: a pass on a 366-episode show is 20
+  # minutes of silence, and an unattended run must not look dead while it works.
   TMDB_API_KEY="$KEY" node tools/harvest-batch.mjs \
     --file "$LIST" --all-seasons --max-eps 0 \
     --wait-429 15 --wait-challenge 300 --min-gap-ms "$SEED" \
-    --profile "$PROFILE" --port "$PORT" > "$PASS" 2>&1
-  cat "$PASS" >> "$LOG"
+    --profile "$PROFILE" --port "$PORT" 2>&1 | tee "$PASS" >> "$LOG"
   after=$(rows)
   echo "=== pass end $(date '+%F %T') rows=$after (+$((after-before)))" >> "$LOG"
   if [ -n "$(git status --porcelain catalogue)" ]; then
