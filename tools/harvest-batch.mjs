@@ -52,8 +52,8 @@ import {
   titleKey,
   writeShow,
 } from './catalogue-lib.mjs';
-import { harvestScript, isSpecialTitle, seasonMarkerOf } from './harvest-page.mjs';
-import { tmdbKey, tmdbShow, totalEpisodes } from './tmdb.mjs';
+import { harvestScript, fold, isSpecialTitle, seasonMarkerOf } from './harvest-page.mjs';
+import { tmdbKey, tmdbMovie, tmdbShow, totalEpisodes } from './tmdb.mjs';
 
 const TMDB_KEY = tmdbKey();
 if (!TMDB_KEY) {
@@ -421,7 +421,7 @@ function saveShow(show, target, result, already) {
   if (result.seasons) {
     data.seasonEpisodes = { ...(data.seasonEpisodes || {}), ...result.seasons };
   }
-  if (ALL_SEASONS) data.allSeasons = true;
+  if (show.allSeasons ?? ALL_SEASONS) data.allSeasons = true;
   // One row per episode at the best release the site had: sub over dub, then
   // the higher resolution, so neither a 720p-only nor a dub-only show is lost.
   const keep = bestRows(result.rows);
@@ -436,7 +436,14 @@ function saveShow(show, target, result, already) {
 
 let done = 0;
 let failed = 0;
-for (const show of shows) {
+// An index loop, not for..of: a film the site offers is queued right after the
+// show it belongs to, so "everything the site has" includes the films in the
+// same run instead of a second pass that never comes.
+for (let qi = 0; qi < shows.length; qi++) {
+  const show = shows[qi];
+  // A film line runs one entry as the app's S1E1; every other line follows the
+  // run's mode.
+  const wantAll = show.allSeasons ?? ALL_SEASONS;
   if (MAX_MINUTES && (Date.now() - STARTED) / 60000 > MAX_MINUTES) {
     console.log(`\nstopping: ${MAX_MINUTES} minute budget reached (re-run continues)`);
     break;
@@ -485,7 +492,7 @@ for (const show of shows) {
           show.maxEps,
           Number((already.data.seasonEpisodes || {})[show.season]) || Infinity
         );
-  if (!ALL_SEASONS && already && storedEps.size >= wanted) {
+  if (!wantAll && already && storedEps.size >= wanted) {
     console.log(`skip   ${show.term} (${storedEps.size} episode(s) stored; --force to redo)`);
     continue;
   }
@@ -494,7 +501,7 @@ for (const show of shows) {
   }
   const plan = {
     ...show,
-    allSeasons: ALL_SEASONS,
+    allSeasons: wantAll,
     // The page paces its own requests; the seed is the gap proven safe so far.
     minGapMs: minGap,
     // Every stored row, no matter the season: an all-seasons run revisits each.
@@ -505,10 +512,10 @@ for (const show of shows) {
     audit: AUDIT,
     // The app counts episodes in TMDB's seasons, so TMDB decides what "season
     // 3" is; a season's name on the site then no longer matters.
-    seasons: ALL_SEASONS ? await seasonsFor(show.catalogueTitle || show.term) : null,
+    seasons: wantAll ? await seasonsFor(show.catalogueTitle || show.term) : null,
   };
   console.log(
-    `fetch  ${show.term} (${ALL_SEASONS ? 'all seasons' : 'season ' + show.season}, ` +
+    `fetch  ${show.term} (${wantAll ? 'all seasons' : 'season ' + show.season}, ` +
       `${show.maxEps ? 'up to ' + show.maxEps : 'all'} episode(s))...`
   );
   let result;
@@ -644,7 +651,7 @@ for (const show of shows) {
   if (result.fallback) {
     console.error(`  warning: no season-labelled entry for "${show.term}" - filed the best hit as season 1`);
   }
-  if (ALL_SEASONS && (plan.seasons || []).length && !result.sized && (result.plans || []).length) {
+  if (wantAll && (plan.seasons || []).length && !result.sized && (result.plans || []).length) {
     console.error(
       `  warning: TMDB's season sizes do not add up to the site's entries for "${show.term}" - ` +
         `filed by the season in each entry's name instead; check the seasons below`
@@ -681,14 +688,30 @@ for (const show of shows) {
     );
   }
   // A film is its own TMDB title and its own catalogue file (the app asks for
-  // it at S1E1), so it is never part of the show's seasons. Name it, because a
-  // sequel film that quietly goes missing is exactly what nobody notices.
+  // it at S1E1), so it is never part of the show's seasons. Queue it as its own
+  // line, right after this show, so "everything the site has" includes the films
+  // in the same run. The movie lookup names the title the app will ask with; a
+  // film TMDB has no movie for keeps the site's name, which is a miss rather
+  // than another film's episodes.
+  const filmQueue = [];
   for (const h of result.films || []) {
+    if (shows.some((s) => fold(s.term) === fold(h.title))) continue;
+    const movie = await tmdbMovie(h.title, h.year, tmdbKey()).catch(() => null);
+    filmQueue.push({
+      term: h.title,
+      maxEps: 1,
+      season: 1,
+      offset: 0,
+      resultIndex: -1,
+      catalogueTitle: movie ? movie.title : '',
+      allSeasons: false,
+    });
     console.log(
-      `  film not filed: "${h.title}" (${h.year || '?'}) - add its own line: ` +
-        `"${h.title} | 1 | 1 | 0 | -1 | <the app's title for this film>"`
+      `  film queued: "${h.title}" (${h.year || '?'})` +
+        (movie ? ` -> "${movie.title}"` : ' (no TMDB movie; filed under the site name)')
     );
   }
+  if (filmQueue.length) shows.splice(qi + 1, 0, ...filmQueue);
   if ((show.maxEps === 0 || show.maxEps > 1) && Number(result.show.episodes) === 1) {
     console.error(`  warning: "${result.show.title}" reports 1 episode - likely a movie/special`);
   }

@@ -99,3 +99,32 @@ export async function tmdbShow(term, key) {
   // status alone says "Returning Series" for a show on a year-long break.
   return { id: hit.id, name: hit.name, seasons, airing: Boolean(show.next_episode_to_air) };
 }
+
+/** The TMDB movie behind a film entry's name, or null. The app asks for a film
+ *  as a movie at S1E1 under its movie title, so a film is only playable when
+ *  its catalogue file is named that. A namesake from another decade is a
+ *  different film, hence the year window. */
+export async function tmdbMovie(name, year, key) {
+  if (!key) return null;
+  const want = fold(name);
+  const search = await get('/search/movie?query=' + encodeURIComponent(name), key);
+  const hits = (search && search.results) || [];
+  const exact = (h) =>
+    fold(h.title) === want ||
+    (latinOnly(h.original_title) && fold(h.original_title) === want);
+  let hit = hits.find(exact);
+  if (!hit) {
+    const prefixed = hits.filter((h) => {
+      const n = fold(h.title);
+      return (
+        n.indexOf(want + ' ') === 0 ||
+        (latinOnly(h.original_title) && fold(h.original_title).indexOf(want + ' ') === 0)
+      );
+    });
+    if (prefixed.length === 1) hit = prefixed[0];
+  }
+  if (!hit) return null;
+  const released = Number(String(hit.release_date || '').slice(0, 4)) || null;
+  if (year && released && Math.abs(released - Number(year)) > 2) return null;
+  return { id: hit.id, title: hit.title, year: released };
+}
