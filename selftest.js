@@ -867,6 +867,21 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         ],
         [1600, 900, 360, 300]
     );
+    // An unattended run must be able to say "never faster than this": the
+    // learned gap decays toward the floor, so a seed alone is not enough and a
+    // long list drifts from a safe 2500ms back to 600ms and into 429 waits.
+    check(
+        "an explicit gap floor is never undercut by repeated clean shows",
+        [
+            Array.from({ length: 40 }, (_, i) => i).reduce(
+                (g) => lib.nextGap(g, 0, { floor: 2500 }),
+                3000
+            ),
+            // A 429 report above the floor is still adopted (slower is fine).
+            lib.nextGap(4000, 1, { floor: 2500 }),
+        ],
+        [2500, 4000]
+    );
     // A temp file whose title differs from the list term: this is the filename
     // fallback, and it must hold whether or not the catalogue has been filled.
     const tempFile = path.join(__dirname, "catalogue", "selftest-show.json");

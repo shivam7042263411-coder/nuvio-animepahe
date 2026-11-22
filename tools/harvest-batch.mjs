@@ -172,6 +172,12 @@ const writeGap = (ms) => {
 const gapFlag = option('--min-gap-ms', null);
 let minGap = gapFlag != null ? Number(gapFlag) : readGap() ?? 1200;
 const MIN_GAP_FLOOR = 600;
+// The learned gap decays 10% per show toward the floor, and the floor is what a
+// connection that has been hit by 429s must not drift back to: a long list then
+// walks itself into 15-minute waits from whatever pace it started at. An
+// explicit --min-gap-ms is a floor for the whole run, not just a seed, so the
+// unattended driver can say "never go faster than this" and be obeyed.
+const GAP_FLOOR = gapFlag != null ? Math.max(Number(gapFlag), MIN_GAP_FLOOR) : MIN_GAP_FLOOR;
 const CHROME = option(
   '--chrome',
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -596,7 +602,7 @@ for (let qi = 0; qi < shows.length; qi++) {
     // The floor is 600ms, not 300: the one stretch that ran at 300ms also saw a
     // 429 and a browser death, so ~100 req/min is as fast as this site is worth
     // pushing without babysitting.
-    minGap = nextGap(pace.gap, pace.limited, { floor: MIN_GAP_FLOOR });
+    minGap = nextGap(pace.gap, pace.limited, { floor: GAP_FLOOR });
     writeGap(minGap);
     if (pace.limited) {
       console.log(`  paced: ${pace.requests} request(s), 429 x${pace.limited} -> gap ${minGap}ms`);
