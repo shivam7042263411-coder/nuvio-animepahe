@@ -4,10 +4,17 @@
 # One harvest-batch pass walks the list top to bottom: it skips a show whose
 # TMDB seasons are already fully stored and tops up the rest, in list order.
 # A pass ends early only when Chrome dies (lid closed), the site challenges, or
-# the run is killed - so this loops the pass with a pause, and stops once two
-# passes in a row add no catalogue rows at all (transient site failures also add
-# none, hence two). Every pass is committed and pushed, so a killed run loses at
-# most the one show it was in the middle of, and the TV sees each sitting.
+# the rate limit outlasts the wait - so this loops the pass, and only stops when
+# a pass walks the list and adds nothing without being cut short.
+#
+# The pace is owned here, across passes: a pass that hit a 429 starts the next
+# one slower, and a clean pass earns a faster one. --min-gap-ms is deliberately
+# passed on every pass, because the batch's own learning drifts back to the 600ms
+# floor and the site punishes that with 15-minute waits; the pass-level signal is
+# the only one that sees the whole cost.
+#
+# Every pass is committed and pushed, so a killed run loses at most the one show
+# it was in the middle of, and the TV sees each sitting.
 #
 # usage: nohup tools/harvest-all.sh [list] [log] &
 set -u
@@ -36,16 +43,21 @@ clean_chrome() {
   done
 }
 
-echo "=== harvest-all start $(date '+%F %T') list=$LIST (pid $$)" >> "$LOG"
+# Start slow. 1200ms is the proven-smooth rate for a healthy connection, but a
+# connection that just took two 429s needs more room than that to recover.
+SEED=2500
 stale=0
+echo "=== harvest-all start $(date '+%F %T') list=$LIST (pid $$)" >> "$LOG"
 while :; do
   before=$(rows)
-  echo "=== pass start $(date '+%F %T') rows=$before" >> "$LOG"
+  echo "=== pass start $(date '+%F %T') rows=$before gap=${SEED}ms" >> "$LOG"
   clean_chrome
+  PASS=$(mktemp)
   TMDB_API_KEY="$KEY" node tools/harvest-batch.mjs \
     --file "$LIST" --all-seasons --max-eps 0 \
-    --wait-429 15 --wait-challenge 300 --min-gap-ms 1200 \
-    --profile "$PROFILE" --port "$PORT" >> "$LOG" 2>&1
+    --wait-429 15 --wait-challenge 300 --min-gap-ms "$SEED" \
+    --profile "$PROFILE" --port "$PORT" > "$PASS" 2>&1
+  cat "$PASS" >> "$LOG"
   after=$(rows)
   echo "=== pass end $(date '+%F %T') rows=$after (+$((after-before)))" >> "$LOG"
   if [ -n "$(git status --porcelain catalogue)" ]; then
@@ -53,13 +65,31 @@ while :; do
     git commit -q -m "catalogue: harvest $(date '+%F %H:%M')" && git push -q origin main
     echo "=== pushed $(date '+%T')" >> "$LOG"
   fi
+  # A pass cut short by the site or the browser says nothing about the list:
+  # it is not evidence of completion, and it is the signal to slow down.
+  cut=0
+  grep -q "429 too many" "$PASS" && cut=1
+  grep -q "rate-limiting this connection" "$PASS" && cut=1
+  grep -q "chrome window closed" "$PASS" && cut=1
+  # The startup banner says "waiting for the challenge" on every run, so match
+  # only the lines that mean the run actually gave up on one.
+  grep -qE "^  challenge (did not clear|appeared mid-run)" "$PASS" && cut=1
+  rm -f "$PASS"
+  if [ "$cut" = 1 ]; then
+    SEED=$((SEED * 3 / 2)); [ "$SEED" -gt 20000 ] && SEED=20000
+    echo "=== cut short by the site; next pass gap=${SEED}ms" >> "$LOG"
+    sleep 600
+    continue
+  fi
+  # Clean pass. A full list that adds nothing is finished - but a single quiet
+  # pass can also be a wall of permanent misses, hence two in a row.
   if [ "$after" -le "$before" ]; then
     stale=$((stale+1))
-    echo "=== no rows added (stale $stale/3)" >> "$LOG"
-    [ "$stale" -ge 3 ] && { echo "=== stopping $(date '+%F %T')" >> "$LOG"; break; }
-    sleep 600
+    echo "=== no rows added (stale $stale/2)" >> "$LOG"
+    [ "$stale" -ge 2 ] && { echo "=== done $(date '+%F %T')" >> "$LOG"; break; }
+    sleep 300
   else
     stale=0
-    sleep 20
+    SEED=$((SEED * 9 / 10)); [ "$SEED" -lt 1200 ] && SEED=1200
   fi
 done
