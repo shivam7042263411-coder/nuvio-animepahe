@@ -49,7 +49,7 @@ Frieren`) that Nyaa releases actually use.
 
 ```
 content id -> titles + season count
-  -> Nyaa RSS + AnimeTosho HTML, queried in parallel (8s cap per request)
+  -> AnimeTosho HTML (8s cap per request)
   -> strict release matcher
   -> magnet (40-hex infoHash)
 ```
@@ -76,9 +76,15 @@ The matcher is deliberately strict:
 - "The Final Season" is mapped to TMDB's last season.
 - `1080p` ranks first, then `720p`; sub ranks above dub; seeders break ties.
 
-AnimeTosho's HTML search runs alongside Nyaa and carries the same releases; its
-base32 info hashes are decoded to the 40-hex form Nuvio requires. Running both
-together is what keeps lookups working on networks that block `nyaa.si`.
+AnimeTosho is the primary source: it mirrors Nyaa (plus TokyoTosho, AniDex and
+nekoBT) and its base32 info hashes are decoded to the 40-hex form Nuvio
+requires. Nyaa's RSS is queried only when AnimeTosho matched nothing.
+
+The order matters. Nuvio's QuickJS runtime keeps a plugin evaluation alive until
+every `fetch` it started settles, and its `fetch` cannot be cancelled. A
+blackholed host (ISP block) never settles, so asking Nyaa first cost the whole
+60s plugin budget and the results were discarded — the "no stream found"/timeout
+bug. With AnimeTosho first, a blocked Nyaa is never contacted on the happy path.
 
 ## Why only single episodes
 
@@ -116,9 +122,9 @@ Nuvio adds its own tracker list; the scraper does not need to.
   file), not hardsubbed MP4. Playback depends on Media3/ExoPlayer supporting the
   codec (HEVC/x265 is common) and rendering the subtitle track.
 - A low-seed release buffers on a TV stick. Debrid is the smooth path.
-- Nyaa's RSS is open, but an ISP/network that blocks `nyaa.si` (connection
-  hangs, or the host resolves to a block page) has no effect here: AnimeTosho is
-  queried in parallel, and every request is capped at 8 seconds.
+- A network that blocks `nyaa.si` is handled: AnimeTosho answers first, and Nyaa
+  is never contacted while it does. If AnimeTosho also has no match, the Nyaa
+  attempt is capped at 8 seconds and yields nothing on a blocked network.
 - Only English-translated releases are searched (`c=1_2`).
 
 ## Files

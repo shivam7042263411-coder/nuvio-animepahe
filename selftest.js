@@ -80,23 +80,41 @@ const NYAA_RSS =
     rssItem("[Other] Attack on Titan S01E01 [1080p]", HASH.a, 1, "1 GiB") +
     "</channel></rss>";
 
-const ANIMETOSHO_HTML =
-    '<html><body><div class="home_list_entry">' +
-    '<div class="size" title="Total file size: 1">1.4 GB</div>' +
-    '<div class="link"><a href="https://animetosho.org/view/x.n1">[Group] Attack on Titan - S01E01 [1080p]</a></div>' +
-    '<div class="links"><a href="magnet:?xt=urn:btih:HTNOI4OEZ2ZIZMYLIBTZKSWZZSGAAZXZ&amp;dn=x">Magnet</a>' +
-    '<span title="Seeders: 7 / Leechers: 6">[7]</span></div>' +
-    "</div></body></html>";
+// AnimeTosho mirrors Nyaa (plus TokyoTosho/AniDex/nekoBT) and is the primary
+// source; the fixture carries a real release plus the rows the matcher must
+// reject, like the site does.
+const ATS_MAIN = "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9";
+function toshoEntry(title, hash, seeders, size) {
+    return (
+        '<div class="home_list_entry">' +
+        '<div class="size" title="Total file size: 1">' + size + "</div>" +
+        '<div class="link"><a href="https://animetosho.org/view/x">' + title + "</a></div>" +
+        '<div class="links"><a href="magnet:?xt=urn:btih:' + hash + '&amp;dn=x">Magnet</a>' +
+        '<span title="Seeders: ' + seeders + ' / Leechers: 1">[' + seeders + "]</span></div>" +
+        "</div>"
+    );
+}
 
-const ANIMETOSHO_BLEACH =
-    '<html><body><div class="home_list_entry">' +
-    '<div class="size">1.3 GB</div>' +
-    '<div class="link"><a href="https://animetosho.org/view/y.n2">[Group] Bleach - 01 [1080p]</a></div>' +
-    '<div class="links"><a href="magnet:?xt=urn:btih:HTNOI4OEZ2ZIZMYLIBTZKSWZZSGAAZXZ&amp;dn=y">Magnet</a>' +
-    '<span title="Seeders: 9 / Leechers: 1">[9]</span></div>' +
-    "</div></body></html>";
+const ANIMETOSHO_HTML =
+    "<html><body>" +
+    toshoEntry("[Group] Attack on Titan - S01E01 [1080p]", ATS_MAIN, 7, "1.4 GB") +
+    toshoEntry("[Group] Attack on Titan S01E01 [720p] [Dubbed]", HASH.b, 5, "700 MB") +
+    toshoEntry("[Group] Attack on Titan - S01E01 [1080p]", ATS_MAIN, 7, "1.4 GB") +
+    toshoEntry("[Group] Attack on Titan S02E05 [1080p]", HASH.c, 99, "1 GB") +
+    toshoEntry("[Erai-raws] Attack on Titan Season 1 (01-25) [1080p] Complete", HASH.d, 80, "20 GB") +
+    toshoEntry("[Group] Attack on Titan OVA - 01 [1080p]", HASH.f, 50, "1 GB") +
+    "</body></html>";
+
+// Empty for Bleach so the Nyaa fallback is the only remaining source.
+const ANIMETOSHO_BLEACH = "<html><body></body></html>";
+
+const NYAA_BLEACH =
+    '<?xml version="1.0"?><rss xmlns:nyaa="https://nyaa.si/xmlns/nyaa"><channel>' +
+    rssItem("[Group] Bleach - 01 [1080p]", HASH.e, 9, "1.3 GB") +
+    "</channel></rss>";
 
 let fetchCalls = 0;
+const requested = [];
 const sandbox = {
     console: { log() {}, error() {} },
     Promise,
@@ -116,13 +134,14 @@ const sandbox = {
     module: { exports: {} },
     fetch: async (url) => {
         fetchCalls++;
+        requested.push(String(url));
         let body = "{}";
         const other = url.indexOf("/tv/999") !== -1;
         if (url.indexOf("/alternative_titles") !== -1) body = other ? '{"results":[]}' : TMDB_ALT;
         else if (url.indexOf("/find/") !== -1) body = TMDB_FIND;
         else if (url.indexOf("kitsu.io") !== -1) body = KITSU_AOT;
         else if (url.indexOf("api.themoviedb.org") !== -1) body = other ? TMDB_OTHER : TMDB_TV;
-        else if (url.indexOf("nyaa.si") !== -1) body = url.indexOf("Bleach") !== -1 ? "<rss><channel></channel></rss>" : NYAA_RSS;
+        else if (url.indexOf("nyaa.si") !== -1) body = url.indexOf("Bleach") !== -1 ? NYAA_BLEACH : NYAA_RSS;
         else if (url.indexOf("animetosho.org") !== -1) body = url.indexOf("Bleach") !== -1 ? ANIMETOSHO_BLEACH : ANIMETOSHO_HTML;
         return {
             ok: true,
@@ -217,16 +236,24 @@ check(
     "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9"
 );
 const tosho = sandbox.parseAnimeTosho(ANIMETOSHO_HTML);
-check("animetosho parse: one row", tosho.length, 1);
-check("animetosho parse: hex hash", tosho[0] && tosho[0].hash, "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9");
+check("animetosho parse: all rows", tosho.length, 6);
+check("animetosho parse: hex hash", tosho[0] && tosho[0].hash, ATS_MAIN);
 check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
 
 // --- end to end ------------------------------------------------------------
 (async () => {
+    requested.length = 0;
     const results = await sandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
 
-    check("returns the real episode 1 releases from both sources", results.length, 5);
-    check("1080p sub ranks first", results[0] && results[0].infoHash, HASH.a);
+    check("returns the episode 1 releases from AnimeTosho", results.length, 2);
+    check("1080p sub ranks first", results[0] && results[0].infoHash, ATS_MAIN);
+    // The whole reason AnimeTosho leads: a blackholed Nyaa must not be left as
+    // an outstanding async job, or the runtime holds the plugin to its timeout.
+    check(
+        "Nyaa is not contacted when AnimeTosho answers",
+        requested.filter((u) => u.indexOf("nyaa.si") !== -1).length,
+        0
+    );
 
     const badUrl = results.filter((r) => !/^magnet:\?xt=urn:btih:[0-9a-f]{40}$/.test(r.url));
     check("every url is a bare 40-hex magnet", badUrl.length, 0);
@@ -234,23 +261,28 @@ check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
     check("every infoHash is 40 lowercase hex", badHash.length, 0);
     check("no blank urls", results.filter((r) => !r.url).length, 0);
     check("no fileIdx is emitted", results.filter((r) => "fileIdx" in r).length, 0);
-    check("no batches/OVAs/wrong episodes", results.filter((r) => /batch|ova|S02E05|S01E02|01-25|01 ~ 12/i.test(r.title)).length, 0);
-    check("duplicate hash deduped", results.filter((r) => r.infoHash === HASH.a).length, 1);
+    check("no batches/OVAs/wrong episodes", results.filter((r) => /batch|ova|S02E05|01-25/i.test(r.title)).length, 0);
+    check("duplicate hash deduped", results.filter((r) => r.infoHash === ATS_MAIN).length, 1);
     check("sub and dub both labelled", [results.some((r) => r.language === "Sub"), results.some((r) => r.language === "Dub")], [true, true]);
     check("results are torrent type", results.every((r) => r.type === "torrent"), true);
 
-    // Nyaa has no Bleach release in the fixture, so this exercises the
-    // AnimeTosho fallback and its base32 hash decoding end to end.
+    // Nyaa is only reached when AnimeTosho has nothing for the episode.
+    requested.length = 0;
     const fallback = await sandbox.module.exports.getStreams(999, "tv", 1, 1, 1);
-    check("fallback: AnimeTosho fills a Nyaa miss", fallback.length, 1);
-    check("fallback: decoded 40-hex hash", fallback[0] && fallback[0].infoHash, "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9");
+    check("Nyaa fallback: returns the release", fallback.length, 1);
+    check("Nyaa fallback: decoded 40-hex hash", fallback[0] && fallback[0].infoHash, HASH.e);
+    check(
+        "Nyaa fallback: Nyaa was queried",
+        requested.filter((u) => u.indexOf("nyaa.si") !== -1).length > 0,
+        true
+    );
 
     // Nuvio passes the meta provider's id, so anime arrives as "kitsu:<id>:<ep>"
     // and other content as "tt<id>". Both must resolve to search titles rather
     // than a TMDB 404.
     const fromKitsu = await sandbox.module.exports.getStreams("kitsu:7442:1", "tv", 1, 1);
     check("kitsu id: resolves and returns streams", fromKitsu.length, results.length);
-    check("kitsu id: 1080p sub ranks first", fromKitsu[0] && fromKitsu[0].infoHash, HASH.a);
+    check("kitsu id: 1080p sub ranks first", fromKitsu[0] && fromKitsu[0].infoHash, ATS_MAIN);
 
     const fromImdb = await sandbox.module.exports.getStreams("tt22248376", "tv", 1, 1);
     check("imdb id: resolves via TMDB find", fromImdb.length, results.length);
@@ -258,23 +290,41 @@ check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
     const kitsuSeason = await sandbox.kitsuInfo("7442");
     check("kitsu: romaji title leads queries", sandbox.queryTitles(kitsuSeason)[0], "Shingeki no Kyojin");
 
-    // A dead host must be bounded: Nyaa is blackholed on this ISP and its fetch
-    // never settles, but the lookup still has to return via AnimeTosho inside
-    // Nuvio's 60s plugin timeout.
-    const hangSource = source.replace("var REQUEST_TIMEOUT_MS = 8000;", "var REQUEST_TIMEOUT_MS = 60;");
-    const hangSandbox = Object.assign({}, sandbox, {
+    // A blackholed Nyaa must not stall the happy path at all: the lookup still
+    // completes through AnimeTosho without ever issuing the Nyaa request.
+    const blackholeRequests = [];
+    const blackholeSandbox = Object.assign({}, sandbox, {
         module: { exports: {} },
         fetch: async (url) => {
-            if (url.indexOf("nyaa.si") !== -1) return new Promise(() => {});
+            if (url.indexOf("nyaa.si") !== -1) {
+                blackholeRequests.push(url);
+                return new Promise(() => {});
+            }
             return sandbox.fetch(url);
         },
     });
-    vm.createContext(hangSandbox);
-    vm.runInContext(hangSource, hangSandbox);
-    const hangStart = Date.now();
-    const hung = await hangSandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
-    check("hanging host: still returns streams", hung.length > 0, true);
-    check("hanging host: wait stays bounded", Date.now() - hangStart < 3000, true);
+    vm.createContext(blackholeSandbox);
+    vm.runInContext(source, blackholeSandbox);
+    const blackholeStart = Date.now();
+    const viaAnimeTosho = await blackholeSandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
+    check("blackholed Nyaa: AnimeTosho still returns streams", viaAnimeTosho.length, results.length);
+    check("blackholed Nyaa: Nyaa is never requested", blackholeRequests.length, 0);
+    check("blackholed Nyaa: lookup returns in time", Date.now() - blackholeStart < 3000, true);
+
+    // When AnimeTosho is empty the Nyaa attempt is still bounded by withTimeout.
+    // shortcut: a hanging Nyaa yields nothing here (the runtime cannot cancel
+    // the fetch); upgrade if Nuvio ever honours an AbortSignal in fetch().
+    const lateSource = source.replace("var REQUEST_TIMEOUT_MS = 8000;", "var REQUEST_TIMEOUT_MS = 60;");
+    const lateSandbox = Object.assign({}, sandbox, {
+        module: { exports: {} },
+        fetch: async (url) => (url.indexOf("nyaa.si") !== -1 ? new Promise(() => {}) : sandbox.fetch(url)),
+    });
+    vm.createContext(lateSandbox);
+    vm.runInContext(lateSource, lateSandbox);
+    const lateStart = Date.now();
+    const late = await lateSandbox.module.exports.getStreams(999, "tv", 1, 1, 1);
+    check("hanging Nyaa fallback: bounded", Date.now() - lateStart < 3000, true);
+    check("hanging Nyaa fallback: returns nothing", late.length, 0);
 
     // One reset of the TMDB connection must not empty the stream list.
     const flakySandbox = Object.assign({}, sandbox, {

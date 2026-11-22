@@ -3,13 +3,12 @@
 //
 // Pipeline:
 //   content id (Kitsu / IMDb / TMDB) -> titles (+ season count)
-//     -> Nyaa RSS search (Anime / English-translated, seeders first)
+//     -> AnimeTosho HTML search (Nyaa only when AnimeTosho finds nothing)
 //     -> strict release matcher (episode token, season guard, batch rejection)
 //     -> one magnet per release -> Nuvio's P2P engine or a debrid provider
 //
-// AnimeTosho's HTML search runs alongside Nyaa: it carries the same releases
-// under a base32 info hash (decoded to the 40-hex form Nuvio expects) and stays
-// reachable on networks that block Nyaa.
+// AnimeTosho carries Nyaa's releases under a base32 info hash (decoded to the
+// 40-hex form Nuvio expects) and stays reachable on networks that block Nyaa.
 //
 // Only single-episode releases are returned. Nuvio's plugin bridge hardcodes
 // fileIdx = null, so a batch cannot be resolved to the requested episode.
@@ -644,23 +643,30 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         var candidates = [];
         var seen = {};
 
-        // Both sources run together. Nyaa orders by seeders; AnimeTosho mirrors
-        // the same releases behind a host that survives ISP-level Nyaa blocks.
-        // One at a time meant a blocked Nyaa burned the whole 60s plugin budget
-        // before the fallback was ever tried.
-        var jobs = [];
-        for (var i = 0; i < queries.length; i++) {
-            jobs.push(searchSource(nyaaSearch, "nyaa", queries[i]));
-        }
-        for (var j = 0; j < Math.min(queries.length, 2); j++) {
-            jobs.push(searchSource(animetoshoSearch, "animetosho", queries[j]));
-        }
-        var batches = await Promise.all(jobs);
-        for (var b = 0; b < batches.length; b++) {
-            addCandidates(batches[b], candidates, seen);
+        // AnimeTosho first: it mirrors Nyaa (plus TokyoTosho/AniDex/nekoBT) and
+        // answers every time. Nyaa is only tried when AnimeTosho matched
+        // nothing, because a blocked host never settles its fetch and the
+        // QuickJS runtime keeps the evaluation alive while that async job is
+        // outstanding -- querying Nyaa up front burned the full 60s plugin
+        // budget even though AnimeTosho already had the release.
+        async function querySource(search, label, count) {
+            var jobs = [];
+            for (var i = 0; i < Math.min(queries.length, count); i++) {
+                jobs.push(searchSource(search, label, queries[i]));
+            }
+            var batches = await Promise.all(jobs);
+            for (var b = 0; b < batches.length; b++) {
+                addCandidates(batches[b], candidates, seen);
+            }
         }
 
+        await querySource(animetoshoSearch, "animetosho", 2);
         var matched = matchCandidates(candidates, req);
+
+        if (!matched.length) {
+            await querySource(nyaaSearch, "nyaa", queries.length);
+            matched = matchCandidates(candidates, req);
+        }
 
         matched.sort(function (a, b) {
             if (b.score !== a.score) return b.score - a.score;
