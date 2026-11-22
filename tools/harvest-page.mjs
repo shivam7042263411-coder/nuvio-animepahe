@@ -121,13 +121,23 @@ export function planSeasons(entries, seasons) {
     // the run, it shifts every season after it, so the ongoing entry is used
     // alone.
     if (!Number(line[0].episodes)) line = [line[0]];
+    // A later entry with no episode count is a season that has not started yet
+    // ("Shangri-La Frontier Season 3"). It adds no episodes to the run, and it
+    // says the show is still airing: a run that comes up short of the season it
+    // fills is that unaired tail, not a gap. The shortfall is allowed and the
+    // season is marked partial, to be topped up when the episodes arrive. TMDB
+    // can also be the one that merged the cours - it models Shangri-La Frontier
+    // as one season of 51 while the site has an entry per cour - and the run of
+    // entries is then exactly what that one season holds.
+    const airing = line.length > 1 && line.some((e) => !Number(e.episodes));
+    if (line.length > 1) line = line.filter((e) => Number(e.episodes) > 0);
     const known = line.every((e) => Number(e.episodes) > 0);
     // One entry of unknown length (a show still airing says "0 episodes") can
     // still be sliced: it just takes whatever each season asks for, in order.
     if (!known && line.length !== 1) return null;
     const total = line.reduce((n, e) => n + (Number(e.episodes) || 0), 0);
     const wanted = seasons.reduce((n, s) => n + (Number(s.episodes) || 0), 0);
-    if (known && total !== wanted) return null;
+    if (known && total !== wanted && !(airing && total < wanted)) return null;
 
     const out = [];
     let ci = 0;

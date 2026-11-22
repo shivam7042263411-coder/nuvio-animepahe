@@ -1272,6 +1272,41 @@ check("episodesOf missing -> 0", sandbox.episodesOf({ title: "x" }), 0);
         typeof shortList.error === "string" && shortList.error.indexOf("short release list") === 0,
         true
     );
+    // Real output, 2026-11-22: TMDB models Shangri-La Frontier as one season of
+    // 51 (E51 is a 2027 placeholder that has not aired) while the site has one
+    // entry per cour plus an announced "Season 3" with no episodes yet. The run
+    // read that 0-episode entry as an unknown-length run, gave up on the sizes
+    // and filed the cours as the app's S1 and S2, so S1E26-51 missed the
+    // catalogue and the S2 rows were never asked for. The cours are that one
+    // season, and the announced entry says the tail has not aired.
+    const slfPool = [
+        { title: "Shangri-La Frontier", session: "c1", year: 2023, episodes: 25, type: "TV" },
+        { title: "Shangri-La Frontier Season 2", session: "c2", year: 2024, episodes: 25, type: "TV" },
+        { title: "Shangri-La Frontier Season 3", session: "c3", year: 2025, episodes: 0, type: "TV" },
+    ];
+    const slf = await new Function("fetch", "DOMParser", "setTimeout", "return " + pageMod.harvestScript({
+        term: "Shangri-La Frontier", maxEps: 0, season: 1, offset: null, resultIndex: -1,
+        allSeasons: true, haveEps: [], force: false,
+        seasons: [{ n: 1, episodes: 51, year: "2023" }],
+    }))(
+        async (url) => {
+            if (url.includes("m=search")) return { status: 200, ok: true, json: async () => ({ data: slfPool }) };
+            if (url.includes("m=release")) {
+                const n = { c1: 25, c2: 25 }[url.match(/id=(c\d)/)[1]] || 0;
+                const data = [];
+                for (let i = 1; i <= n; i++) data.push({ episode: String(i), session: "e" + i });
+                return { status: 200, ok: true, json: async () => ({ data, last_page: 1 }) };
+            }
+            return { status: 200, ok: true, text: async () => '<button data-src="/e/AA1080" data-audio="jpn">1080p</button>' };
+        },
+        FakeDom,
+        (fn) => fn()
+    );
+    check(
+        "the site's cours fill the one season TMDB describes, not a season each",
+        [slf.rows.length, slf.rows.every((r) => r.s === 1), slf.rows.map((r) => r.e).join(",")],
+        [50, true, Array.from({ length: 50 }, (_, i) => i + 1).join(",")]
+    );
     // Real output, 2026-11-20: Naruto's search pool also carries "Naruto
     // Shippuden" (500 episodes, a TMDB show of its own), so the entry sums
     // could never equal TMDB's 52/52/54/62 and all 220 episodes landed in
