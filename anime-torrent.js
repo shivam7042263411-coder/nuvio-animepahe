@@ -401,7 +401,13 @@ function scoreOf(candidate, req) {
     else if (quality === "480p") score += 5;
     if (/\b(dual[\s-]*audio|multi[\s-]*audio|multi[\s-]*subs?)\b/i.test(title)) score += 5;
     if (!isDub(title)) score += 10;
-    score += Math.min(toInt(candidate.seeders, 0), 50) * 0.2;
+    // A release with no seeders has nobody to hand over the torrent metadata, so
+    // Nuvio's P2P engine sits on "loading" (peers=0) until the user gives up --
+    // observed as a 27s stall on a dead 1080p while a live 720p sat below it.
+    // Liveness therefore outranks quality: a live release always sorts first.
+    var seeders = toInt(candidate.seeders, 0);
+    if (seeders <= 0) score -= 100;
+    else score += Math.min(seeders, 50) * 0.2;
     return score;
 }
 

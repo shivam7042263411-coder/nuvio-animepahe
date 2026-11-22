@@ -240,6 +240,22 @@ check("animetosho parse: all rows", tosho.length, 6);
 check("animetosho parse: hex hash", tosho[0] && tosho[0].hash, ATS_MAIN);
 check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
 
+// A dead release (no peers) stalls the P2P engine on metadata, so a live lower
+// -quality release must outrank it; a live 1080p must still outrank a live 720p.
+const att = { season: 1, titles: ["Attack on Titan"] };
+check(
+    "a live 720p outranks a dead 1080p",
+    sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [720p]", seeders: 20 }, att) >
+        sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [1080p]", seeders: 0 }, att),
+    true
+);
+check(
+    "a live 1080p still outranks a live 720p",
+    sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [1080p]", seeders: 5 }, att) >
+        sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [720p]", seeders: 5 }, att),
+    true
+);
+
 // --- end to end ------------------------------------------------------------
 (async () => {
     requested.length = 0;
