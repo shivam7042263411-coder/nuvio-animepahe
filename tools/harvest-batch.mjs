@@ -64,6 +64,9 @@ if (!TMDB_KEY) {
   );
 }
 const showCache = new Map();
+// A term whose lookup threw (network, HTTP), as opposed to one TMDB has no show
+// for. Only the first means the seasons are unknown.
+const tmdbFailed = new Set();
 /** The TMDB show behind a term, or null when it cannot be identified. Cached
  *  per run: several lines can name the same show. */
 async function showFor(term) {
@@ -74,7 +77,8 @@ async function showFor(term) {
     show = await tmdbShow(term, TMDB_KEY);
     if (!show) console.error(`  tmdb: no exact show for "${term}" - matching by name`);
   } catch (e) {
-    console.error(`  tmdb: ${e.message} - matching by name`);
+    console.error(`  tmdb: ${e.message} - seasons unknown, not guessing them`);
+    tmdbFailed.add(term);
   }
   showCache.set(term, show);
   return show;
@@ -498,6 +502,14 @@ for (let qi = 0; qi < shows.length; qi++) {
   }
   if (storedEps.size) {
     console.log(`top up ${show.term} (${storedEps.size} stored, asking for ${show.maxEps || 'all'})`);
+  }
+  // A lookup that failed is not a show TMDB doesn't have: the seasons are
+  // unknown, and filing by the site's entry names is how one season's cours get
+  // labelled as two separate seasons. Leave it to a run where TMDB answers.
+  // A film keeps this out: its line is single-entry by design, not a guess.
+  if (wantAll && tmdbFailed.has(target)) {
+    console.log(`defer  ${show.term} (TMDB lookup failed; next run retries instead of guessing)`);
+    continue;
   }
   const plan = {
     ...show,
