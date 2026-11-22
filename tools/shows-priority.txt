@@ -1,36 +1,79 @@
 # Priority list, fetched in this order. Every episode of every season.
-# term | maxEpisodes | appSeason | episodeOffset
+# term | maxEpisodes | appSeason | episodeOffset | resultIndex | appTitle
+
+## First, in your order
 86: Eighty-Six | 0 | 1 | 0
 Summer Time Rendering | 0 | 1 | 0
 Dr. STONE | 0 | 1 | 0
 JoJo's Bizarre Adventure | 0 | 1 | 0
 The Promised Neverland | 0 | 1 | 0
+Great Pretender | 0 | 1 | 0
+To Your Eternity | 0 | 1 | 0
+Shangri-La Frontier | 0 | 1 | 0
+Bleach | 0 | 1 | 0
+Noragami | 0 | 1 | 0
+Death Parade | 0 | 1 | 0
+Fairy Tail | 0 | 1 | 0
+Kuroko's Basketball | 0 | 1 | 0
+Fighting Spirit | 0 | 1 | 0
+Slam Dunk | 0 | 1 | 0
+From Me to You: Kimi ni Todoke | 0 | 1 | 0
+Tsukigakirei | 0 | 1 | 0
+ReLIFE | 0 | 1 | 0
+Undead Unluck | 0 | 1 | 0
+Hunter x Hunter | 0 | 1 | 0
+Dororo | 0 | 1 | 0
+Golden Kamuy | 0 | 1 | 0
+Beyond the Boundary | 0 | 1 | 0
+## Fate, ufotable only
+Fate/Zero | 0 | 1 | 0
+Fate/stay night [Unlimited Blade Works] | 0 | 1 | 0
+Dorohedoro | 0 | 1 | 0
+A Sign of Affection | 0 | 1 | 0
+Golden Time | 0 | 1 | 0
+Lovely Complex | 0 | 1 | 0
+Masamune-kun's Revenge | 0 | 1 | 0
+Call of the Night | 0 | 1 | 0
+Vivy: Fluorite Eye's Song | 0 | 1 | 0
+Akame ga Kill! | 0 | 1 | 0
+The God of High School | 0 | 1 | 0
+
+## Added
+Samurai Champloo | 0 | 1 | 0
+Chitose Is in the Ramune Bottle | 0 | 1 | 0
+Monster | 0 | 1 | 0
+Tengoku Daimakyo | 0 | 1 | 0
+Agents of the Four Seasons Dance of Spring | 0 | 1 | 0
+Josee, the Tiger and the Fish | 0 | 1 | 0
+The Garden of Words | 0 | 1 | 0
+Ride Your Wave | 0 | 1 | 0
+The Anthem of the Heart | 0 | 1 | 0
+Her Blue Sky | 0 | 1 | 0
+Hello World | 0 | 1 | 0
+5 Centimeters per Second | 0 | 1 | 0
+Neon Genesis Evangelion | 0 | 1 | 0
+Cowboy Bebop | 0 | 1 | 0
+Code Geass: Lelouch of the Rebellion | 0 | 1 | 0
+Made in Abyss | 0 | 1 | 0
+Bubble | 0 | 1 | 0
+
+## The rest, in their original order
 Gintama | 0 | 1 | 0
 Yu Yu Hakusho | 0 | 1 | 0
 World Trigger | 0 | 1 | 0
 Ranking of Kings | 0 | 1 | 0
-Great Pretender | 0 | 1 | 0
-To Your Eternity | 0 | 1 | 0
 A Place Further than the Universe | 0 | 1 | 0
 March Comes in Like a Lion | 0 | 1 | 0
-Shangri-La Frontier | 0 | 1 | 0
 Gurren Lagann | 0 | 1 | 0
-Bleach | 0 | 1 | 0
 Magi | 0 | 1 | 0
-Noragami | 0 | 1 | 0
 Durarara!! | 0 | 1 | 0
 Land of the Lustrous | 0 | 1 | 0
 Astra Lost in Space | 0 | 1 | 0
-Death Parade | 0 | 1 | 0
 Delicious in Dungeon | 0 | 1 | 0
 Ascendance of a Bookworm | 0 | 1 | 0
 Log Horizon | 0 | 1 | 0
-Fairy Tail | 0 | 1 | 0
 D.Gray-man | 0 | 1 | 0
 The Disastrous Life of Saiki K. | 0 | 1 | 0
-Kuroko's Basketball | 0 | 1 | 0
-Fighting Spirit | 0 | 1 | 0
-Slam Dunk | 0 | 1 | 0
 Initial D | 0 | 1 | 0
 Hikaru no Go | 0 | 1 | 0
 Chihayafuru | 0 | 1 | 0
@@ -44,36 +87,16 @@ Mushi-Shi | 0 | 1 | 0
 Anohana: The Flower We Saw That Day | 0 | 1 | 0
 Clannad | 0 | 1 | 0
 Toradora! | 0 | 1 | 0
-From Me to You: Kimi ni Todoke | 0 | 1 | 0
 Insomniacs After School | 0 | 1 | 0
-Tsukigakirei | 0 | 1 | 0
-ReLIFE | 0 | 1 | 0
 K-On! | 0 | 1 | 0
 The Tatami Galaxy | 0 | 1 | 0
-Undead Unluck | 0 | 1 | 0
-Hunter x Hunter | 0 | 1 | 0
-Dororo | 0 | 1 | 0
 Beelzebub | 0 | 1 | 0
-Golden Kamuy | 0 | 1 | 0
 Ishura | 0 | 1 | 0
 Claymore | 0 | 1 | 0
-Beyond the Boundary | 0 | 1 | 0
 Darker than Black | 0 | 1 | 0
 KONOSUBA - God's blessing on this wonderful world! | 0 | 1 | 0
-## "FATE series" is a franchise, not one show; these are its mainline TV entries.
-Fate/stay night | 0 | 1 | 0
-Fate/stay night [Unlimited Blade Works] | 0 | 1 | 0
-Fate/Zero | 0 | 1 | 0
-Fate/Apocrypha | 0 | 1 | 0
-Fate/Grand Order Absolute Demonic Front: Babylonia | 0 | 1 | 0
-Fate/EXTRA Last Encore | 0 | 1 | 0
-Dorohedoro | 0 | 1 | 0
 Deca-Dence | 0 | 1 | 0
 Aldnoah.Zero | 0 | 1 | 0
-## Romance batch.
-A Sign of Affection | 0 | 1 | 0
-Golden Time | 0 | 1 | 0
-Lovely Complex | 0 | 1 | 0
 Taisho Otome Fairy Tale | 0 | 1 | 0
 Boarding School Juliet | 0 | 1 | 0
 Maid Sama! | 0 | 1 | 0
@@ -84,26 +107,20 @@ Kokoro Connect | 0 | 1 | 0
 Adachi and Shimamura | 0 | 1 | 0
 Sugar Apple Fairy Tale | 0 | 1 | 0
 The World God Only Knows | 0 | 1 | 0
-Masamune-kun's Revenge | 0 | 1 | 0
-Call of the Night | 0 | 1 | 0
 Engaged to the Unidentified | 0 | 1 | 0
 Amagami SS | 0 | 1 | 0
 Ai Yori Aoshi | 0 | 1 | 0
 Dusk Maiden of Amnesia | 0 | 1 | 0
 Ef: A Tale of Memories | 0 | 1 | 0 | | Ef: A Tale Of Memories & Melodies
-## Action / dark-fantasy batch.
-Vivy: Fluorite Eye's Song | 0 | 1 | 0
 Black Lagoon | 0 | 1 | 0
 Ajin | 0 | 1 | 0
 Drifters | 0 | 1 | 0
 Kabaneri of the Iron Fortress | 0 | 1 | 0
-Akame ga Kill! | 0 | 1 | 0
 Baccano! | 0 | 1 | 0
 Blood Blockade Battlefront | 0 | 1 | 0
 Kengan Ashura | 0 | 1 | 0
 Kingdom | 0 | 1 | 0
 Ragna Crimson | 0 | 1 | 0
-The God of High School | 0 | 1 | 0
 Tower of God | 0 | 1 | 0
 Seraph of the End | 0 | 1 | 0
 Kekkaishi | 0 | 1 | 0
