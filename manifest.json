@@ -1,6 +1,6 @@
 {
   "name": "Nuvio Anime Torrents",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Torrent source for NuvioTV. Strict per-episode matching from AnimeTosho; returns 40-hex magnets for Nuvio's P2P engine or a debrid provider.",
   "author": "Nuvio Community",
   "scrapers": [
@@ -8,7 +8,7 @@
       "id": "anime-torrent",
       "name": "Anime Torrents",
       "description": "Per-episode anime magnets from AnimeTosho (live .xyz successor + .org mirror); 1080p/1080p HDR only, SubsPlease first",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "filename": "anime-torrent.js",
       "supportedTypes": [
         "movie",

@@ -87,6 +87,13 @@ The matcher is deliberately strict:
   `<title> <episode>` search returns a capped, relevance-ranked page that omits
   the trusted groups' per-episode singles (Jujutsu Kaisen: 75 rows, zero
   SubsPlease; Re:Zero: zero HorribleSubs), so the groups are queried directly.
+- Long-running anime are numbered two ways. The app reports a season-local
+  episode (TMDB `Black Clover` S2E7), but the release names count continuously
+  (`[HorribleSubs] Black Clover - 58`). The absolute episode is derived from
+  TMDB's per-season episode counts and searched too, so the trusted group is
+  found for both schemes. A group proven to number this show continuously also
+  has its bare same-numbered release dropped for that request, since `- 07`
+  under a continuous scheme is season 1, not season 2.
 
 Two AnimeTosho hosts are queried in parallel and merged by info hash:
 `animetosho.xyz` (the community successor, live) and `animetosho.org` (frozen on

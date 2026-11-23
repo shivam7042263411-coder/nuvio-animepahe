@@ -13,7 +13,12 @@ const TMDB_TV = JSON.stringify({
     original_name: "進撃の巨人",
     first_air_date: "2013-04-07",
     number_of_seasons: 4,
-    seasons: [{ season_number: 1 }, { season_number: 2 }, { season_number: 3 }, { season_number: 4 }],
+    seasons: [
+        { season_number: 1, episode_count: 25 },
+        { season_number: 2, episode_count: 12 },
+        { season_number: 3, episode_count: 22 },
+        { season_number: 4, episode_count: 28 },
+    ],
 });
 const TMDB_ALT = JSON.stringify({
     results: [
@@ -367,6 +372,16 @@ check(
     const fromImdb = await sandbox.module.exports.getStreams("tt22248376", "tv", 1, 1);
     check("imdb id: resolves via TMDB find", fromImdb.length, results.length);
 
+    // A TMDB request for a later season must also search the absolute episode the
+    // app never passes (S2E1 with 25 season-1 episodes -> episode 26).
+    requested.length = 0;
+    await sandbox.module.exports.getStreams(1429, "tv", 2, 1);
+    check(
+        "season 2 derives the absolute episode into the query",
+        requested.some((u) => /(?:Titan|Kyojin) 26/.test(decodeURIComponent(u))),
+        true
+    );
+
     const kitsuSeason = await sandbox.kitsuInfo("7442");
     check("kitsu: romaji title leads queries", sandbox.queryTitles(kitsuSeason)[0], "Shingeki no Kyojin");
 
@@ -385,6 +400,54 @@ check(
         ]
     );
     check("cleanTitle strips brackets", sandbox.cleanTitle("[Oshi no Ko]"), "Oshi no Ko");
+
+    // Black Clover S2E7 is released as "[HorribleSubs] Black Clover - 58": groups
+    // that number long-running anime continuously use the absolute episode, while
+    // TMDB/the app report S2E7. The absolute number comes from TMDB's per-season
+    // episode counts, so both numbering schemes get searched.
+    check(
+        "absolute episode: Black Clover S2E7 -> 58",
+        sandbox.absoluteEpisodeFrom(
+            [{ n: 1, c: 51 }, { n: 2, c: 52 }, { n: 3, c: 51 }, { n: 4, c: 16 }, { n: 0, c: 1 }],
+            2,
+            7
+        ),
+        58
+    );
+    check("absolute episode: specials are skipped", sandbox.absoluteEpisodeFrom([{ n: 0, c: 10 }, { n: 1, c: 12 }], 2, 1), 13);
+    check("absolute episode: season 1 needs none", sandbox.absoluteEpisodeFrom([{ n: 1, c: 51 }], 1, 7), null);
+    check(
+        "trusted-group queries use the absolute episode",
+        sandbox.buildQueries(["Black Clover"], { ...REQ, season: 2, episode: 7, absoluteEpisode: 58 })[0],
+        "SubsPlease Black Clover 58"
+    );
+    // A group that numbers continuously must lose its bare "- 07" on an S2E7
+    // request (that file is S1E7), while a season-labelled S02E07 stays.
+    const bcFiltered = sandbox.dropSeasonAmbiguity(
+        [
+            { title: "[HorribleSubs] Black Clover - 58 [1080p]" },
+            { title: "[HorribleSubs] Black Clover - 07 [1080p]" },
+            { title: "[AnoZu] Black Clover S02E07 1080p" },
+        ],
+        { ...REQ, season: 2, episode: 7, absoluteEpisode: 58 }
+    );
+    check(
+        "absolute numbering drops the same group's bare local episode",
+        bcFiltered.map((r) => r.title),
+        ["[HorribleSubs] Black Clover - 58 [1080p]", "[AnoZu] Black Clover S02E07 1080p"]
+    );
+    // A group that restarts numbering has no absolute release, so its "- 07" is
+    // the real S2E7 and must survive.
+    check(
+        "seasonal numbering keeps the bare local episode",
+        sandbox
+            .dropSeasonAmbiguity(
+                [{ title: "[SubsPlease] Show - 07 (1080p)" }],
+                { ...REQ, season: 2, episode: 7, absoluteEpisode: 58 }
+            )
+            .length,
+        1
+    );
 
     // Raising the per-request timeout changes nothing, because AnimeTosho is
     // the only source: a miss costs one AnimeTosho round-trip and returns

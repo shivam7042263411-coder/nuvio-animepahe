@@ -166,6 +166,18 @@ async function getTmdbInfo(tmdbId, mediaType) {
     var year = String(data.release_date || data.first_air_date || "").slice(0, 4);
     var lastSeason = toInt(data.number_of_seasons, 0);
     if (!lastSeason && Array.isArray(data.seasons)) lastSeason = data.seasons.length;
+    // Episode counts per season, for absolute-episode numbering. Same payload, no
+    // extra request.
+    var seasons = [];
+    if (Array.isArray(data.seasons)) {
+        for (var s = 0; s < data.seasons.length; s++) {
+            var row = data.seasons[s] || {};
+            seasons.push({
+                n: toInt(row.season_number, 0),
+                c: toInt(row.episode_count, 0)
+            });
+        }
+    }
 
     // JP-region alternative titles are the romaji Nyaa groups actually use
     // ("Shingeki no Kyojin"), so they lead the search. Non-fatal on failure.
@@ -188,7 +200,7 @@ async function getTmdbInfo(tmdbId, mediaType) {
         return tokenList(a).length - tokenList(b).length;
     });
 
-    return { kind: kind, titles: titles, jpTitles: jpTitles, year: year || null, lastSeason: lastSeason || null };
+    return { kind: kind, titles: titles, jpTitles: jpTitles, year: year || null, lastSeason: lastSeason || null, seasons: seasons };
 }
 
 // ---------------------------------------------------------------------------
@@ -334,6 +346,19 @@ function isBatch(title) {
     if (/(^|[^\d.])\d{1,4}\s*[-~–—]\s*\d{1,4}(?![\d.])/.test(rest)) return true;
     if (/\b\d{1,4}\s*\+\s*(?:ova|specials?|extras?|movies?)\b/i.test(rest)) return true;
     return false;
+}
+
+/** Absolute episode from TMDB's per-season episode counts. Fansub groups number
+ *  long-running anime continuously ("[HorribleSubs] Black Clover - 58"), while
+ *  TMDB/the app report a season-local number (S2E7), so the query needs both. */
+function absoluteEpisodeFrom(seasons, season, episode) {
+    if (!seasons || !seasons.length || !(season > 1)) return null;
+    var sum = 0;
+    for (var i = 0; i < seasons.length; i++) {
+        var s = seasons[i] || {};
+        if (s.n >= 1 && s.n < season) sum += toInt(s.c, 0);
+    }
+    return sum > 0 ? sum + episode : null;
 }
 
 /** Season hints, used to reject a different season's episode 1. */
@@ -574,12 +599,18 @@ function buildQueries(titles, req, year) {
     // page that omits the trusted groups' per-episode singles (seen live:
     // Jujutsu Kaisen 75 rows with zero SubsPlease; Re:Zero with zero
     // HorribleSubs). Querying each group by name surfaces them directly.
+    // Groups that number long-running anime continuously (HorribleSubs, SubsPlease)
+    // use the absolute episode, not the season-local one, so their query uses it.
+    var groupEp =
+        req.absoluteEpisode != null && req.absoluteEpisode !== req.episode
+            ? String(req.absoluteEpisode)
+            : pad2(req.episode);
     for (var g = 0; g < TRUSTED_GROUPS.length; g++) {
         push(
             TRUSTED_GROUPS[g] +
                 " " +
                 cleanTitle(titles[0]) +
-                (req.isMovie ? (year ? " " + year : "") : " " + pad2(req.episode))
+                (req.isMovie ? (year ? " " + year : "") : " " + groupEp)
         );
     }
     if (req.isMovie) {
@@ -618,6 +649,33 @@ function dropDeadReleases(list) {
         if (toInt(list[i].seeders, 0) > 0) live.push(list[i]);
     }
     return live.length ? live : list;
+}
+
+/** A group that numbered this show continuously (an absolute-episode release of
+ *  it is present) must not also offer its bare "- 07" for a season-2 episode 7 —
+ *  that file is season 1. Groups that restart numbering each season have no
+ *  absolute release here, so their "- 07" is kept.
+ *  shortcut: inferred per group from the candidates; a very long season whose
+ *  local episode equals the absolute one could tip it the wrong way. Revisit if a
+ *  show is reported as missing an episode. */
+function dropSeasonAmbiguity(list, req) {
+    if (req.absoluteEpisode == null || req.absoluteEpisode === req.episode) return list;
+    var usesAbsolute = {};
+    var i;
+    for (i = 0; i < list.length; i++) {
+        var e = episodeInfo(list[i].title);
+        if (e.episode === req.absoluteEpisode || e.absolute === req.absoluteEpisode) {
+            usesAbsolute[groupOf(list[i].title)] = true;
+        }
+    }
+    var out = [];
+    for (i = 0; i < list.length; i++) {
+        var t = episodeInfo(list[i].title);
+        var bare = t.season == null && t.absolute == null && t.episode === req.episode;
+        if (bare && usesAbsolute[groupOf(list[i].title)]) continue;
+        out.push(list[i]);
+    }
+    return out;
 }
 
 function matchCandidates(candidates, req) {
@@ -696,6 +754,13 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             absoluteEpisode: absoluteEpisode == null ? null : toInt(absoluteEpisode, null),
             lastSeason: info.lastSeason
         };
+        // TMDB reports season-local episodes, but most fansub groups number
+        // long-running anime continuously: Black Clover S2E7 is released as
+        // "[HorribleSubs] Black Clover - 58". Derive that absolute number from
+        // the season episode counts so both numbering schemes are searched.
+        if (req.absoluteEpisode == null && !req.isMovie) {
+            req.absoluteEpisode = absoluteEpisodeFrom(info.seasons, req.season, req.episode);
+        }
         var queries = buildQueries(titles, req, info.year);
 
         var candidates = [];
@@ -729,6 +794,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             })
         );
         var matched = matchCandidates(candidates, req);
+        matched = dropSeasonAmbiguity(matched, req);
         matched = prefer1080p(matched);
         matched = rankReleases(matched);
         matched = dropDeadReleases(matched);
