@@ -107,11 +107,11 @@ Each result is:
 
 ```js
 {
-  title: "Release name",
-  name: "AnimeTorrents · 1080p · Sub",
+  title: "Release name",                       // parsed for badges, not shown as the row label
+  name: "26↑ · [SubsPlease] Show - 08 (1080p)", // the row label Nuvio shows; must be per-release unique
   url: "magnet:?xt=urn:btih:<40-hex>",   // required non-blank
   infoHash: "<40-hex>",
-  quality: "1080p",
+  quality: "1080p",                           // "1080p HDR" when HDR; Nuvio shows this in the subtitle
   size: "1.4 GiB",
   language: "Sub",
   provider: "AnimeTorrents",
@@ -121,6 +121,11 @@ Each result is:
   subtitles: []
 }
 ```
+
+Nuvio's plugin bridge renders `name` as the bold row label and builds the row
+subtitle from `quality • size • language`. It never shows `title` (only parses it
+for badge rules), so every release puts its own name + seeder count in `name` —
+otherwise the whole list reads as identical rows.
 
 Nuvio adds its own tracker list; the scraper does not need to.
 

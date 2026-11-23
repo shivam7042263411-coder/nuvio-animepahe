@@ -293,8 +293,13 @@ check(
     check("SubsPlease ranks first", results[0] && results[0].infoHash, HASH.e);
     check("SubsPlease is labelled", results[0] && /SubsPlease/.test(results[0].name), true);
     check("HDR release is labelled", results[0] && /HDR/.test(results[0].name), true);
+    // Nuvio shows `name` as the row label and ignores `title`, so the release
+    // name must be in `name` (with a seeder count) or every row looks identical.
+    check("row labels are distinguishable", new Set(results.map((r) => r.name)).size, results.length);
+    check("label carries the release name and seeders", results[0] && /^\d+↑ · \[SubsPlease\]/.test(results[0].name), true);
+    check("HDR is in the quality label", results[0] && results[0].quality, "1080p HDR");
     // Only 1080p survives; a 90-seeder 720p must not reach the list.
-    check("only 1080p results", results.filter((r) => r.quality !== "1080p").length, 0);
+    check("only 1080p results", results.filter((r) => !/^1080p(?: HDR)?$/.test(r.quality || "")).length, 0);
     check("no 720p leak", results.filter((r) => /720p/.test(r.title)).length, 0);
     // AnimeTosho.org is frozen (no releases after 2026-05-09); the live successor
     // animetosho.xyz is queried alongside it, so both hosts must appear and no

@@ -596,26 +596,26 @@ function prefer1080p(list) {
 
 function makeResult(candidate) {
     var quality = parseQuality(candidate.title) || "";
+    var hdr = isHdr(candidate.title);
     var language = isDub(candidate.title) ? "Dub" : "Sub";
     var title = candidate.title.replace(/\.(mkv|mp4|avi|m4v)$/i, "").trim();
     if (title.length > 140) title = title.slice(0, 137) + "...";
+    var seeders = toInt(candidate.seeders, 0);
     return {
+        // Nuvio's plugin bridge renders `name` as the bold row label and builds
+        // the row subtitle from quality/size/language; `title` is only used for
+        // badge parsing, never shown. Every release therefore needs its own
+        // distinguishing name, or the whole list reads as identical rows.
+        name: (seeders ? seeders + "↑ · " : "") + title,
         title: title,
-        name:
-            "AnimeTorrents" +
-            (quality ? " · " + quality : "") +
-            (isHdr(candidate.title) ? " · HDR" : "") +
-            (isSubsPlease(candidate.title) ? " · SubsPlease" : "") +
-            " · " +
-            language,
         url: "magnet:?xt=urn:btih:" + candidate.hash,
         infoHash: candidate.hash,
-        quality: quality || null,
+        quality: quality ? quality + (hdr ? " HDR" : "") : null,
         size: candidate.size || null,
         language: language,
         provider: "AnimeTorrents",
         type: "torrent",
-        seeders: toInt(candidate.seeders, 0),
+        seeders: seeders,
         peers: null,
         subtitles: []
     };
