@@ -374,6 +374,39 @@ check(
     check("duplicate hash deduped", results.filter((r) => r.infoHash === ATS_MAIN).length, 1);
     check("sub and dub both labelled", [results.some((r) => r.language === "Sub"), results.some((r) => r.language === "Dub")], [true, true]);
     check("results are torrent type", results.every((r) => r.type === "torrent"), true);
+    // No extracted subtitle for this episode, so no extra track anywhere.
+    check("no subs index entry: no attached tracks", results.filter((r) => r.subtitles.length).length, 0);
+
+    // tools/grab-subs.mjs extracts a SubsPlease MKV's subtitle into this repo;
+    // the plugin attaches that .ass to the other groups' releases of the same
+    // episode. A URL ending in ".ass" is what makes Nuvio render it with libass.
+    const withSubs = (body) => ({
+        ok: true,
+        status: 200,
+        text: async () => body,
+        json: async () => JSON.parse(body),
+        headers: { get: () => null },
+    });
+    const subsSandbox = Object.assign({}, sandbox, {
+        module: { exports: {} },
+        fetch: async (url) => {
+            if (url.indexOf("subs/index.json") !== -1) return withSubs('{"393802":"subs/subsplease/393802.ass"}');
+            if (url.indexOf("animetosho") !== -1) return withSubs(ANIMETOSHO_HTML.replace(/\/view\/x/g, "/view/393802"));
+            return sandbox.fetch(url);
+        },
+    });
+    vm.createContext(subsSandbox);
+    vm.runInContext(source, subsSandbox);
+    const subbed = await subsSandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
+    const spRow = subbed.find((r) => /SubsPlease/.test(r.name));
+    const rawRows = subbed.filter((r) => !/SubsPlease/.test(r.name));
+    check("subs: not re-attached to the group that ships it", spRow && spRow.subtitles.length, 0);
+    check(
+        "subs: other groups get the extracted .ass",
+        rawRows.length === 2 && rawRows.every((r) => r.subtitles.length === 1 && /subs\/subsplease\/393802\.ass$/.test(r.subtitles[0].url)),
+        true
+    );
+    check("subs: attached track is labelled", rawRows[0] && rawRows[0].subtitles[0].name, "SubsPlease");
 
     // When AnimeTosho has nothing for the episode the lookup returns empty
     // rather than falling through to a source that never answers.

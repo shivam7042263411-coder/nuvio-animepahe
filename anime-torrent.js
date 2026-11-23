@@ -25,6 +25,15 @@ var KITSU_BASE = "https://kitsu.io/api/edge";
 var ANIMETOSHO_HOSTS = ["animetosho.xyz", "animetosho.org"];
 var MAX_RESULTS = 10;
 
+// SubsPlease's subtitles are shipped inside its MKV, where nothing can read
+// them. They are extracted once into plain .ass files in this repo (tools/
+// grab-subs.mjs) and attached to every other group's release of the same
+// episode, so their typeset styling is available on any raw. Nuvio only treats
+// a subtitle as ASS when the URL ends in ".ass" (PlayerSubtitleUtils
+// .mimeTypeFromUrl), which those files do.
+var SUBS_BASE = "https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/";
+var subsIndex = null;
+
 // Nuvio kills a plugin after 60s. A blocked host (ISP blackhole, firewall)
 // never settles a fetch, so every request needs its own ceiling or the whole
 // lookup dies before any source answers.
@@ -540,12 +549,15 @@ function parseAnimeTosho(html) {
         if (!hashM) continue;
         var hash = hashM[1].length === 40 ? hashM[1].toLowerCase() : base32ToHex(hashM[1]);
         if (!hash || !/^[0-9a-f]{40}$/.test(hash)) continue;
+        // The release page id addresses its extracted subtitles (subs/index.json).
+        var viewM = block.match(/\/view\/(\d+)/);
         out.push({
             title: title,
             hash: hash,
             seeders: seedM ? toInt(seedM[1], 0) : 0,
             size: sizeM ? decodeEntities(sizeM[1]).trim() : null,
-            source: "AnimeTosho"
+            source: "AnimeTosho",
+            view: viewM ? viewM[1] : null
         });
     }
     return out;
@@ -588,6 +600,24 @@ async function searchSource(search, label, query) {
         console.error("[AnimeTorrents] " + label + " '" + query + "' failed: " + (e && e.message));
         return [];
     }
+}
+
+/** view id -> "subs/subsplease/<id>.ass" for the episodes whose SubsPlease
+ *  subtitles were extracted. One request per lookup; a miss only means no extra
+ *  track, never a failed lookup. */
+async function loadSubsIndex() {
+    if (subsIndex) return subsIndex;
+    subsIndex = {};
+    try {
+        var res = await withTimeout(
+            fetch(SUBS_BASE + "subs/index.json", { headers: { "User-Agent": UA } }),
+            "subs index"
+        );
+        if (res.ok) subsIndex = (await res.json()) || {};
+    } catch (e) {
+        console.log("[AnimeTorrents] subs index unavailable: " + ((e && e.message) || e));
+    }
+    return subsIndex;
 }
 
 // ---------------------------------------------------------------------------
@@ -745,13 +775,16 @@ function prefer1080p(list) {
     return hd.length ? hd : list;
 }
 
-function makeResult(candidate, rank) {
+function makeResult(candidate, rank, subtitleUrl) {
     var quality = parseQuality(candidate.title) || "";
     var hdr = isHdr(candidate.title);
     var language = isDub(candidate.title) ? "Dub" : "Sub";
     var title = candidate.title.replace(/\.(mkv|mp4|avi|m4v)$/i, "").trim();
     if (title.length > 140) title = title.slice(0, 137) + "...";
     var seeders = toInt(candidate.seeders, 0);
+    // SubsPlease/HorribleSubs files already carry these subtitles, so the
+    // extracted copy is only an extra track on everyone else's release.
+    var embeddedSubs = /^(SubsPlease|HorribleSubs)$/i.test(groupOf(candidate.title));
     return {
         // Nuvio's plugin bridge renders `name` as the bold row label (subtitle
         // comes from quality/size/language; `title` is never shown) and then
@@ -771,7 +804,10 @@ function makeResult(candidate, rank) {
         type: "torrent",
         seeders: seeders,
         peers: null,
-        subtitles: []
+        subtitles:
+            subtitleUrl && !embeddedSubs
+                ? [{ url: subtitleUrl, language: "en", name: "SubsPlease" }]
+                : []
     };
 }
 
@@ -848,8 +884,17 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         matched = rankReleases(matched);
         matched = dropDeadReleases(matched);
 
+        // The first index hit wins, and `matched` is already ranked, so that is
+        // the most trusted group's file (SubsPlease before anyone else).
+        var extraSub = null;
+        var idx = await loadSubsIndex();
+        for (var s = 0; s < matched.length && !extraSub; s++) {
+            var subsPath = idx[matched[s].view];
+            if (subsPath) extraSub = SUBS_BASE + subsPath;
+        }
+
         for (var n = 0; n < matched.length && results.length < MAX_RESULTS; n++) {
-            results.push(makeResult(matched[n], n + 1));
+            results.push(makeResult(matched[n], n + 1, extraSub));
         }
         console.log(
             "[AnimeTorrents] S" + req.season + "E" + req.episode +

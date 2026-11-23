@@ -146,7 +146,7 @@ Each result is:
   type: "torrent",
   seeders: 26,
   peers: null,
-  subtitles: []
+  subtitles: []                          // [{ url, language, name }] when one is extracted
 }
 ```
 
@@ -162,6 +162,32 @@ that reproduces our order under a plain string sort (a `852↑ …`/`30↑ …` 
 sorted "30↑" first). SubsPlease therefore always stays at `01 · `.
 
 Nuvio adds its own tracker list; the scraper does not need to.
+
+## SubsPlease subtitles on other groups' releases
+
+SubsPlease ships its typeset `.ass` inside the MKV, and nothing inside the plugin
+can read it out: AnimeTosho's copy is xz-compressed and QuickJS has no xz
+decoder. So the files are extracted once, offline, into `subs/` and the plugin
+attaches the extracted `.ass` to *every other group's* release of the same
+episode. Nuvio renders a subtitle with libass only when the URL path ends in
+`.ass`, which is why these are committed to this repo and served raw.
+
+```
+node tools/grab-subs.mjs "Bocchi the Rock" 1     # search AnimeTosho, extract, index
+node tools/grab-subs.mjs --view 393812           # or straight from a release page
+```
+
+It writes `subs/subsplease/<view>.ass` and adds `<view>` to `subs/index.json`.
+The plugin reads that index once per lookup (one extra request, failure is
+harmless) and looks up the release ids of the results it already matched, so an
+episode without an extracted file simply gets no extra track. SubsPlease and
+HorribleSubs rows are skipped because their MKV already carries the same file.
+
+Caveats: the match is by episode, not by video, so the extra track is only
+frame-accurate when the raw shares the same script (measured on
+`Bocchi the Rock!` S01E01: all 519 dialogue lines and timings identical between
+SubsPlease and Erai-raws, only the style table differs). Files in `subs/` are
+redistributed fansub work; the repo is public, which is your call.
 
 ## Limits
 
@@ -182,6 +208,8 @@ Nuvio adds its own tracker list; the scraper does not need to.
 | `anime-torrent.js` | The scraper (`getStreams`) |
 | `manifest.json` | Repository manifest read by Nuvio |
 | `selftest.js` | Offline checks: matching, hash decoding, result shape |
+| `subs/index.json` | Release id → extracted `.ass` used for the extra subtitle track |
+| `tools/grab-subs.mjs` | Extracts a SubsPlease `.ass` out of AnimeTosho into `subs/` |
 
 Run the self-check:
 
