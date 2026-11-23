@@ -74,8 +74,11 @@ The matcher is deliberately strict:
 - OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
   "Kanketsu-hen" finale specials are rejected.
 - "The Final Season" is mapped to TMDB's last season.
-- `SubsPlease` releases rank first at any quality (trusted English subs); then
-  `1080p` over `720p`; sub ranks above dub; seeders break ties.
+- Only `1080p` releases are returned; `1080p HDR` is included and labelled
+  `· HDR`. If a show has no 1080p at all, the full set is used as a fallback so
+  the list is never empty.
+- Within 1080p, `SubsPlease` ranks first (trusted English subs); sub ranks above
+  dub; seeders break ties.
 
 Two AnimeTosho hosts are queried in parallel and merged by info hash:
 `animetosho.xyz` (the community successor, live) and `animetosho.org` (frozen on

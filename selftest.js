@@ -74,9 +74,10 @@ function toshoEntry(title, hash, seeders, size) {
 const ANIMETOSHO_HTML =
     "<html><body>" +
     toshoEntry("[Group] Attack on Titan - S01E01 [1080p]", ATS_MAIN, 7, "1.4 GB") +
-    toshoEntry("[Group] Attack on Titan S01E01 [720p] [Dubbed]", HASH.b, 5, "700 MB") +
+    toshoEntry("[Group] Attack on Titan S01E01 [1080p] [Dubbed]", HASH.b, 5, "1.3 GB") +
     toshoEntry("[Group] Attack on Titan - S01E01 [1080p]", ATS_MAIN, 7, "1.4 GB") +
-    toshoEntry("[SubsPlease] Attack on Titan - S01E01 (720p)", HASH.e, 3, "500 MB") +
+    toshoEntry("[SubsPlease] Attack on Titan - 01 (1080p) [HDR]", HASH.e, 3, "900 MB") +
+    toshoEntry("[Group] Attack on Titan - S01E01 [720p]", HASH.g, 90, "400 MB") +
     toshoEntry("[Group] Attack on Titan S02E05 [1080p]", HASH.c, 99, "1 GB") +
     toshoEntry("[Erai-raws] Attack on Titan Season 1 (01-25) [1080p] Complete", HASH.d, 80, "20 GB") +
     toshoEntry("[Group] Attack on Titan OVA - 01 [1080p]", HASH.f, 50, "1 GB") +
@@ -224,7 +225,7 @@ check(
     "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9"
 );
 const tosho = sandbox.parseAnimeTosho(ANIMETOSHO_HTML);
-check("animetosho parse: all rows", tosho.length, 7);
+check("animetosho parse: all rows", tosho.length, 8);
 check("animetosho parse: hex hash", tosho[0] && tosho[0].hash, ATS_MAIN);
 check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
 
@@ -266,6 +267,23 @@ check(
     true
 );
 
+// --- HDR / 1080p-only filter ----------------------------------------------
+check("HDR: HDR10+ detected", sandbox.isHdr("[SubsPlease] Show - 01 (1080p) [HDR10+]"), true);
+check("HDR: bare HDR detected", sandbox.isHdr("Show S01E01 1080p HDR"), true);
+check("HDR: Dolby Vision detected", sandbox.isHdr("Show 1080p Dolby Vision"), true);
+check("HDR: HDRip is not HDR", sandbox.isHdr("Show 1080p HDRip"), false);
+check("HDR: plain 1080p is not HDR", sandbox.isHdr("Show S01E01 1080p"), false);
+check(
+    "prefer1080p: drops 720p when a 1080p exists",
+    sandbox.prefer1080p([{ title: "A 1080p" }, { title: "B 720p" }]).map((r) => r.title),
+    ["A 1080p"]
+);
+check(
+    "prefer1080p: falls back when there is no 1080p",
+    sandbox.prefer1080p([{ title: "B 720p" }]).map((r) => r.title),
+    ["B 720p"]
+);
+
 // --- end to end ------------------------------------------------------------
 (async () => {
     requested.length = 0;
@@ -274,6 +292,10 @@ check(
     check("returns the episode 1 releases from AnimeTosho", results.length, 3);
     check("SubsPlease ranks first", results[0] && results[0].infoHash, HASH.e);
     check("SubsPlease is labelled", results[0] && /SubsPlease/.test(results[0].name), true);
+    check("HDR release is labelled", results[0] && /HDR/.test(results[0].name), true);
+    // Only 1080p survives; a 90-seeder 720p must not reach the list.
+    check("only 1080p results", results.filter((r) => r.quality !== "1080p").length, 0);
+    check("no 720p leak", results.filter((r) => /720p/.test(r.title)).length, 0);
     // AnimeTosho.org is frozen (no releases after 2026-05-09); the live successor
     // animetosho.xyz is queried alongside it, so both hosts must appear and no
     // dead source (nyaa.si here) may be touched.

@@ -277,6 +277,11 @@ function isSubsPlease(title) {
     return /\bsubs\s?please\b/i.test(String(title));
 }
 
+/** HDR markers, kept as whole tokens so "HDRip"/"DVDRip" do not match. */
+function isHdr(title) {
+    return /\b(?:hdr10\+?|hdr|hlg|dolby[\s.]?vision|dovi)\b/i.test(String(title));
+}
+
 // SubsPlease is the trusted-sub tier and must outrank everything: its titles use
 // "- 08" rather than "S01E08", so they miss the +60 exact-season bonus that other
 // releases get. The largest score a non-SubsPlease release can reach is
@@ -579,6 +584,16 @@ function matchCandidates(candidates, req) {
     return matched;
 }
 
+/** The user wants 1080p only (including 1080p HDR). Falls back to the full set
+ *  when a show has no 1080p release, so the list is never emptied. */
+function prefer1080p(list) {
+    var hd = [];
+    for (var i = 0; i < list.length; i++) {
+        if (parseQuality(list[i].title) === "1080p") hd.push(list[i]);
+    }
+    return hd.length ? hd : list;
+}
+
 function makeResult(candidate) {
     var quality = parseQuality(candidate.title) || "";
     var language = isDub(candidate.title) ? "Dub" : "Sub";
@@ -589,6 +604,7 @@ function makeResult(candidate) {
         name:
             "AnimeTorrents" +
             (quality ? " · " + quality : "") +
+            (isHdr(candidate.title) ? " · HDR" : "") +
             (isSubsPlease(candidate.title) ? " · SubsPlease" : "") +
             " · " +
             language,
@@ -664,6 +680,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             })
         );
         var matched = matchCandidates(candidates, req);
+        matched = prefer1080p(matched);
 
         matched.sort(function (a, b) {
             if (b.score !== a.score) return b.score - a.score;
