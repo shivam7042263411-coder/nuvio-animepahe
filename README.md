@@ -73,6 +73,8 @@ The matcher is deliberately strict:
   `01 ~ 12`, `S1-S4`, `(01-25)`.
 - OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
   "Kanketsu-hen" finale specials are rejected.
+- Fractional episode numbers (`11.5`, `12.5`) are OVAs and never satisfy episode
+  `11`/`12` (found live on Hyouka, where only the 11.5 OVA had a 1080p file).
 - "The Final Season" is mapped to TMDB's last season.
 - Only `1080p` releases are returned; `1080p HDR` is included and labelled
   `· HDR`. If a show has no 1080p at all, the full set is used as a fallback so

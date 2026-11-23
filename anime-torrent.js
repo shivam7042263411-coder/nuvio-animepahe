@@ -379,13 +379,13 @@ function seasonHints(title) {
 function episodeInfo(title) {
     var t = String(title);
     var info = { season: null, episode: null, absolute: null };
-    var m = t.match(/\bS(\d{1,2})\s*E(?:P)?\s*(\d{1,4})(?:v\d)?\b/i);
+    var m = t.match(/\bS(\d{1,2})\s*E(?:P)?\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
     if (m) {
         info.season = toInt(m[1], null);
         info.episode = toInt(m[2], null);
     }
     if (info.episode == null) {
-        m = t.match(/\bS(\d{1,2})\s*[-_ ]\s*(\d{1,4})(?:v\d)?\b/i);
+        m = t.match(/\bS(\d{1,2})\s*[-_ ]\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
         if (m) {
             info.season = toInt(m[1], null);
             info.episode = toInt(m[2], null);
@@ -393,22 +393,23 @@ function episodeInfo(title) {
     }
     if (info.episode == null) {
         m =
-            t.match(/\bSeason\s*(\d{1,2})\s*(?:Episode|Ep\.?|E)\s*(\d{1,4})(?:v\d)?\b/i) ||
-            t.match(/\bSeason\s*(\d{1,2})\s*[-–—:]\s*(\d{1,4})(?:v\d)?\b/i);
+            t.match(/\bSeason\s*(\d{1,2})\s*(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i) ||
+            t.match(/\bSeason\s*(\d{1,2})\s*[-–—:]\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
         if (m) {
             info.season = toInt(m[1], null);
             info.episode = toInt(m[2], null);
         }
     }
     if (info.episode == null) {
-        m = t.match(/\b(?:Episode|Ep\.?|E)\s*(\d{1,4})(?:v\d)?\b/i);
+        m = t.match(/\b(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
         if (m) info.episode = toInt(m[1], null);
     }
     if (info.episode == null) {
         m =
-            t.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
-            t.match(/[\[\(](\d{1,3})(?:v\d)?[\]\)]/) ||
-            t.match(/(?:^|[\s_])(\d{1,3})(?:v\d)?(?=[\s_]*[\[\(])/);
+            // "(?!\.\d)" keeps "11.5" (an OVA/recap) from parsing as episode 11.
+            t.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?!\.\d)(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
+            t.match(/[\[\(](\d{1,3})(?!\.\d)(?:v\d)?[\]\)]/) ||
+            t.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(])/);
         if (m) info.episode = toInt(m[1], null);
     }
     var abs = t.match(/\((\d{1,4})\)/);

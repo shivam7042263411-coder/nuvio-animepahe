@@ -178,6 +178,20 @@ check(
     sandbox.episodeInfo("[EMBER] Attack on Titan The Final Season (Season 4 | part 01) [1080p]").episode,
     null
 );
+// "11.5" is an OVA/recap, not episode 11 (found live on Hyouka).
+check("episode: 11.5 is not episode 11", sandbox.episodeInfo("[Commie] Hyouka - 11.5 [BD 1080p AAC]").episode, null);
+check(
+    "match: fractional episode does not satisfy its integer",
+    sandbox.matchesRequest("[Commie] Hyouka - 11.5 [BD 1080p AAC]", {
+        titles: ["Hyouka"],
+        isMovie: false,
+        season: 1,
+        episode: 11,
+        absoluteEpisode: null,
+        lastSeason: null,
+    }),
+    false
+);
 
 // --- request matching ------------------------------------------------------
 check("match: correct episode", sandbox.matchesRequest("Attack on Titan S01E01 [1080p]", REQ), true);
