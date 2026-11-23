@@ -115,8 +115,8 @@ Each result is:
 
 ```js
 {
-  title: "Release name",                       // parsed for badges, not shown as the row label
-  name: "26↑ · [SubsPlease] Show - 08 (1080p)", // the row label Nuvio shows; must be per-release unique
+  title: "Release name",                        // parsed for badges, not shown as the row label
+  name: "01 · 26↑ · [SubsPlease] Show - 08 (1080p)", // row label; the leading rank keeps our order
   url: "magnet:?xt=urn:btih:<40-hex>",   // required non-blank
   infoHash: "<40-hex>",
   quality: "1080p",                           // "1080p HDR" when HDR; Nuvio shows this in the subtitle
@@ -132,8 +132,14 @@ Each result is:
 
 Nuvio's plugin bridge renders `name` as the bold row label and builds the row
 subtitle from `quality • size • language`. It never shows `title` (only parses it
-for badge rules), so every release puts its own name + seeder count in `name` —
-otherwise the whole list reads as identical rows.
+for badge rules), so every release puts its own name + seeder count in `name`.
+
+Crucially, Nuvio then **re-sorts every plugin row** with
+`List<StreamItem>.sortedForGroupedDisplay()` — a plain case-insensitive
+alphabetical sort on the label (grouped after `sourceName`). Our ranking would be
+thrown away by that sort, so the label carries a zero-padded `NN · ` rank prefix
+that reproduces our order under a plain string sort (a `852↑ …`/`30↑ …` label
+sorted "30↑" first). SubsPlease therefore always stays at `01 · `.
 
 Nuvio adds its own tracker list; the scraper does not need to.
 

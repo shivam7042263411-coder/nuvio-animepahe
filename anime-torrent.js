@@ -640,7 +640,7 @@ function prefer1080p(list) {
     return hd.length ? hd : list;
 }
 
-function makeResult(candidate) {
+function makeResult(candidate, rank) {
     var quality = parseQuality(candidate.title) || "";
     var hdr = isHdr(candidate.title);
     var language = isDub(candidate.title) ? "Dub" : "Sub";
@@ -648,11 +648,14 @@ function makeResult(candidate) {
     if (title.length > 140) title = title.slice(0, 137) + "...";
     var seeders = toInt(candidate.seeders, 0);
     return {
-        // Nuvio's plugin bridge renders `name` as the bold row label and builds
-        // the row subtitle from quality/size/language; `title` is only used for
-        // badge parsing, never shown. Every release therefore needs its own
-        // distinguishing name, or the whole list reads as identical rows.
-        name: (seeders ? seeders + "↑ · " : "") + title,
+        // Nuvio's plugin bridge renders `name` as the bold row label (subtitle
+        // comes from quality/size/language; `title` is never shown) and then
+        // re-sorts every plugin row with `List<StreamItem>.sortedForGroupedDisplay()`,
+        // which is a plain case-insensitive alphabetical sort on this label. Our
+        // ranking therefore has to be baked into the label's sort order, or Nuvio
+        // throws it away (a seeder-prefixed label sorted "30↑" before "852↑").
+        // The zero-padded rank prefix keeps our order intact through that sort.
+        name: pad2(rank) + " · " + (seeders ? seeders + "↑ · " : "") + title,
         title: title,
         url: "magnet:?xt=urn:btih:" + candidate.hash,
         infoHash: candidate.hash,
@@ -731,7 +734,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         matched = dropDeadReleases(matched);
 
         for (var n = 0; n < matched.length && results.length < MAX_RESULTS; n++) {
-            results.push(makeResult(matched[n]));
+            results.push(makeResult(matched[n], n + 1));
         }
         console.log(
             "[AnimeTorrents] S" + req.season + "E" + req.episode +

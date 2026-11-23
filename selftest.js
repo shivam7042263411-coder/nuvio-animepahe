@@ -303,8 +303,22 @@ check(
     // Nuvio shows `name` as the row label and ignores `title`, so the release
     // name must be in `name` (with a seeder count) or every row looks identical.
     check("row labels are distinguishable", new Set(results.map((r) => r.name)).size, results.length);
-    check("label carries the release name and seeders", results[0] && /^\d+↑ · \[SubsPlease\]/.test(results[0].name), true);
+    check("label carries the release name and seeders", results[0] && /^01 · \d+↑ · \[SubsPlease\]/.test(results[0].name), true);
     check("HDR is in the quality label", results[0] && results[0].quality, "1080p HDR");
+    // Nuvio re-sorts every plugin row with sortedForGroupedDisplay(), a plain
+    // case-insensitive alphabetical sort on `name`. Our ranking must survive it,
+    // so apply the exact same sort and assert the order is unchanged.
+    const asNuvioSorts = () =>
+        results
+            .map((r) => r.name)
+            .slice()
+            .sort((a, b) => {
+                const x = a.toLowerCase();
+                const y = b.toLowerCase();
+                return x < y ? -1 : x > y ? 1 : 0;
+            });
+    check("order survives Nuvio's alphabetical sort", asNuvioSorts(), results.map((r) => r.name));
+    check("SubsPlease stays first after that sort", /SubsPlease/.test(asNuvioSorts()[0]), true);
     // Only 1080p survives; a 90-seeder 720p must not reach the list.
     check("only 1080p results", results.filter((r) => !/^1080p(?: HDR)?$/.test(r.quality || "")).length, 0);
     check("no 720p leak", results.filter((r) => /720p/.test(r.title)).length, 0);
