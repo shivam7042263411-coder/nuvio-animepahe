@@ -70,7 +70,8 @@ The matcher is deliberately strict:
   `01v2`, `[01]`, or the absolute number in `(60)`.
 - A different season is rejected (`S02E05` for a season 1 request).
 - Season packs and batches are rejected: `Batch`, `Complete`, `01-12`,
-  `01 ~ 12`, `S1-S4`, `(01-25)`.
+  `01 ~ 12`, `S1-S4`, `(01-25)`, and a bare season marker with no episode
+  (`Season 01 (S01)`), which otherwise read as episode 1.
 - OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
   "Kanketsu-hen" finale specials are rejected.
 - Fractional episode numbers (`11.5`, `12.5`) are OVAs and never satisfy episode
@@ -79,16 +80,26 @@ The matcher is deliberately strict:
 - Only `1080p` releases are returned; `1080p HDR` is included and labelled
   `· HDR`. If a show has no 1080p at all, the full set is used as a fallback so
   the list is never empty.
-- Ranking is tiered by release group: `SubsPlease` first, then `HorribleSubs`
-  (its predecessor; still the only tagged source for pre-2021 back-catalogue),
-  then `AnoZu` and `EMBER`, then everything else. Within a tier, score decides
-  (1080p > 720p, sub > dub), then seeders break ties. Other groups (`Erai-raws`,
-  `DKB`, `Judas`, `ASW`, ...) still appear, just below the trusted tier.
-- Each lookup queries **every trusted group by name** first
+- Ranking is tiered by release group, most wanted first: `SubsPlease`,
+  `HorribleSubs`, `AnoZu`, `EMBER`, then `Judas`, `DKB`, `Yameii`, `Anime Time`,
+  then everything else. The first four are the original trusted tier; the next
+  four were added for their **typeset subtitles** (the styling lives inside the
+  MKV, so ranking is the only lever the plugin has — Erai-raws and similar just
+  mux plain Crunchyroll subs). Within a tier, score decides (1080p > 720p,
+  sub > dub), then seeders break ties.
+- Each lookup queries the **leading four groups by name** first
   (`SubsPlease <title> <ep>`, `HorribleSubs <title> <ep>`, ...). A generic
   `<title> <episode>` search returns a capped, relevance-ranked page that omits
   the trusted groups' per-episode singles (Jujutsu Kaisen: 75 rows, zero
   SubsPlease; Re:Zero: zero HorribleSubs), so the groups are queried directly.
+  Only four are named because each query is a request per host and the index
+  answers HTTP 429 when too many hit it at once (that silently emptied the list
+  live); the lower tier still ranks high when the generic search finds it.
+- The generic searches are never trimmed to make room for the named ones. They
+  are the only source for shows no trusted group released (Hyouka, 2012), and
+  trimming them emptied the list.
+- A 429 gets one retry after a pause, and each host is queried in waves of three
+  rather than all at once.
 - Long-running anime are numbered two ways. The app reports a season-local
   episode (TMDB `Black Clover` S2E7), but the release names count continuously
   (`[HorribleSubs] Black Clover - 58`). The absolute episode is derived from

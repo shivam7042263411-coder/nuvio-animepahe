@@ -289,17 +289,22 @@ function isHdr(title) {
     return /\b(?:hdr10\+?|hdr|hlg|dolby[\s.]?vision|dovi)\b/i.test(String(title));
 }
 
-// Trusted English-sub groups, most wanted first: SubsPlease, then the reliable
-// The release groups the user wants ranked first, most wanted first. Ranking is
-// tiered because these groups name episodes "- 08" rather than "S01E08" and so
-// miss the +60 exact-season bonus that other releases get. HorribleSubs is
-// SubsPlease's predecessor (dead since 2021, but still the only tagged source
-// for pre-2021 back-catalogue).
+// Release groups ranked first, most wanted first. The user's priority here is
+// SUBTITLE STYLING: SubsPlease (and its predecessor HorribleSubs) do their own
+// typesetting with embedded fonts, while groups like Erai-raws just mux the raw
+// Crunchyroll subs, which looks plain. Styling lives inside the MKV, so the only
+// lever the plugin has is which release it offers — hence a tier of groups known
+// for typeset subs. Ranking is tiered (not just scored) because these groups name
+// episodes "- 08" rather than "S01E08" and so miss the +60 exact-season bonus.
 var TRUSTED_GROUPS = [
     "SubsPlease",
     "HorribleSubs",
     "AnoZu",
-    "EMBER"
+    "EMBER",
+    "Judas",
+    "DKB",
+    "Yameii",
+    "Anime Time"
 ];
 
 /** Release group: the leading [Tag], else a trailing -Tag. */
@@ -405,11 +410,18 @@ function episodeInfo(title) {
         if (m) info.episode = toInt(m[1], null);
     }
     if (info.episode == null) {
+        // A bare season marker ("Season 01 (S01)") is a season pack, not an
+        // episode: strip it first so its number is not read as episode 1
+        // (found live on "[SubsMix] Bocchi the Rock! - Season 01 (S01) V4").
+        var rest = t
+            .replace(/\bSeason\s*\d{1,2}\b/gi, " ")
+            .replace(/\(\s*S\d{1,2}\s*\)/gi, " ")
+            .replace(/\bS\d{1,2}\b/gi, " ");
         m =
             // "(?!\.\d)" keeps "11.5" (an OVA/recap) from parsing as episode 11.
-            t.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?!\.\d)(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
-            t.match(/[\[\(](\d{1,3})(?!\.\d)(?:v\d)?[\]\)]/) ||
-            t.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(])/);
+            rest.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?!\.\d)(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
+            rest.match(/[\[\(](\d{1,3})(?!\.\d)(?:v\d)?[\]\)]/) ||
+            rest.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(])/);
         if (m) info.episode = toInt(m[1], null);
     }
     var abs = t.match(/\((\d{1,4})\)/);
@@ -539,15 +551,30 @@ function parseAnimeTosho(html) {
     return out;
 }
 
+/** Short wait, used to back off when the index rate-limits a burst. */
+function delay(ms) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, ms);
+    });
+}
+
 async function animetoshoSearch(host, query) {
     var url =
         "https://" + host + "/search?q=" + encodeURIComponent(query) + "&type=torrent&order=seeders";
-    var res = await withTimeout(
-        fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } }),
-        "AnimeTosho " + host
-    );
-    if (!res.ok) throw new Error("AnimeTosho " + host + " HTTP " + res.status);
-    return parseAnimeTosho(await res.text());
+    for (var attempt = 0; ; attempt++) {
+        var res = await withTimeout(
+            fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } }),
+            "AnimeTosho " + host
+        );
+        // A burst of queries gets 429s, which would silently empty the list, so
+        // one retry after a pause keeps the lookup whole. Nuvio allows 60s.
+        if (res.status === 429 && attempt < 1) {
+            await delay(1500);
+            continue;
+        }
+        if (!res.ok) throw new Error("AnimeTosho " + host + " HTTP " + res.status);
+        return parseAnimeTosho(await res.text());
+    }
 }
 
 /** One source/query pair. A failure returns [] so the other sources still
@@ -589,45 +616,64 @@ function cleanTitle(t) {
     return String(t).replace(/[\[\](){}]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+// Each query is one request per host, sent in waves, so this bounds the fan-out.
+var QUERY_LIMIT = 12;
+
+// Only the tier's leaders are queried by name. Each named query is one request
+// per host, and the index answers 429 when too many hit it at once — the generic
+// searches must fit in that budget too, and they already surface the lower
+// groups (DKB, Judas, Yameii) when they rank.
+var QUERY_GROUPS = TRUSTED_GROUPS.slice(0, 4);
+
 function buildQueries(titles, req, year) {
-    var qs = [];
-    function push(q) {
+    if (!titles.length) return [];
+    var seen = {};
+    function add(list, q) {
         q = String(q || "").replace(/\s+/g, " ").trim();
-        if (q && qs.indexOf(q) === -1) qs.push(q);
+        if (!q || seen[q]) return;
+        seen[q] = true;
+        list.push(q);
     }
-    if (!titles.length) return qs;
     // A generic "<title> <episode>" search returns a capped, relevance-ranked
     // page that omits the trusted groups' per-episode singles (seen live:
     // Jujutsu Kaisen 75 rows with zero SubsPlease; Re:Zero with zero
     // HorribleSubs). Querying each group by name surfaces them directly.
+    var groups = [];
     // Groups that number long-running anime continuously (HorribleSubs, SubsPlease)
     // use the absolute episode, not the season-local one, so their query uses it.
     var groupEp =
         req.absoluteEpisode != null && req.absoluteEpisode !== req.episode
             ? String(req.absoluteEpisode)
             : pad2(req.episode);
-    for (var g = 0; g < TRUSTED_GROUPS.length; g++) {
-        push(
-            TRUSTED_GROUPS[g] +
+    for (var g = 0; g < QUERY_GROUPS.length; g++) {
+        add(
+            groups,
+            QUERY_GROUPS[g] +
                 " " +
                 cleanTitle(titles[0]) +
                 (req.isMovie ? (year ? " " + year : "") : " " + groupEp)
         );
     }
+    var generic = [];
     if (req.isMovie) {
         for (var i = 0; i < titles.length; i++) {
-            if (year) push(titles[i] + " " + year);
-            push(titles[i]);
+            if (year) add(generic, titles[i] + " " + year);
+            add(generic, titles[i]);
         }
     } else {
-        push(titles[0] + " S" + pad2(req.season) + "E" + pad2(req.episode));
-        push(titles[0] + " " + pad2(req.episode));
+        add(generic, titles[0] + " S" + pad2(req.season) + "E" + pad2(req.episode));
+        add(generic, titles[0] + " " + pad2(req.episode));
         if (req.absoluteEpisode != null && req.absoluteEpisode !== req.episode) {
-            push(titles[0] + " " + req.absoluteEpisode);
+            add(generic, titles[0] + " " + req.absoluteEpisode);
         }
-        if (titles[1]) push(titles[1] + " " + pad2(req.episode));
+        if (titles[1]) add(generic, titles[1] + " " + pad2(req.episode));
     }
-    return qs.slice(0, 8);
+    // The generic searches are the only source for everything outside the
+    // trusted tier (Hyouka: the group queries matched nothing, and when they
+    // filled the cap the generic ones were dropped, emptying the list), so the
+    // groups are the ones trimmed.
+    var room = Math.max(2, QUERY_LIMIT - generic.length);
+    return groups.slice(0, room).concat(generic);
 }
 
 function addCandidates(list, out, seen) {
@@ -769,29 +815,31 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
 
         // A blocked or dead host never settles its fetch and the QuickJS runtime
         // keeps the evaluation alive while that async job is outstanding, so every
-        // request is bounded by withTimeout and all hosts/queries run in parallel.
-        // The two hosts mirror the same index, so a slow one cannot stall the
-        // lookup or hide the results the other already produced.
-        async function querySource(search, label, count) {
-            var jobs = [];
-            for (var i = 0; i < Math.min(queries.length, count); i++) {
-                jobs.push(searchSource(search, label, queries[i]));
-            }
-            var batches = await Promise.all(jobs);
-            for (var b = 0; b < batches.length; b++) {
-                addCandidates(batches[b], candidates, seen);
+        // request is bounded by withTimeout. The two hosts mirror the same index,
+        // so a slow one cannot stall the lookup or hide the results the other
+        // already produced.
+        // The index answers 429 when every query hits it at once (seen live with
+        // 10 parallel requests, which silently emptied the result list), so each
+        // host is queried in small waves. Nuvio allows 60s per plugin call.
+        var CONCURRENCY = 3;
+        async function querySource(search, label) {
+            for (var i = 0; i < queries.length; i += CONCURRENCY) {
+                var jobs = [];
+                for (var j = i; j < Math.min(queries.length, i + CONCURRENCY); j++) {
+                    jobs.push(searchSource(search, label, queries[j]));
+                }
+                var batches = await Promise.all(jobs);
+                for (var b = 0; b < batches.length; b++) {
+                    addCandidates(batches[b], candidates, seen);
+                }
             }
         }
 
         await Promise.all(
             ANIMETOSHO_HOSTS.map(function (host) {
-                return querySource(
-                    function (query) {
-                        return animetoshoSearch(host, query);
-                    },
-                    "animetosho:" + host,
-                    queries.length
-                );
+                return querySource(function (query) {
+                    return animetoshoSearch(host, query);
+                }, "animetosho:" + host);
             })
         );
         var matched = matchCandidates(candidates, req);

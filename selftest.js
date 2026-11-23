@@ -180,6 +180,12 @@ check(
 );
 // "11.5" is an OVA/recap, not episode 11 (found live on Hyouka).
 check("episode: 11.5 is not episode 11", sandbox.episodeInfo("[Commie] Hyouka - 11.5 [BD 1080p AAC]").episode, null);
+// A bare season marker is a season pack, not episode 1 (found live on Bocchi).
+check(
+    "episode: 'Season 01 (S01)' pack has no episode",
+    sandbox.episodeInfo("[SubsMix] Bocchi the Rock! - Season 01 (S01) V4 (BD 1080p HEVC Opus 2.0)").episode,
+    null
+);
 check(
     "match: fractional episode does not satisfy its integer",
     sandbox.matchesRequest("[Commie] Hyouka - 11.5 [BD 1080p AAC]", {
@@ -288,8 +294,14 @@ check("trusted: SubsPlease is rank 0", sandbox.trustedRank("[SubsPlease] X - 01"
 check("trusted: HorribleSubs is rank 1", sandbox.trustedRank("[HorribleSubs] X - 01"), 1);
 check("trusted: AnoZu is rank 2", sandbox.trustedRank("[AnoZu] X - 01"), 2);
 check("trusted: EMBER is rank 3", sandbox.trustedRank("[EMBER] X - 01"), 3);
-check("trusted: removed Erai-raws is now untrusted", sandbox.trustedRank("[Erai-raws] X - 01"), 4);
-check("trusted: unknown group is last", sandbox.trustedRank("[SomeGroup] X - 01") > 3, true);
+// Groups added for their typeset (SubsPlease-style) subs.
+check("trusted: Judas is rank 4", sandbox.trustedRank("[Judas] X - 01"), 4);
+check("trusted: DKB is rank 5", sandbox.trustedRank("[DKB] X - 01"), 5);
+check("trusted: Yameii is rank 6", sandbox.trustedRank("[Yameii] X - 01"), 6);
+check("trusted: Anime Time is rank 7", sandbox.trustedRank("[Anime Time] X - 01"), 7);
+// Erai-raws muxes plain Crunchyroll subs, so it stays below the styling tier.
+check("trusted: plain-mux Erai-raws is untrusted", sandbox.trustedRank("[Erai-raws] X - 01"), 8);
+check("trusted: unknown group is last", sandbox.trustedRank("[SomeGroup] X - 01") > 7, true);
 check("groupOf: leading bracket", sandbox.groupOf("[AnoZu] X - 01"), "AnoZu");
 check("groupOf: trailing tag", sandbox.groupOf("X S01E01 1080p WEB-DL H.264-VARYG"), "VARYG");
 
@@ -404,7 +416,7 @@ check(
     const groupQueries = sandbox.buildQueries(["Attack on Titan"], REQ);
     check("queries lead with a SubsPlease query", groupQueries[0], "SubsPlease Attack on Titan 01");
     check(
-        "every trusted group is queried by name",
+        "the tier's leading groups are queried by name",
         groupQueries.slice(0, 4),
         [
             "SubsPlease Attack on Titan 01",
@@ -413,7 +425,23 @@ check(
             "EMBER Attack on Titan 01",
         ]
     );
+    // Named queries cost a request each per host and the index rate-limits
+    // bursts (HTTP 429 emptied the list live), so only the leading tier is
+    // named; the rest are found by the generic searches.
+    check(
+        "named group queries stay within the request budget",
+        groupQueries.filter((q) => /^(SubsPlease|HorribleSubs|AnoZu|EMBER|Judas|DKB|Yameii|Anime Time) /.test(q)).length,
+        4
+    );
     check("cleanTitle strips brackets", sandbox.cleanTitle("[Oshi no Ko]"), "Oshi no Ko");
+    // The trusted group queries must never crowd out the generic searches: they
+    // are the only source for shows no trusted group released (Hyouka, 2012).
+    const hyoukaQueries = sandbox.buildQueries(["Hyouka"], REQ);
+    check(
+        "generic queries survive a full trusted tier",
+        hyoukaQueries.filter((q) => !/^(SubsPlease|HorribleSubs|AnoZu|EMBER|Judas|DKB|Yameii|Anime Time) /.test(q)),
+        ["Hyouka S01E01", "Hyouka 01"]
+    );
 
     // Black Clover S2E7 is released as "[HorribleSubs] Black Clover - 58": groups
     // that number long-running anime continuously use the absolute episode, while
