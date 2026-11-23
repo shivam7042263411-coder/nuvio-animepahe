@@ -267,6 +267,11 @@ function isDub(title) {
     return /\b(dub|dubbed)\b/i.test(t);
 }
 
+/** The release group the user trusts for English subs. */
+function isSubsPlease(title) {
+    return /\bsubs\s?please\b/i.test(String(title));
+}
+
 /** Batch/season packs cannot be resolved without fileIdx, so drop them. */
 function isBatch(title) {
     var t = String(title);
@@ -387,7 +392,13 @@ function scoreOf(candidate, req) {
     else if (quality === "720p") score += 15;
     else if (quality === "480p") score += 5;
     if (/\b(dual[\s-]*audio|multi[\s-]*audio|multi[\s-]*subs?)\b/i.test(title)) score += 5;
-    if (!isDub(title)) score += 10;
+    // The user trusts SubsPlease for English subs, but badly-subbed releases kept
+    // topping it on raw quality + seeders. Make it a strict top tier.
+    if (isSubsPlease(title)) score += 60;
+    // A dub is a different audio track, not a subtitle. Push it below every sub
+    // so a high-seeder dub cannot outrank the English-subbed releases.
+    if (isDub(title)) score -= 40;
+    else score += 10;
     // A release with no seeders has nobody to hand over the torrent metadata, so
     // Nuvio's P2P engine sits on "loading" (peers=0) until the user gives up --
     // observed as a 27s stall on a dead 1080p while a live 720p sat below it.
@@ -563,7 +574,12 @@ function makeResult(candidate) {
     if (title.length > 140) title = title.slice(0, 137) + "...";
     return {
         title: title,
-        name: "AnimeTorrents" + (quality ? " · " + quality : "") + " · " + language,
+        name:
+            "AnimeTorrents" +
+            (quality ? " · " + quality : "") +
+            (isSubsPlease(candidate.title) ? " · SubsPlease" : "") +
+            " · " +
+            language,
         url: "magnet:?xt=urn:btih:" + candidate.hash,
         infoHash: candidate.hash,
         quality: quality || null,

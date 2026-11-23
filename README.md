@@ -74,7 +74,8 @@ The matcher is deliberately strict:
 - OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
   "Kanketsu-hen" finale specials are rejected.
 - "The Final Season" is mapped to TMDB's last season.
-- `1080p` ranks first, then `720p`; sub ranks above dub; seeders break ties.
+- `SubsPlease` releases rank first (trusted English subs); then `1080p` over
+  `720p`; sub ranks above dub; seeders break ties.
 
 AnimeTosho is the only source: it mirrors Nyaa (plus TokyoTosho, AniDex and
 nekoBT) and its base32 info hashes are decoded to the 40-hex form Nuvio

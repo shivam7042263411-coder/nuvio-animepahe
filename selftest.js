@@ -76,6 +76,7 @@ const ANIMETOSHO_HTML =
     toshoEntry("[Group] Attack on Titan - S01E01 [1080p]", ATS_MAIN, 7, "1.4 GB") +
     toshoEntry("[Group] Attack on Titan S01E01 [720p] [Dubbed]", HASH.b, 5, "700 MB") +
     toshoEntry("[Group] Attack on Titan - S01E01 [1080p]", ATS_MAIN, 7, "1.4 GB") +
+    toshoEntry("[SubsPlease] Attack on Titan - S01E01 (720p)", HASH.e, 3, "500 MB") +
     toshoEntry("[Group] Attack on Titan S02E05 [1080p]", HASH.c, 99, "1 GB") +
     toshoEntry("[Erai-raws] Attack on Titan Season 1 (01-25) [1080p] Complete", HASH.d, 80, "20 GB") +
     toshoEntry("[Group] Attack on Titan OVA - 01 [1080p]", HASH.f, 50, "1 GB") +
@@ -223,7 +224,7 @@ check(
     "3cdae471c4ceb28cb30b4067954ad9cc8c0066f9"
 );
 const tosho = sandbox.parseAnimeTosho(ANIMETOSHO_HTML);
-check("animetosho parse: all rows", tosho.length, 6);
+check("animetosho parse: all rows", tosho.length, 7);
 check("animetosho parse: hex hash", tosho[0] && tosho[0].hash, ATS_MAIN);
 check("animetosho parse: seeders", tosho[0] && tosho[0].seeders, 7);
 
@@ -242,14 +243,29 @@ check(
         sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [720p]", seeders: 5 }, att),
     true
 );
+// SubsPlease is the trusted-sub tier: its low-seeded 720p must beat a
+// higher-seeded 1080p from an unknown group, and a [Dubbed] release.
+check(
+    "SubsPlease 720p outranks a higher-seeded non-SubsPlease 1080p",
+    sandbox.scoreOf({ title: "[SubsPlease] Attack on Titan - S01E01 (720p)", seeders: 3 }, att) >
+        sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [1080p]", seeders: 50 }, att),
+    true
+);
+check(
+    "SubsPlease outranks a [Dubbed] release",
+    sandbox.scoreOf({ title: "[SubsPlease] Attack on Titan - S01E01 (720p)", seeders: 3 }, att) >
+        sandbox.scoreOf({ title: "[Group] Attack on Titan S01E01 [1080p] [Dubbed]", seeders: 50 }, att),
+    true
+);
 
 // --- end to end ------------------------------------------------------------
 (async () => {
     requested.length = 0;
     const results = await sandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
 
-    check("returns the episode 1 releases from AnimeTosho", results.length, 2);
-    check("1080p sub ranks first", results[0] && results[0].infoHash, ATS_MAIN);
+    check("returns the episode 1 releases from AnimeTosho", results.length, 3);
+    check("SubsPlease ranks first", results[0] && results[0].infoHash, HASH.e);
+    check("SubsPlease is labelled", results[0] && /SubsPlease/.test(results[0].name), true);
     // AnimeTosho is the only source: a request to a host that never answers
     // (nyaa.si here) stays an outstanding async job, and the runtime holds the
     // plugin to its 60s timeout instead of returning the results it has.
@@ -289,7 +305,7 @@ check(
     // than a TMDB 404.
     const fromKitsu = await sandbox.module.exports.getStreams("kitsu:7442:1", "tv", 1, 1);
     check("kitsu id: resolves and returns streams", fromKitsu.length, results.length);
-    check("kitsu id: 1080p sub ranks first", fromKitsu[0] && fromKitsu[0].infoHash, ATS_MAIN);
+    check("kitsu id: SubsPlease ranks first", fromKitsu[0] && fromKitsu[0].infoHash, HASH.e);
 
     const fromImdb = await sandbox.module.exports.getStreams("tt22248376", "tv", 1, 1);
     check("imdb id: resolves via TMDB find", fromImdb.length, results.length);
