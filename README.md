@@ -77,8 +77,10 @@ The matcher is deliberately strict:
 - Only `1080p` releases are returned; `1080p HDR` is included and labelled
   `· HDR`. If a show has no 1080p at all, the full set is used as a fallback so
   the list is never empty.
-- Within 1080p, `SubsPlease` ranks first (trusted English subs); sub ranks above
-  dub; seeders break ties.
+- Ranking is tiered by release group: `SubsPlease` first, then the other trusted
+  weekly English-sub rippers (`Erai-raws`, `EMBER`, `Judas`, `ASW`, `DKB`,
+  `Yameii`, `Anime Time`), then everything else. Within a tier, score decides
+  (1080p > 720p, sub > dub), then seeders break ties.
 - Each lookup sends a `SubsPlease <title> <episode>` query first. A generic
   `<title> <episode>` search returns a capped, relevance-ranked page that omits
   SubsPlease's well-seeded singles (Jujutsu Kaisen: 75 rows, zero SubsPlease), so

@@ -272,22 +272,56 @@ function isDub(title) {
     return /\b(dub|dubbed)\b/i.test(t);
 }
 
-/** The release group the user trusts for English subs. */
-function isSubsPlease(title) {
-    return /\bsubs\s?please\b/i.test(String(title));
-}
-
 /** HDR markers, kept as whole tokens so "HDRip"/"DVDRip" do not match. */
 function isHdr(title) {
     return /\b(?:hdr10\+?|hdr|hlg|dolby[\s.]?vision|dovi)\b/i.test(String(title));
 }
 
-// SubsPlease is the trusted-sub tier and must outrank everything: its titles use
-// "- 08" rather than "S01E08", so they miss the +60 exact-season bonus that other
-// releases get. The largest score a non-SubsPlease release can reach is
-// 60 (season) + 30 (1080p) + 5 (dual-audio) + 10 (sub) + 10 (seeders) = 115, so
-// this bonus guarantees the whole tier sorts first while 1080p still beats 720p.
-var SUBSPLEASE_TIER = 130;
+// Trusted English-sub groups, most wanted first: SubsPlease, then the reliable
+// weekly simulcast rippers the user wants alongside it. Ranking is tiered
+// because these groups name episodes "- 08" rather than "S01E08" and so miss the
+// +60 exact-season bonus that other releases get.
+var TRUSTED_GROUPS = [
+    "SubsPlease",
+    "Erai-raws",
+    "EMBER",
+    "Judas",
+    "ASW",
+    "DKB",
+    "Yameii",
+    "Anime Time"
+];
+
+/** Release group: the leading [Tag], else a trailing -Tag. */
+function groupOf(title) {
+    var t = String(title);
+    var m = t.match(/^\s*\[([^\]]{1,30})\]/);
+    if (m) return m[1].trim();
+    m = t.match(/-([A-Za-z0-9]{2,20})(?:\.[a-z0-9]{2,4})?\s*$/);
+    return m ? m[1] : "";
+}
+
+/** Sort tier: a trusted group's list index, else one past the list. */
+function trustedRank(title) {
+    var g = groupOf(title).toLowerCase();
+    if (g) {
+        for (var i = 0; i < TRUSTED_GROUPS.length; i++) {
+            if (g === TRUSTED_GROUPS[i].toLowerCase()) return i;
+        }
+    }
+    return TRUSTED_GROUPS.length;
+}
+
+/** Trusted groups first (SubsPlease highest), then score, then seeders. */
+function rankReleases(list) {
+    list.sort(function (a, b) {
+        var tier = trustedRank(a.title) - trustedRank(b.title);
+        if (tier) return tier;
+        if (b.score !== a.score) return b.score - a.score;
+        return toInt(b.seeders, 0) - toInt(a.seeders, 0);
+    });
+    return list;
+}
 
 /** Batch/season packs cannot be resolved without fileIdx, so drop them. */
 function isBatch(title) {
@@ -409,9 +443,6 @@ function scoreOf(candidate, req) {
     else if (quality === "720p") score += 15;
     else if (quality === "480p") score += 5;
     if (/\b(dual[\s-]*audio|multi[\s-]*audio|multi[\s-]*subs?)\b/i.test(title)) score += 5;
-    // The user trusts SubsPlease for English subs, but badly-subbed releases kept
-    // topping it on raw quality + seeders. Make it a strict top tier.
-    if (isSubsPlease(title)) score += SUBSPLEASE_TIER;
     // A dub is a different audio track, not a subtitle. Push it below every sub
     // so a high-seeder dub cannot outrank the English-subbed releases.
     if (isDub(title)) score -= 40;
@@ -691,11 +722,7 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         );
         var matched = matchCandidates(candidates, req);
         matched = prefer1080p(matched);
-
-        matched.sort(function (a, b) {
-            if (b.score !== a.score) return b.score - a.score;
-            return toInt(b.seeders, 0) - toInt(a.seeders, 0);
-        });
+        matched = rankReleases(matched);
         matched = dropDeadReleases(matched);
 
         for (var n = 0; n < matched.length && results.length < MAX_RESULTS; n++) {

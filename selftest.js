@@ -244,28 +244,32 @@ check(
         sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [720p]", seeders: 5 }, att),
     true
 );
-// SubsPlease is the trusted-sub tier: its low-seeded 720p must beat a
-// higher-seeded 1080p from an unknown group, and a [Dubbed] release.
+// Ranking is tiered: a trusted group (SubsPlease, then Erai-raws/EMBER/...) sorts
+// above every other release even when it lacks the +60 exact-season bonus that
+// SxxExx releases get, and above producing groups like "Group".
+function ranked(titles) {
+    const list = titles.map((t) => {
+        const c = { title: t[0], seeders: t[1] };
+        c.score = sandbox.scoreOf(c, att);
+        return c;
+    });
+    return sandbox.rankReleases(list).map((r) => sandbox.groupOf(r.title));
+}
 check(
-    "SubsPlease 720p outranks a higher-seeded non-SubsPlease 1080p",
-    sandbox.scoreOf({ title: "[SubsPlease] Attack on Titan - S01E01 (720p)", seeders: 3 }, att) >
-        sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [1080p]", seeders: 50 }, att),
-    true
+    "ranking: SubsPlease, then trusted, then the rest",
+    ranked([
+        ["[Group] Attack on Titan S01E01 [1080p]", 50],
+        ["[SubsPlease] Attack on Titan - 01 (1080p)", 3],
+        ["[EMBER] Attack on Titan - 01 [1080p]", 10],
+        ["Attack on Titan S01E01 SUBFRENCH 1080p", 1],
+    ]),
+    ["SubsPlease", "EMBER", "Group", ""]
 );
-check(
-    "SubsPlease outranks a [Dubbed] release",
-    sandbox.scoreOf({ title: "[SubsPlease] Attack on Titan - S01E01 (720p)", seeders: 3 }, att) >
-        sandbox.scoreOf({ title: "[Group] Attack on Titan S01E01 [1080p] [Dubbed]", seeders: 50 }, att),
-    true
-);
-// SubsPlease names episodes "- 01", not "S01E01", so they miss the +60 season
-// bonus other releases get; the tier must still win (found live on Kanata kara).
-check(
-    "SubsPlease beats a season-matched non-SubsPlease 1080p",
-    sandbox.scoreOf({ title: "[SubsPlease] Attack on Titan - 01 (1080p)", seeders: 10 }, att) >
-        sandbox.scoreOf({ title: "[Group] Attack on Titan S01E01 [1080p] [Multi-Subs]", seeders: 50 }, att),
-    true
-);
+check("trusted: SubsPlease is rank 0", sandbox.trustedRank("[SubsPlease] X - 01"), 0);
+check("trusted: Erai-raws is rank 1", sandbox.trustedRank("[Erai-raws] X - 01"), 1);
+check("trusted: unknown group is last", sandbox.trustedRank("[SomeGroup] X - 01") > 1, true);
+check("groupOf: leading bracket", sandbox.groupOf("[Erai-raws] X - 01"), "Erai-raws");
+check("groupOf: trailing tag", sandbox.groupOf("X S01E01 1080p WEB-DL H.264-VARYG"), "VARYG");
 
 // --- HDR / 1080p-only filter ----------------------------------------------
 check("HDR: HDR10+ detected", sandbox.isHdr("[SubsPlease] Show - 01 (1080p) [HDR10+]"), true);
