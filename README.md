@@ -74,19 +74,22 @@ The matcher is deliberately strict:
 - OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
   "Kanketsu-hen" finale specials are rejected.
 - "The Final Season" is mapped to TMDB's last season.
-- `SubsPlease` releases rank first (trusted English subs); then `1080p` over
-  `720p`; sub ranks above dub; seeders break ties.
+- `SubsPlease` releases rank first at any quality (trusted English subs); then
+  `1080p` over `720p`; sub ranks above dub; seeders break ties.
 
-AnimeTosho is the only source: it mirrors Nyaa (plus TokyoTosho, AniDex and
-nekoBT) and its base32 info hashes are decoded to the 40-hex form Nuvio
-requires.
+Two AnimeTosho hosts are queried in parallel and merged by info hash:
+`animetosho.xyz` (the community successor, live) and `animetosho.org` (frozen on
+2026-05-09, kept for back-catalogue depth and as a mirror). Both render the same
+`home_list_entry` markup and list Nyaa/TokyoTosho/AniDex/nekoBT releases; base32
+info hashes are decoded to the 40-hex form Nuvio requires. AnimeTosho.org alone
+was the "missing latest episodes" cause — it has no releases after May 2026.
 
 Dropping a direct Nyaa query matters. Nuvio's QuickJS runtime keeps a plugin
 evaluation alive until every `fetch` it started settles, and its `fetch` cannot
 be cancelled. A blackholed host (ISP block) never settles, so one fallback to a
 blocked `nyaa.si` burned the whole 60s plugin budget and the results were
-discarded — the "no stream found"/timeout bug. Since AnimeTosho carries the same
-releases, querying it alone loses nothing and always returns.
+discarded — the "no stream found"/timeout bug. Every request is now bounded by
+`withTimeout` and hosts run in parallel, so a slow one cannot stall the rest.
 
 ## Why only single episodes
 

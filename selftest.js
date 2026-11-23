@@ -113,7 +113,7 @@ const sandbox = {
         else if (url.indexOf("/find/") !== -1) body = TMDB_FIND;
         else if (url.indexOf("kitsu.io") !== -1) body = KITSU_AOT;
         else if (url.indexOf("api.themoviedb.org") !== -1) body = other ? TMDB_OTHER : TMDB_TV;
-        else if (url.indexOf("animetosho.org") !== -1) body = url.indexOf("Bleach") !== -1 ? ANIMETOSHO_BLEACH : ANIMETOSHO_HTML;
+        else if (url.indexOf("animetosho") !== -1) body = url.indexOf("Bleach") !== -1 ? ANIMETOSHO_BLEACH : ANIMETOSHO_HTML;
         return {
             ok: true,
             status: 200,
@@ -257,6 +257,14 @@ check(
         sandbox.scoreOf({ title: "[Group] Attack on Titan S01E01 [1080p] [Dubbed]", seeders: 50 }, att),
     true
 );
+// SubsPlease names episodes "- 01", not "S01E01", so they miss the +60 season
+// bonus other releases get; the tier must still win (found live on Kanata kara).
+check(
+    "SubsPlease beats a season-matched non-SubsPlease 1080p",
+    sandbox.scoreOf({ title: "[SubsPlease] Attack on Titan - 01 (1080p)", seeders: 10 }, att) >
+        sandbox.scoreOf({ title: "[Group] Attack on Titan S01E01 [1080p] [Multi-Subs]", seeders: 50 }, att),
+    true
+);
 
 // --- end to end ------------------------------------------------------------
 (async () => {
@@ -266,13 +274,14 @@ check(
     check("returns the episode 1 releases from AnimeTosho", results.length, 3);
     check("SubsPlease ranks first", results[0] && results[0].infoHash, HASH.e);
     check("SubsPlease is labelled", results[0] && /SubsPlease/.test(results[0].name), true);
-    // AnimeTosho is the only source: a request to a host that never answers
-    // (nyaa.si here) stays an outstanding async job, and the runtime holds the
-    // plugin to its 60s timeout instead of returning the results it has.
+    // AnimeTosho.org is frozen (no releases after 2026-05-09); the live successor
+    // animetosho.xyz is queried alongside it, so both hosts must appear and no
+    // dead source (nyaa.si here) may be touched.
     check(
-        "only AnimeTosho is queried when it answers",
-        requested.filter((u) => u.indexOf("animetosho.org") !== -1).length > 0 &&
-            requested.filter((u) => u.indexOf("nyaa.si") !== -1).length === 0,
+        "both AnimeTosho hosts queried, no Nyaa",
+        requested.some((u) => u.indexOf("animetosho.xyz") !== -1) &&
+            requested.some((u) => u.indexOf("animetosho.org") !== -1) &&
+            !requested.some((u) => u.indexOf("nyaa.si") !== -1),
         true
     );
 
@@ -295,7 +304,7 @@ check(
     check(
         "empty AnimeTosho: only AnimeTosho/TMDB/Kitsu are queried",
         requested.filter(
-            (u) => u.indexOf("animetosho.org") === -1 && u.indexOf("themoviedb.org") === -1 && u.indexOf("kitsu.io") === -1
+            (u) => u.indexOf("animetosho") === -1 && u.indexOf("themoviedb.org") === -1 && u.indexOf("kitsu.io") === -1
         ).length,
         0
     );

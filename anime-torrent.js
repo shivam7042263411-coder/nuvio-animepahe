@@ -17,7 +17,12 @@
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
 var KITSU_BASE = "https://kitsu.io/api/edge";
-var ANIMETOSHO_URL = "https://animetosho.org/search";
+// AnimeTosho.org was frozen on 2026-05-09 (no releases added since) and is
+// end-of-life, so it returns nothing for anything that aired after that date.
+// The community successor animetosho.xyz uses the same markup and carries
+// current releases. Query both in parallel: the successor for fresh episodes,
+// the original for back-catalogue depth and as a mirror if either host stalls.
+var ANIMETOSHO_HOSTS = ["animetosho.xyz", "animetosho.org"];
 var MAX_RESULTS = 10;
 
 // Nuvio kills a plugin after 60s. A blocked host (ISP blackhole, firewall)
@@ -272,6 +277,13 @@ function isSubsPlease(title) {
     return /\bsubs\s?please\b/i.test(String(title));
 }
 
+// SubsPlease is the trusted-sub tier and must outrank everything: its titles use
+// "- 08" rather than "S01E08", so they miss the +60 exact-season bonus that other
+// releases get. The largest score a non-SubsPlease release can reach is
+// 60 (season) + 30 (1080p) + 5 (dual-audio) + 10 (sub) + 10 (seeders) = 115, so
+// this bonus guarantees the whole tier sorts first while 1080p still beats 720p.
+var SUBSPLEASE_TIER = 130;
+
 /** Batch/season packs cannot be resolved without fileIdx, so drop them. */
 function isBatch(title) {
     var t = String(title);
@@ -394,7 +406,7 @@ function scoreOf(candidate, req) {
     if (/\b(dual[\s-]*audio|multi[\s-]*audio|multi[\s-]*subs?)\b/i.test(title)) score += 5;
     // The user trusts SubsPlease for English subs, but badly-subbed releases kept
     // topping it on raw quality + seeders. Make it a strict top tier.
-    if (isSubsPlease(title)) score += 60;
+    if (isSubsPlease(title)) score += SUBSPLEASE_TIER;
     // A dub is a different audio track, not a subtitle. Push it below every sub
     // so a high-seeder dub cannot outrank the English-subbed releases.
     if (isDub(title)) score -= 40;
@@ -467,14 +479,14 @@ function parseAnimeTosho(html) {
     return out;
 }
 
-async function animetoshoSearch(query) {
+async function animetoshoSearch(host, query) {
     var url =
-        ANIMETOSHO_URL + "?q=" + encodeURIComponent(query) + "&type=torrent&order=seeders";
+        "https://" + host + "/search?q=" + encodeURIComponent(query) + "&type=torrent&order=seeders";
     var res = await withTimeout(
         fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } }),
-        "AnimeTosho"
+        "AnimeTosho " + host
     );
-    if (!res.ok) throw new Error("AnimeTosho HTTP " + res.status);
+    if (!res.ok) throw new Error("AnimeTosho " + host + " HTTP " + res.status);
     return parseAnimeTosho(await res.text());
 }
 
@@ -624,11 +636,11 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         var candidates = [];
         var seen = {};
 
-        // Only AnimeTosho is queried. A blocked host never settles its fetch and
-        // the QuickJS runtime keeps the evaluation alive while that async job is
-        // outstanding, so one fallback to an unreachable source (nyaa.si here)
-        // burned the full 60s plugin budget and discarded results the scraper
-        // had already produced. AnimeTosho mirrors Nyaa, so there is no loss.
+        // A blocked or dead host never settles its fetch and the QuickJS runtime
+        // keeps the evaluation alive while that async job is outstanding, so every
+        // request is bounded by withTimeout and all hosts/queries run in parallel.
+        // The two hosts mirror the same index, so a slow one cannot stall the
+        // lookup or hide the results the other already produced.
         async function querySource(search, label, count) {
             var jobs = [];
             for (var i = 0; i < Math.min(queries.length, count); i++) {
@@ -640,7 +652,17 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
             }
         }
 
-        await querySource(animetoshoSearch, "animetosho", queries.length);
+        await Promise.all(
+            ANIMETOSHO_HOSTS.map(function (host) {
+                return querySource(
+                    function (query) {
+                        return animetoshoSearch(host, query);
+                    },
+                    "animetosho:" + host,
+                    queries.length
+                );
+            })
+        );
         var matched = matchCandidates(candidates, req);
 
         matched.sort(function (a, b) {
