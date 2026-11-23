@@ -408,6 +408,12 @@ check(
     );
     check("subs: attached track is labelled", rawRows[0] && rawRows[0].subtitles[0].name, "SubsPlease");
 
+    // Pre-2021 shows have no SubsPlease release; HorribleSubs is the same
+    // pipeline and is what the index holds for them, so the track must carry
+    // that group's name rather than a hard-coded "SubsPlease".
+    check("subs: group is derived from the path", sandbox.subsGroupOf("subs/horriblesubs/168587.ass"), "HorribleSubs");
+    check("subs: unknown group falls back to its slug", sandbox.subsGroupOf("subs/anozu/1.ass"), "anozu");
+
     // When AnimeTosho has nothing for the episode the lookup returns empty
     // rather than falling through to a source that never answers.
     requested.length = 0;

@@ -602,9 +602,10 @@ async function searchSource(search, label, query) {
     }
 }
 
-/** view id -> "subs/subsplease/<id>.ass" for the episodes whose SubsPlease
- *  subtitles were extracted. One request per lookup; a miss only means no extra
- *  track, never a failed lookup. */
+/** view id -> "subs/<group>/<id>.ass" for episodes whose subtitles were
+ *  extracted. One request per lookup; a miss only means no extra track, never a
+ *  failed lookup. Values stay plain path strings so a cached older plugin (which
+ *  only knows SubsPlease) still reads the index without breaking. */
 async function loadSubsIndex() {
     if (subsIndex) return subsIndex;
     subsIndex = {};
@@ -618,6 +619,15 @@ async function loadSubsIndex() {
         console.log("[AnimeTorrents] subs index unavailable: " + ((e && e.message) || e));
     }
     return subsIndex;
+}
+
+/** "subs/horriblesubs/1.ass" -> "HorribleSubs", so the track is labelled with
+ *  the group whose styling it carries (HorribleSubs covers pre-2021 shows). */
+function subsGroupOf(path) {
+    var m = String(path).match(/^subs\/([^/]+)\//);
+    var slug = m ? m[1].toLowerCase() : "";
+    var names = { subsplease: "SubsPlease", horriblesubs: "HorribleSubs" };
+    return names[slug] || slug || "SubsPlease";
 }
 
 // ---------------------------------------------------------------------------
@@ -775,7 +785,7 @@ function prefer1080p(list) {
     return hd.length ? hd : list;
 }
 
-function makeResult(candidate, rank, subtitleUrl) {
+function makeResult(candidate, rank, sub) {
     var quality = parseQuality(candidate.title) || "";
     var hdr = isHdr(candidate.title);
     var language = isDub(candidate.title) ? "Dub" : "Sub";
@@ -805,8 +815,8 @@ function makeResult(candidate, rank, subtitleUrl) {
         seeders: seeders,
         peers: null,
         subtitles:
-            subtitleUrl && !embeddedSubs
-                ? [{ url: subtitleUrl, language: "en", name: "SubsPlease" }]
+            sub && !embeddedSubs
+                ? [{ url: sub.url, language: "en", name: sub.name }]
                 : []
     };
 }
@@ -885,12 +895,13 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         matched = dropDeadReleases(matched);
 
         // The first index hit wins, and `matched` is already ranked, so that is
-        // the most trusted group's file (SubsPlease before anyone else).
+        // the most trusted group's file (SubsPlease before anyone else; on
+        // pre-2021 shows HorribleSubs is the only group with one).
         var extraSub = null;
         var idx = await loadSubsIndex();
         for (var s = 0; s < matched.length && !extraSub; s++) {
             var subsPath = idx[matched[s].view];
-            if (subsPath) extraSub = SUBS_BASE + subsPath;
+            if (subsPath) extraSub = { url: SUBS_BASE + subsPath, name: subsGroupOf(subsPath) };
         }
 
         for (var n = 0; n < matched.length && results.length < MAX_RESULTS; n++) {
