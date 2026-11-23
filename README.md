@@ -163,6 +163,16 @@ sorted "30↑" first). SubsPlease therefore always stays at `01 · `.
 
 Nuvio adds its own tracker list; the scraper does not need to.
 
+### Plugin hosts differ (Android TV has no timers)
+
+The mobile plugin host installs `setTimeout`/`clearTimeout`; the **Android TV**
+host (`NuvioTV`) bridges only fetch/console/cheerio/crypto and defines neither.
+The scraper therefore detects once (`typeof setTimeout`) and, when absent, skips
+its per-request deadline and retry back-off instead of calling a timer that
+throws `ReferenceError` — which used to blank the whole lookup on TV only. The
+host's own 60 s plugin cap still bounds the call, so a hung AnimeTosho costs
+results, never a stuck plugin.
+
 ## SubsPlease / HorribleSubs subtitles on other groups' releases
 
 SubsPlease ships its typeset `.ass` inside the MKV, and nothing inside the plugin

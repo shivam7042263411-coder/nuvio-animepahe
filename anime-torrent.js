@@ -506,8 +506,17 @@ function scoreOf(candidate, req) {
 // Sources
 // ---------------------------------------------------------------------------
 
+// Not every Nuvio host provides timers. The Android TV plugin runtime bridges
+// only fetch/console/cheerio/crypto and defines no setTimeout, while the mobile
+// host installs one - so arming a timer here throws ReferenceError before the
+// fetch even starts and the lookup comes back empty on TV only. Detect it once
+// (typeof on an undeclared name is safe); without timers the host's own 60s cap
+// still bounds the call, so a hung host costs results, never a dead plugin.
+var HAS_TIMERS = typeof setTimeout === "function";
+
 /** Races a promise against a timer so one dead host cannot stall the request. */
 function withTimeout(promise, label) {
+    if (!HAS_TIMERS) return promise;
     return new Promise(function (resolve, reject) {
         var settled = false;
         var timer = setTimeout(function () {
@@ -565,6 +574,7 @@ function parseAnimeTosho(html) {
 
 /** Short wait, used to back off when the index rate-limits a burst. */
 function delay(ms) {
+    if (!HAS_TIMERS) return Promise.resolve();
     return new Promise(function (resolve) {
         setTimeout(resolve, ms);
     });

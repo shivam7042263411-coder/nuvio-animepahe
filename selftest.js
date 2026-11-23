@@ -564,6 +564,23 @@ check(
     const retried = await flakySandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
     check("TMDB retry: one reset still yields streams", retried.length > 0, true);
 
+    // Nuvio's Android TV plugin host defines no setTimeout (only the mobile host
+    // does), and this plugin used to arm a request ceiling with it - so on TV
+    // every fetch threw and the list came back empty. Run the whole lookup in a
+    // timer-less sandbox and require streams.
+    const tvSandbox = Object.assign({}, sandbox, { module: { exports: {} } });
+    delete tvSandbox.setTimeout;
+    delete tvSandbox.clearTimeout;
+    vm.createContext(tvSandbox);
+    vm.runInContext(source, tvSandbox);
+    const tvRows = await tvSandbox.module.exports.getStreams(1429, "tv", 1, 1, 1);
+    check("Android TV (no setTimeout): lookup still yields streams", tvRows.length > 0, true);
+    check(
+        "Android TV: rows keep the magnet shape Nuvio needs",
+        /^magnet:\?xt=urn:btih:[0-9a-f]{40}$/.test(tvRows[0].url) && /^[0-9a-f]{40}$/.test(tvRows[0].infoHash),
+        true
+    );
+
     console.log(failures.length ? `\n${failures.join("\n")}\n\n${failures.length} FAILED` : "\nALL PASS");
     console.log(`fetch calls: ${fetchCalls}`);
     process.exit(failures.length ? 1 : 0);
