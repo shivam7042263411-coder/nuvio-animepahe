@@ -349,6 +349,15 @@ check(
     const kitsuSeason = await sandbox.kitsuInfo("7442");
     check("kitsu: romaji title leads queries", sandbox.queryTitles(kitsuSeason)[0], "Shingeki no Kyojin");
 
+    // A generic "<title> <ep>" query returns a capped page that omits SubsPlease
+    // singles, so the group is queried by name first.
+    check(
+        "queries lead with a SubsPlease query",
+        sandbox.buildQueries(["Attack on Titan"], REQ)[0],
+        "SubsPlease Attack on Titan 01"
+    );
+    check("cleanTitle strips brackets", sandbox.cleanTitle("[Oshi no Ko]"), "Oshi no Ko");
+
     // Raising the per-request timeout changes nothing, because AnimeTosho is
     // the only source: a miss costs one AnimeTosho round-trip and returns
     // instead of waiting on a host that never answers.

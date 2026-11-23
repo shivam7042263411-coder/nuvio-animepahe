@@ -79,6 +79,10 @@ The matcher is deliberately strict:
   the list is never empty.
 - Within 1080p, `SubsPlease` ranks first (trusted English subs); sub ranks above
   dub; seeders break ties.
+- Each lookup sends a `SubsPlease <title> <episode>` query first. A generic
+  `<title> <episode>` search returns a capped, relevance-ranked page that omits
+  SubsPlease's well-seeded singles (Jujutsu Kaisen: 75 rows, zero SubsPlease), so
+  the trusted group is queried by name.
 
 Two AnimeTosho hosts are queried in parallel and merged by info hash:
 `animetosho.xyz` (the community successor, live) and `animetosho.org` (frozen on

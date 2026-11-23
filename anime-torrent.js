@@ -529,6 +529,11 @@ function queryTitles(info) {
     return out.slice(0, 2);
 }
 
+/** Brackets/punctuation an index search can't tokenize, for the group query. */
+function cleanTitle(t) {
+    return String(t).replace(/[\[\](){}]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function buildQueries(titles, req, year) {
     var qs = [];
     function push(q) {
@@ -542,6 +547,11 @@ function buildQueries(titles, req, year) {
             push(titles[i]);
         }
     } else {
+        // SubsPlease's per-episode singles are the trusted-subs priority, but a
+        // generic "<title> <ep>" query returns a capped, relevance-ranked page
+        // that often omits them (seen live on Jujutsu Kaisen: 75 rows, zero
+        // SubsPlease). Querying the group by name surfaces them directly.
+        push("SubsPlease " + cleanTitle(titles[0]) + " " + pad2(req.episode));
         push(titles[0] + " S" + pad2(req.season) + "E" + pad2(req.episode));
         push(titles[0] + " " + pad2(req.episode));
         if (req.absoluteEpisode != null && req.absoluteEpisode !== req.episode) {
@@ -549,7 +559,7 @@ function buildQueries(titles, req, year) {
         }
         if (titles[1]) push(titles[1] + " " + pad2(req.episode));
     }
-    return qs.slice(0, 3);
+    return qs.slice(0, 4);
 }
 
 function addCandidates(list, out, seen) {
