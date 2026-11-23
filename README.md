@@ -187,6 +187,12 @@ looks up the release ids of the results it already matched, and labels the track
 with the group whose styling it carries. SubsPlease and HorribleSubs rows are
 skipped because their MKV already carries the same file.
 
+Two things the tool deliberately refuses: a row that is not the show (a spin-off
+like `Shingeki! Kyojin Chuugakkou`, a season pack, a `Director's Cut`), and an
+episode where AnimeTosho never extracted the subtitles — many older releases have
+no attachment at all, so coverage is only as good as AnimeTosho's. It prints what
+it skipped; pass a release id with `--view <id>` to override.
+
 Caveats: the match is by episode, not by video, so the extra track is only
 frame-accurate when the raw shares the same script (measured on
 `Bocchi the Rock!` S01E01: all 519 dialogue lines and timings identical between
