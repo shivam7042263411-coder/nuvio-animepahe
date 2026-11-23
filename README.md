@@ -163,7 +163,7 @@ sorted "30↑" first). SubsPlease therefore always stays at `01 · `.
 
 Nuvio adds its own tracker list; the scraper does not need to.
 
-## SubsPlease subtitles on other groups' releases
+## SubsPlease / HorribleSubs subtitles on other groups' releases
 
 SubsPlease ships its typeset `.ass` inside the MKV, and nothing inside the plugin
 can read it out: AnimeTosho's copy is xz-compressed and QuickJS has no xz
@@ -172,16 +172,20 @@ attaches the extracted `.ass` to *every other group's* release of the same
 episode. Nuvio renders a subtitle with libass only when the URL path ends in
 `.ass`, which is why these are committed to this repo and served raw.
 
+SubsPlease only starts in 2021. **HorribleSubs** runs the same pipeline and
+carries everything before that, so it is the group to use for older shows:
+
 ```
-node tools/grab-subs.mjs "Bocchi the Rock" 1     # search AnimeTosho, extract, index
-node tools/grab-subs.mjs --view 393812           # or straight from a release page
+node tools/grab-subs.mjs SubsPlease "Bocchi the Rock" 1
+node tools/grab-subs.mjs HorribleSubs "Black Clover" 1
+node tools/grab-subs.mjs --view 393812           # straight from a release page
 ```
 
-It writes `subs/subsplease/<view>.ass` and adds `<view>` to `subs/index.json`.
-The plugin reads that index once per lookup (one extra request, failure is
-harmless) and looks up the release ids of the results it already matched, so an
-episode without an extracted file simply gets no extra track. SubsPlease and
-HorribleSubs rows are skipped because their MKV already carries the same file.
+It writes `subs/<group>/<view>.ass` and adds `<view>` to `subs/index.json`. The
+plugin reads that index once per lookup (one extra request, failure is harmless),
+looks up the release ids of the results it already matched, and labels the track
+with the group whose styling it carries. SubsPlease and HorribleSubs rows are
+skipped because their MKV already carries the same file.
 
 Caveats: the match is by episode, not by video, so the extra track is only
 frame-accurate when the raw shares the same script (measured on
