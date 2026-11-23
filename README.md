@@ -77,14 +77,16 @@ The matcher is deliberately strict:
 - Only `1080p` releases are returned; `1080p HDR` is included and labelled
   `· HDR`. If a show has no 1080p at all, the full set is used as a fallback so
   the list is never empty.
-- Ranking is tiered by release group: `SubsPlease` first, then the other trusted
-  weekly English-sub rippers (`Erai-raws`, `EMBER`, `Judas`, `ASW`, `DKB`,
-  `Yameii`, `Anime Time`), then everything else. Within a tier, score decides
-  (1080p > 720p, sub > dub), then seeders break ties.
-- Each lookup sends a `SubsPlease <title> <episode>` query first. A generic
+- Ranking is tiered by release group: `SubsPlease` first, then `HorribleSubs`
+  (its predecessor; still the only tagged source for pre-2021 back-catalogue),
+  then `AnoZu` and `EMBER`, then everything else. Within a tier, score decides
+  (1080p > 720p, sub > dub), then seeders break ties. Other groups (`Erai-raws`,
+  `DKB`, `Judas`, `ASW`, ...) still appear, just below the trusted tier.
+- Each lookup queries **every trusted group by name** first
+  (`SubsPlease <title> <ep>`, `HorribleSubs <title> <ep>`, ...). A generic
   `<title> <episode>` search returns a capped, relevance-ranked page that omits
-  SubsPlease's well-seeded singles (Jujutsu Kaisen: 75 rows, zero SubsPlease), so
-  the trusted group is queried by name.
+  the trusted groups' per-episode singles (Jujutsu Kaisen: 75 rows, zero
+  SubsPlease; Re:Zero: zero HorribleSubs), so the groups are queried directly.
 
 Two AnimeTosho hosts are queried in parallel and merged by info hash:
 `animetosho.xyz` (the community successor, live) and `animetosho.org` (frozen on

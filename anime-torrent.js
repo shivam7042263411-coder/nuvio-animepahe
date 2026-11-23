@@ -278,18 +278,16 @@ function isHdr(title) {
 }
 
 // Trusted English-sub groups, most wanted first: SubsPlease, then the reliable
-// weekly simulcast rippers the user wants alongside it. Ranking is tiered
-// because these groups name episodes "- 08" rather than "S01E08" and so miss the
-// +60 exact-season bonus that other releases get.
+// The release groups the user wants ranked first, most wanted first. Ranking is
+// tiered because these groups name episodes "- 08" rather than "S01E08" and so
+// miss the +60 exact-season bonus that other releases get. HorribleSubs is
+// SubsPlease's predecessor (dead since 2021, but still the only tagged source
+// for pre-2021 back-catalogue).
 var TRUSTED_GROUPS = [
     "SubsPlease",
-    "Erai-raws",
-    "EMBER",
-    "Judas",
-    "ASW",
-    "DKB",
-    "Yameii",
-    "Anime Time"
+    "HorribleSubs",
+    "AnoZu",
+    "EMBER"
 ];
 
 /** Release group: the leading [Tag], else a trailing -Tag. */
@@ -572,17 +570,24 @@ function buildQueries(titles, req, year) {
         if (q && qs.indexOf(q) === -1) qs.push(q);
     }
     if (!titles.length) return qs;
+    // A generic "<title> <episode>" search returns a capped, relevance-ranked
+    // page that omits the trusted groups' per-episode singles (seen live:
+    // Jujutsu Kaisen 75 rows with zero SubsPlease; Re:Zero with zero
+    // HorribleSubs). Querying each group by name surfaces them directly.
+    for (var g = 0; g < TRUSTED_GROUPS.length; g++) {
+        push(
+            TRUSTED_GROUPS[g] +
+                " " +
+                cleanTitle(titles[0]) +
+                (req.isMovie ? (year ? " " + year : "") : " " + pad2(req.episode))
+        );
+    }
     if (req.isMovie) {
         for (var i = 0; i < titles.length; i++) {
             if (year) push(titles[i] + " " + year);
             push(titles[i]);
         }
     } else {
-        // SubsPlease's per-episode singles are the trusted-subs priority, but a
-        // generic "<title> <ep>" query returns a capped, relevance-ranked page
-        // that often omits them (seen live on Jujutsu Kaisen: 75 rows, zero
-        // SubsPlease). Querying the group by name surfaces them directly.
-        push("SubsPlease " + cleanTitle(titles[0]) + " " + pad2(req.episode));
         push(titles[0] + " S" + pad2(req.season) + "E" + pad2(req.episode));
         push(titles[0] + " " + pad2(req.episode));
         if (req.absoluteEpisode != null && req.absoluteEpisode !== req.episode) {
@@ -590,7 +595,7 @@ function buildQueries(titles, req, year) {
         }
         if (titles[1]) push(titles[1] + " " + pad2(req.episode));
     }
-    return qs.slice(0, 4);
+    return qs.slice(0, 8);
 }
 
 function addCandidates(list, out, seen) {

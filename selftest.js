@@ -244,9 +244,9 @@ check(
         sandbox.scoreOf({ title: "[Group] Attack on Titan - S01E01 [720p]", seeders: 5 }, att),
     true
 );
-// Ranking is tiered: a trusted group (SubsPlease, then Erai-raws/EMBER/...) sorts
-// above every other release even when it lacks the +60 exact-season bonus that
-// SxxExx releases get, and above producing groups like "Group".
+// Ranking is tiered: a trusted group (SubsPlease, then HorribleSubs/AnoZu/EMBER)
+// sorts above every other release even when it lacks the +60 exact-season bonus
+// that SxxExx releases get, and above producing groups like "Group".
 function ranked(titles) {
     const list = titles.map((t) => {
         const c = { title: t[0], seeders: t[1] };
@@ -266,9 +266,12 @@ check(
     ["SubsPlease", "EMBER", "Group", ""]
 );
 check("trusted: SubsPlease is rank 0", sandbox.trustedRank("[SubsPlease] X - 01"), 0);
-check("trusted: Erai-raws is rank 1", sandbox.trustedRank("[Erai-raws] X - 01"), 1);
-check("trusted: unknown group is last", sandbox.trustedRank("[SomeGroup] X - 01") > 1, true);
-check("groupOf: leading bracket", sandbox.groupOf("[Erai-raws] X - 01"), "Erai-raws");
+check("trusted: HorribleSubs is rank 1", sandbox.trustedRank("[HorribleSubs] X - 01"), 1);
+check("trusted: AnoZu is rank 2", sandbox.trustedRank("[AnoZu] X - 01"), 2);
+check("trusted: EMBER is rank 3", sandbox.trustedRank("[EMBER] X - 01"), 3);
+check("trusted: removed Erai-raws is now untrusted", sandbox.trustedRank("[Erai-raws] X - 01"), 4);
+check("trusted: unknown group is last", sandbox.trustedRank("[SomeGroup] X - 01") > 3, true);
+check("groupOf: leading bracket", sandbox.groupOf("[AnoZu] X - 01"), "AnoZu");
 check("groupOf: trailing tag", sandbox.groupOf("X S01E01 1080p WEB-DL H.264-VARYG"), "VARYG");
 
 // --- HDR / 1080p-only filter ----------------------------------------------
@@ -353,12 +356,19 @@ check(
     const kitsuSeason = await sandbox.kitsuInfo("7442");
     check("kitsu: romaji title leads queries", sandbox.queryTitles(kitsuSeason)[0], "Shingeki no Kyojin");
 
-    // A generic "<title> <ep>" query returns a capped page that omits SubsPlease
-    // singles, so the group is queried by name first.
+    // A generic "<title> <ep>" query returns a capped page that omits the
+    // trusted groups' singles, so each group is queried by name first.
+    const groupQueries = sandbox.buildQueries(["Attack on Titan"], REQ);
+    check("queries lead with a SubsPlease query", groupQueries[0], "SubsPlease Attack on Titan 01");
     check(
-        "queries lead with a SubsPlease query",
-        sandbox.buildQueries(["Attack on Titan"], REQ)[0],
-        "SubsPlease Attack on Titan 01"
+        "every trusted group is queried by name",
+        groupQueries.slice(0, 4),
+        [
+            "SubsPlease Attack on Titan 01",
+            "HorribleSubs Attack on Titan 01",
+            "AnoZu Attack on Titan 01",
+            "EMBER Attack on Titan 01",
+        ]
     );
     check("cleanTitle strips brackets", sandbox.cleanTitle("[Oshi no Ko]"), "Oshi no Ko");
 
