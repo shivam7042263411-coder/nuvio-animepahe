@@ -378,8 +378,9 @@ check(
     check("no subs index entry: no attached tracks", results.filter((r) => r.subtitles.length).length, 0);
 
     // tools/grab-subs.mjs extracts a SubsPlease MKV's subtitle into this repo;
-    // the plugin attaches that .ass to the other groups' releases of the same
-    // episode. A URL ending in ".ass" is what makes Nuvio render it with libass.
+    // the plugin attaches that SRT to the other groups' releases of the same
+    // episode. SRT is what makes Nuvio apply the user's subtitle appearance
+    // instead of handing the file to each platform's own libass.
     const withSubs = (body) => ({
         ok: true,
         status: 200,
@@ -390,7 +391,7 @@ check(
     const subsSandbox = Object.assign({}, sandbox, {
         module: { exports: {} },
         fetch: async (url) => {
-            if (url.indexOf("subs/index.json") !== -1) return withSubs('{"393802":"subs/subsplease/393802.ass"}');
+            if (url.indexOf("subs/index.json") !== -1) return withSubs('{"393802":"subs/subsplease/393802.srt"}');
             if (url.indexOf("animetosho") !== -1) return withSubs(ANIMETOSHO_HTML.replace(/\/view\/x/g, "/view/393802"));
             return sandbox.fetch(url);
         },
@@ -402,8 +403,8 @@ check(
     const rawRows = subbed.filter((r) => !/SubsPlease/.test(r.name));
     check("subs: not re-attached to the group that ships it", spRow && spRow.subtitles.length, 0);
     check(
-        "subs: other groups get the extracted .ass",
-        rawRows.length === 2 && rawRows.every((r) => r.subtitles.length === 1 && /subs\/subsplease\/393802\.ass$/.test(r.subtitles[0].url)),
+        "subs: other groups get the extracted SRT",
+        rawRows.length === 2 && rawRows.every((r) => r.subtitles.length === 1 && /subs\/subsplease\/393802\.srt$/.test(r.subtitles[0].url)),
         true
     );
     check("subs: attached track is labelled", rawRows[0] && rawRows[0].subtitles[0].name, "SubsPlease");
@@ -411,8 +412,8 @@ check(
     // Pre-2021 shows have no SubsPlease release; HorribleSubs is the same
     // pipeline and is what the index holds for them, so the track must carry
     // that group's name rather than a hard-coded "SubsPlease".
-    check("subs: group is derived from the path", sandbox.subsGroupOf("subs/horriblesubs/168587.ass"), "HorribleSubs");
-    check("subs: unknown group falls back to its slug", sandbox.subsGroupOf("subs/anozu/1.ass"), "anozu");
+    check("subs: group is derived from the path", sandbox.subsGroupOf("subs/horriblesubs/168587.srt"), "HorribleSubs");
+    check("subs: unknown group falls back to its slug", sandbox.subsGroupOf("subs/anozu/1.srt"), "anozu");
 
     // When AnimeTosho has nothing for the episode the lookup returns empty
     // rather than falling through to a source that never answers.

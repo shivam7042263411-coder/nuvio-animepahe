@@ -26,11 +26,12 @@ var ANIMETOSHO_HOSTS = ["animetosho.xyz", "animetosho.org"];
 var MAX_RESULTS = 10;
 
 // SubsPlease's subtitles are shipped inside its MKV, where nothing can read
-// them. They are extracted once into plain .ass files in this repo (tools/
+// them. They are extracted once into plain .srt files in this repo (tools/
 // grab-subs.mjs) and attached to every other group's release of the same
-// episode, so their typeset styling is available on any raw. Nuvio only treats
-// a subtitle as ASS when the URL ends in ".ass" (PlayerSubtitleUtils
-// .mimeTypeFromUrl), which those files do.
+// episode. SRT rather than the extracted ASS: Nuvio applies the user's subtitle
+// appearance to SRT on every platform, while ASS is drawn by each platform's own
+// libass (Android overlay, mpv on desktop/iOS) with its own font lookup, so the
+// same ASS file looks different per device.
 var SUBS_BASE = "https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/";
 var subsIndex = null;
 
@@ -612,7 +613,7 @@ async function searchSource(search, label, query) {
     }
 }
 
-/** view id -> "subs/<group>/<id>.ass" for episodes whose subtitles were
+/** view id -> "subs/<group>/<id>.srt" for episodes whose subtitles were
  *  extracted. One request per lookup; a miss only means no extra track, never a
  *  failed lookup. Values stay plain path strings so a cached older plugin (which
  *  only knows SubsPlease) still reads the index without breaking. */
@@ -631,8 +632,8 @@ async function loadSubsIndex() {
     return subsIndex;
 }
 
-/** "subs/horriblesubs/1.ass" -> "HorribleSubs", so the track is labelled with
- *  the group whose styling it carries (HorribleSubs covers pre-2021 shows). */
+/** "subs/horriblesubs/1.srt" -> "HorribleSubs", so the track is labelled with
+ *  the group whose subtitles it carries (HorribleSubs covers pre-2021 shows). */
 function subsGroupOf(path) {
     var m = String(path).match(/^subs\/([^/]+)\//);
     var slug = m ? m[1].toLowerCase() : "";

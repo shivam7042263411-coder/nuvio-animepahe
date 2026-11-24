@@ -1,8 +1,13 @@
 // Extracts a typeset group's subtitles out of an AnimeTosho release page into
-// subs/, where the plugin attaches the .ass to other groups' releases of the
-// same episode. AnimeTosho ships them xz-compressed, and Nuvio only renders a
-// subtitle as ASS when its URL ends in ".ass", so they have to be unpacked once
-// and committed.
+// subs/, where the plugin attaches them to other groups' releases of the same
+// episode. AnimeTosho ships them xz-compressed and QuickJS has no xz decoder, so
+// they have to be unpacked once and committed.
+//
+// They are committed as SRT, not ASS. Nuvio restyles SRT with the user's
+// subtitle appearance on every platform, while ASS is drawn by a different
+// renderer per platform (Android libass, mpv on desktop and iOS) with its own
+// font lookup and rasterisation, so one file looks different on each device.
+// Converting drops the typesetting and keeps the track consistent.
 //
 // SubsPlease covers 2021+; HorribleSubs is the same pipeline for everything
 // before that, so both are searchable. The group is the first argument, in
@@ -106,7 +111,7 @@ export function pickAttachment(html) {
   return pick ? pick[2] : null;
 }
 
-/** Downloads one release's subtitles into subs/<group>/<view>.ass. */
+/** Downloads one release's subtitles into subs/<group>/<view>.srt. */
 async function fetchSubtitles(view) {
   const page = await (await get(`https://animetosho.xyz/view/${view}`)).text();
   const file = pickAttachment(page);
@@ -123,13 +128,72 @@ async function fetchSubtitles(view) {
 
 function save(view, ass, group) {
   const slug = group.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const srt = assToSrt(ass);
+  if (!srt) throw new Error(`view/${view}: no dialogue left after converting to SRT`);
   mkdirSync(join(SUBS, slug), { recursive: true });
-  const rel = `subs/${slug}/${view}.ass`;
-  writeFileSync(join(ROOT, rel), ass);
+  const rel = `subs/${slug}/${view}.srt`;
+  writeFileSync(join(ROOT, rel), srt);
   const total = saveIndex(view, rel);
-  console.log(`  ${rel}  (${ass.length} bytes)`);
+  console.log(`  ${rel}  (${srt.length} bytes)`);
   console.log(`  ${BASE}${rel}`);
   console.log(`  index: ${total} episode(s)`);
+}
+
+/** ASS script -> SRT. Only the dialogue text survives: override blocks
+ *  (`{\pos..}`, `{\fs..}`, `{\p1}` drawings) and the style table are dropped,
+ *  so Nuvio's subtitle appearance decides how the track looks on every
+ *  platform instead of each platform's libass. */
+export function assToSrt(ass) {
+  const cues = [];
+  let inEvents = false;
+  let fields = null;
+  for (const raw of String(ass).replace(/\r\n?/g, '\n').split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('[')) {
+      inEvents = /^\[events\]$/i.test(line);
+      continue;
+    }
+    if (!inEvents) continue;
+    if (/^format\s*:/i.test(line)) {
+      fields = line.slice(line.indexOf(':') + 1).split(',').map((f) => f.trim().toLowerCase());
+      continue;
+    }
+    const textAt = fields ? fields.indexOf('text') : -1;
+    if (textAt < 0 || !/^dialogue\s*:/i.test(line)) continue;
+    const values = line.slice(line.indexOf(':') + 1).split(',');
+    const field = (name) => {
+      const i = fields.indexOf(name);
+      return i < 0 ? '' : (values[i] || '').trim();
+    };
+    const start = srtTime(field('start'));
+    const end = srtTime(field('end'));
+    const body = srtText(values.slice(textAt).join(','));
+    if (start && end && body) cues.push({ start, end, body });
+  }
+  cues.sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+  return cues.map((cue, i) => `${i + 1}\n${cue.start} --> ${cue.end}\n${cue.body}\n`).join('\n');
+}
+
+/** `0:01:02.50` -> `00:01:02,500`, or null when the field is not a timestamp. */
+function srtTime(value) {
+  const m = String(value).match(/^(\d+):(\d{1,2}):(\d{1,2})[.:](\d{1,3})$/);
+  if (!m) return null;
+  const pad = (n) => String(Number(n)).padStart(2, '0');
+  return `${pad(m[1])}:${pad(m[2])}:${pad(m[3])},${(m[4] + '00').slice(0, 3)}`;
+}
+
+/** Dialogue text without ASS markup. Drawings (`\p1`..`\p9`) are shapes, not
+ *  text, so their cue is dropped rather than committed as garbage. */
+function srtText(value) {
+  if (/\\p[1-9]/.test(value)) return '';
+  return value
+    .replace(/\{[^}]*\}/g, '')
+    .replace(/\\N/gi, '\n')
+    .replace(/\\h/gi, ' ')
+    .split('\n')
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 async function grab(view, label, group = 'subsplease') {
@@ -205,6 +269,27 @@ async function selfTest() {
     // A re-cut and a season pack are different timelines, never episode N.
     ['re-cut is not the episode', best(traps, 1, 'HorribleSubs', ['Re:Zero', 'Re Zero kara Hajimeru Isekai Seikatsu']), null],
     ['season pack is not the episode', first(traps, 1, 'HorribleSubs', 'Shingeki no Kyojin'), '32116'],
+    // The committed track is SRT so Nuvio's own subtitle style draws it on every
+    // platform; override blocks, drawings and the style table must not leak in.
+    [
+      'ASS dialogue converts to plain SRT',
+      assToSrt(
+        [
+          '[Script Info]',
+          'ScriptType: v4.00+',
+          '[V4+ Styles]',
+          'Format: Name, Fontname, Fontsize',
+          'Style: Default,Roboto Medium,26',
+          '[Events]',
+          'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+          'Dialogue: 0,0:00:01.00,0:00:02.50,Default,,0,0,0,,{\\pos(320,300)\\fs26}Hello, world',
+          'Dialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,line one\\Nline two',
+          'Dialogue: 0,0:00:05.00,0:00:06.00,Default,,0,0,0,,{\\p1}m 0 0 l 100 0{\\p0}',
+          'Comment: 0,0:00:07.00,0:00:08.00,Default,,0,0,0,,not a cue',
+        ].join('\n')
+      ),
+      '1\n00:00:01,000 --> 00:00:02,500\nHello, world\n\n2\n00:00:03,000 --> 00:00:04,000\nline one\nline two\n',
+    ],
   ];
   for (const [name, actual, expected] of checks) {
     const ok = JSON.stringify(actual) === JSON.stringify(expected);

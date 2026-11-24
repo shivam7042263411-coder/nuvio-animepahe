@@ -175,12 +175,18 @@ results, never a stuck plugin.
 
 ## SubsPlease / HorribleSubs subtitles on other groups' releases
 
-SubsPlease ships its typeset `.ass` inside the MKV, and nothing inside the plugin
-can read it out: AnimeTosho's copy is xz-compressed and QuickJS has no xz
-decoder. So the files are extracted once, offline, into `subs/` and the plugin
-attaches the extracted `.ass` to *every other group's* release of the same
-episode. Nuvio renders a subtitle with libass only when the URL path ends in
-`.ass`, which is why these are committed to this repo and served raw.
+SubsPlease ships its subtitles inside the MKV, and nothing inside the plugin can
+read them out: AnimeTosho's copy is xz-compressed and QuickJS has no xz decoder.
+So the files are extracted once, offline, into `subs/` and the plugin attaches
+them to *every other group's* release of the same episode.
+
+They are committed as **SRT**, not ASS. Nuvio applies your subtitle appearance to
+SRT on every platform, so one setting set gives one look on phone, TV, iOS and
+desktop. ASS is handed to each platform's own libass instead — the Android
+overlay, or mpv on desktop and iOS — and those resolve fonts and rasterise
+differently, which is why the same ASS file looked heavier or bolder on some
+devices. The conversion drops typesetting (fonts, signs, positioning) and keeps
+the dialogue text and timings.
 
 SubsPlease only starts in 2021. **HorribleSubs** runs the same pipeline and
 carries everything before that, so it is the group to use for older shows:
@@ -191,11 +197,11 @@ node tools/grab-subs.mjs HorribleSubs "Black Clover" 1
 node tools/grab-subs.mjs --view 393812           # straight from a release page
 ```
 
-It writes `subs/<group>/<view>.ass` and adds `<view>` to `subs/index.json`. The
+It writes `subs/<group>/<view>.srt` and adds `<view>` to `subs/index.json`. The
 plugin reads that index once per lookup (one extra request, failure is harmless),
 looks up the release ids of the results it already matched, and labels the track
-with the group whose styling it carries. SubsPlease and HorribleSubs rows are
-skipped because their MKV already carries the same file.
+with the group it came from. SubsPlease and HorribleSubs rows are skipped
+because their MKV already carries the same subtitles.
 
 Two things the tool deliberately refuses: a row that is not the show (a spin-off
 like `Shingeki! Kyojin Chuugakkou`, a season pack, a `Director's Cut`), and an
@@ -228,8 +234,8 @@ redistributed fansub work; the repo is public, which is your call.
 | `anime-torrent.js` | The scraper (`getStreams`) |
 | `manifest.json` | Repository manifest read by Nuvio |
 | `selftest.js` | Offline checks: matching, hash decoding, result shape |
-| `subs/index.json` | Release id → extracted `.ass` used for the extra subtitle track |
-| `tools/grab-subs.mjs` | Extracts a SubsPlease `.ass` out of AnimeTosho into `subs/` |
+| `subs/index.json` | Release id → extracted `.srt` used for the extra subtitle track |
+| `tools/grab-subs.mjs` | Extracts a SubsPlease `.ass` out of AnimeTosho and converts it to `subs/<group>/<view>.srt` |
 
 Run the self-check:
 
