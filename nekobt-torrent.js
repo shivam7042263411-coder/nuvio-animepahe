@@ -250,7 +250,13 @@ async function getTmdbInfo(tmdbId, mediaType) {
     if (Array.isArray(data.seasons)) {
         for (var s = 0; s < data.seasons.length; s++) {
             var row = data.seasons[s] || {};
-            seasons.push({ n: toInt(row.season_number, 0), c: toInt(row.episode_count, 0) });
+            seasons.push({
+                n: toInt(row.season_number, 0),
+                c: toInt(row.episode_count, 0),
+                // "Thousand-Year Blood War", "S1 • Kazekage Rescue". The name
+                // lets a season be matched under its own arc title.
+                name: String(row.name || "").replace(/^\s*S\d+\s*[•·:-]\s*/i, "").trim()
+            });
         }
     }
 
@@ -363,6 +369,22 @@ function absoluteEpisodeFrom(seasons, season, episode) {
         if (s.n >= 1 && s.n < season) sum += toInt(s.c, 0);
     }
     return sum > 0 ? sum + episode : null;
+}
+
+/** A distinctive TMDB season name releases use as an arc title ("Bleach:
+ *  Thousand-Year Blood War"), or null for a generic name ("Season 2"). */
+function seasonArcTitle(showTitle, seasons, season) {
+    if (!showTitle || !(season > 1)) return null;
+    for (var i = 0; i < (seasons || []).length; i++) {
+        var s = seasons[i] || {};
+        if (s.n !== season) continue;
+        var name = String(s.name || "").trim();
+        if (!name || name.length < 4) return null;
+        // "Season 2" and "Specials" are not arc titles.
+        if (/^(?:season|specials?)\b/i.test(name)) return null;
+        return showTitle + ": " + name;
+    }
+    return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -479,12 +501,18 @@ function isVideoName(name) {
     return /\.(mkv|mp4|m4v|avi|webm|ts|m2ts|mov|wmv)$/i.test(String(name || ""));
 }
 
-/** Does this release name hold the requested episode? */
-function nameMatchesEpisode(name, req) {
+/** Does this release name hold the requested episode? `arcMatched` means the
+ *  release named the season's own arc title, so its season label is the arc's
+ *  (Bleach "S01E49"/"S17E49" for TMDB season 2) and its episode is local. */
+function nameMatchesEpisode(name, req, arcMatched) {
     if (isSpecialFile(name)) return false;
     var e = fileEpisode(name);
     function absOk(n) {
         return n != null && (n === req.episode || (req.absoluteEpisode != null && n === req.absoluteEpisode));
+    }
+    if (arcMatched) {
+        if (e.episode != null && e.episode === req.episode) return true;
+        return absOk(e.absolute);
     }
     if (e.season != null) {
         if (e.season === req.season && e.episode === req.episode) return true;
@@ -706,6 +734,8 @@ function isBatchName(name) {
     if (/\b(?:batch|complete|all\s+episodes)\b/i.test(t)) return true;
     // S01E01-E12, S02E01-E07
     if (/\bS\d{1,2}E\d{1,3}\s*[-~]\s*(?:S\d{1,2})?E?\d{1,3}\b/i.test(t)) return true;
+    // E0001-E1155, EP01-EP12 (a long show's complete batch)
+    if (/\bE(?:P)?\d{1,4}\s*[-~]\s*E?P?\d{1,4}\b/i.test(t)) return true;
     // S01-S03
     if (/\bS\d{1,2}\s*[-~]\s*S\d{1,2}\b/i.test(t)) return true;
     // (01-12), [01~12]
@@ -729,8 +759,10 @@ function looksLikePack(name) {
  *  file's position in NekoBT's list, which is the torrent's file order.
  *  `packHeight` is the resolution the pack's own name states, used when a file
  *  name does not repeat it. In a multi-season pack a season-less file name
- *  ("Show - 01") is ambiguous, so only an explicit season marker is trusted. */
-function pickBatchFile(files, req, packHeight, requireSeason) {
+ *  ("Show - 01") is ambiguous, so only an explicit season marker is trusted.
+ *  `packArc` means the pack itself named the season's own arc title, so its
+ *  files carry the arc's own season label (Bleach "S17 E01" for TMDB season 2). */
+function pickBatchFile(files, req, packHeight, requireSeason, packArc) {
     var picked = null;
     for (var i = 0; i < files.length; i++) {
         var f = files[i] || {};
@@ -744,7 +776,7 @@ function pickBatchFile(files, req, packHeight, requireSeason) {
         }
         var e = fileEpisode(name);
         if (requireSeason && e.season == null) continue;
-        if (!nameMatchesEpisode(name, req)) continue;
+        if (!nameMatchesEpisode(name, req, packArc)) continue;
         var resolution = resolutionOf(name);
         var height = resolution ? resolution.height : packHeight || 0;
         // 1080p or higher only.
@@ -823,7 +855,7 @@ function multiSeasonPack(name) {
 
 /** Tokens that can follow a show title: episode/season markers and release
  *  tags. Any other word there is a subtitle, i.e. a different show. */
-var AFTER_TITLE_TAG = /^(?:s\d+e\d+|s\d+|\d{1,4}|\d{3,4}p|\d{3,4}x\d{3,4}|part|season|cour|final|web|webrip|webdl|dl|bd|bdrip|brrip|bluray|blu|ray|dvd|dvdrip|hdtv|tv|uhd|remux|hdr|dv|hevc|avc|av1|vp9|x264|x265|h264|h265|10bit|8bit|aac|ac3|eac3|dts|flac|opus|dd|ddp|truehd|atmos|multi|dual|audio|sub|subs|dub|batch|complete|repack|proper|v\d|eng|english|japanese|jpn|ita|fre|ger|spa|por|rus|ara|chi|kor|raw|raws|uncensored|uncut|extended|edition|internal|limited)$/;
+var AFTER_TITLE_TAG = /^(?:s\d+e\d+|s\d+|e\d+|ep\d+|\d{1,4}|\d{3,4}p|\d{3,4}x\d{3,4}|part|season|cour|final|web|webrip|webdl|dl|bd|bdrip|brrip|bluray|blu|ray|dvd|dvdrip|hdtv|tv|uhd|remux|hdr|dv|hevc|avc|av1|vp9|x264|x265|h264|h265|10bit|8bit|aac|ac3|eac3|dts|flac|opus|dd|ddp|truehd|atmos|multi|dual|audio|sub|subs|dub|batch|complete|repack|proper|v\d|eng|english|japanese|jpn|ita|fre|ger|spa|por|rus|ara|chi|kor|raw|raws|uncensored|uncut|extended|edition|internal|limited)$/;
 
 /** The release must name this show, not merely share the episode token the
  *  fuzzy search matched. The title has to appear as a whole phrase, so
@@ -867,16 +899,24 @@ function selectReleases(list, guardTitles, req) {
         if (seen[r.hash]) continue;
         seen[r.hash] = true;
         if (r.seeders < MIN_SEEDERS) continue;
-        if (!releaseMatchesTitle(r.name, guardTitles)) continue;
+        // A season's own arc title ("Bleach: Thousand-Year Blood War") is a
+        // name of this show for that season, and its S01/S17 label is the
+        // arc's own, not a TMDB season.
+        var arcMatched = req.arcTitle ? releaseMatchesTitle(r.name, [req.arcTitle]) : false;
+        if (!arcMatched && !releaseMatchesTitle(r.name, guardTitles)) continue;
+        if (arcMatched) r.arc = true;
         if (isSpecialFile(r.name)) continue;
         var resolution = resolutionOf(r.name);
         // 1080p or higher only, and the name has to say so.
         if (!resolution || resolution.height < 1080) continue;
         if (isBatchName(r.name)) {
-            if (!namesOtherSeason(r.name, req.season, req.isMovie)) packs.push(r);
-        } else if (req.isMovie || nameMatchesEpisode(r.name, req)) {
+            if (arcMatched || !namesOtherSeason(r.name, req.season, req.isMovie)) packs.push(r);
+        } else if (req.isMovie || nameMatchesEpisode(r.name, req, arcMatched)) {
             singles.push(singleRow(r, resolution));
-        } else if (looksLikePack(r.name) && !namesOtherSeason(r.name, req.season, req.isMovie)) {
+        } else if (
+            looksLikePack(r.name) &&
+            (arcMatched || !namesOtherSeason(r.name, req.season, req.isMovie))
+        ) {
             packs.push(r);
         }
     }
@@ -940,7 +980,14 @@ async function nekobtReleases(info, searchTitles, guardTitles, req) {
         var meta = metas[p];
         if (!meta) continue;
         var packRes = resolutionOf(chosen[p].name);
-        var picked = pickBatchFile(meta.files, req, packRes && packRes.height, multiSeasonPack(chosen[p].name));
+        var packArc = req.arcTitle ? releaseMatchesTitle(chosen[p].name, [req.arcTitle]) : false;
+        var picked = pickBatchFile(
+            meta.files,
+            req,
+            packRes && packRes.height,
+            multiSeasonPack(chosen[p].name),
+            packArc
+        );
         if (!picked) continue;
         if (meta.seeders < MIN_SEEDERS) continue;
         rows.push(packRow(chosen[p], picked, meta.seeders));
@@ -1067,6 +1114,10 @@ async function getStreams(tmdbId, mediaType, season, episode) {
             // app knows is never handed over; TMDB's season counts are the
             // fallback. A single-season request is already absolute.
             if (req.absoluteEpisode == null) req.absoluteEpisode = req.episode;
+            // The arc title of the requested season ("Bleach: Thousand-Year
+            // Blood War"), which releases name alongside their own S01/S17
+            // numbering.
+            req.arcTitle = seasonArcTitle(info.titles[0], info.seasons, req.season);
         }
 
         var found = await nekobtReleases(info, titles, info.titles, req);

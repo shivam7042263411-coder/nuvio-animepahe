@@ -255,6 +255,29 @@ check("pack: a resolution-silent file takes the pack's resolution", (sandbox.pic
 check("pack: a multi-season pack requires the file's season", (sandbox.pickBatchFile([{ name: "Show - 01.mkv", length: 1 }, { name: "Show - (S2) - 01.mkv", length: 1 }], { ...REQ, season: 2, absoluteEpisode: null }, 1080, true) || {}).name, "Show - (S2) - 01.mkv");
 check("pack: a multi-season pack is detected", sandbox.multiSeasonPack("Show Season 1+2+3 (BD 1080p)"), true);
 check("pack: a single-season pack is not multi", sandbox.multiSeasonPack("Show S01 (BD 1080p)"), false);
+check("batch: an E-range complete batch is a batch", sandbox.isBatchName("One Piece E0001-E1155 KOREAN 1080p"), true);
+check("batch: an EP-range is a batch", sandbox.isBatchName("One Piece EP01-EP12 1080p"), true);
+
+/** Arc titles: a season's own arc name ("Bleach: Thousand-Year Blood War")
+ *  is matched as the show for that season, and its files keep the arc's own
+ *  season label. */
+check("arc: a season arc title is built", sandbox.seasonArcTitle("Bleach", [
+    { n: 1, c: 366, name: "Bleach" },
+    { n: 2, c: 50, name: "Thousand-Year Blood War" }
+], 2), "Bleach: Thousand-Year Blood War");
+check("arc: season 1 has no arc", sandbox.seasonArcTitle("Bleach", [
+    { n: 1, c: 366, name: "Bleach" },
+    { n: 2, c: 50, name: "Thousand-Year Blood War" }
+], 1), null);
+check("arc: a generic \"Season 2\" is not an arc", sandbox.seasonArcTitle("Show", [
+    { n: 2, c: 12, name: "Season 2" }
+], 2), null);
+check("arc: an arc release matches its own season's episode",
+    sandbox.nameMatchesEpisode("Bleach Thousand Year Blood War - S17 E01 [1080p].mkv",
+        { ...REQ, season: 2, episode: 1, absoluteEpisode: 367 }, true), true);
+check("arc: an arc release rejects another episode",
+    sandbox.nameMatchesEpisode("Bleach Thousand Year Blood War - S17 E02 [1080p].mkv",
+        { ...REQ, season: 2, episode: 1, absoluteEpisode: 367 }, true), false);
 
 check("magnet: starts with btih", /^magnet:\?xt=urn:btih:[0-9a-f]{40}&dn=/.test(sandbox.magnetFor({ hash: H.n1080, name: "x" })), true);
 check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n1080, name: "x" })), true);

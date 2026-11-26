@@ -247,6 +247,13 @@ Each provider is bounded on its own; the two never wait on each other.
 - Long-running anime are numbered two ways; the absolute episode is derived from
   TMDB's season counts, so a release that restarts numbering inside a batch is
   still matched by its `SxxExx`.
+- A season's own arc title (e.g. "Bleach: Thousand-Year Blood War") is matched
+  as that season's name, so releases that restart season numbering inside the arc
+  still resolve. NekoBT's coverage of long-running shows is patchy: early seasons
+  often exist only below 1080p (correctly excluded), later seasons may be
+  incomplete packs, and some episodes have no row at all. Those are data gaps,
+  not missing plugins — the provider returns exactly what NekoBT has at 1080p+
+  with at least one seeder, nothing more.
 
 ## Files
 
