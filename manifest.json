@@ -1,6 +1,6 @@
 {
   "name": "Nuvio Anime Torrents (SeaDex + NekoBT)",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Two independent torrent providers for NuvioTV. SeaDex (seadex.moe) returns curated best releases and season batches aimed at the exact episode file; NekoBT (nekobt.to) returns the releases indexed by the tracker. Both return 1080p and above only.",
   "author": "Nuvio Community",
   "scrapers": [
@@ -8,7 +8,7 @@
       "id": "anime-torrent",
       "name": "SeaDex Torrents",
       "description": "Per-episode torrents from SeaDex (seadex.moe), keyed by AniList id; 1080p and above only, including season batches targeted at the exact episode file",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "filename": "anime-torrent.js",
       "supportedTypes": [
         "movie",

@@ -315,6 +315,15 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     const tvPack = await tv.module.exports.getStreams(209867, "tv", 1, 3);
     check("tv (no setTimeout): a pack still resolves", (tvPack[0] || {}).url, "torrent://" + H.nbatch + "/2");
 
+    // A host that bridges setTimeout but not clearTimeout must not be trusted:
+    // withTimeout would throw when it clears. Detection requires both halves.
+    const halfTimers = makeSandbox();
+    delete halfTimers.clearTimeout;
+    vm.createContext(halfTimers);
+    vm.runInContext(source, halfTimers);
+    const halfRows = await halfTimers.module.exports.getStreams(209867, "tv", 1, 1);
+    check("tv host (setTimeout, no clearTimeout): still yields streams", halfRows.length, rows.length);
+
     // A reset on the feed: fetchText retries and still returns rows.
     let calls = 0;
     const flaky = makeSandbox({

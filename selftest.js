@@ -286,6 +286,15 @@ check(
     check("tv (no setTimeout): still yields streams", tvRows.length, results.length);
     check("tv: batch row keeps torrent:// shape", tvRows.find((r) => r.infoHash === H.batch).url, "torrent://" + H.batch + "/0");
 
+    // A host that bridges setTimeout but not clearTimeout must not be trusted:
+    // withTimeout would throw when it clears. Detection requires both halves.
+    const halfTimers = makeSandbox();
+    delete halfTimers.clearTimeout;
+    vm.createContext(halfTimers);
+    vm.runInContext(source, halfTimers);
+    const halfRows = await halfTimers.module.exports.getStreams(209867, "tv", 1, 1);
+    check("tv host (setTimeout, no clearTimeout): still yields streams", halfRows.length, results.length);
+
     // AniList 429 on the first try is retried once, not turned into "no streams".
     let anilistCalls = 0;
     const flaky = makeSandbox({

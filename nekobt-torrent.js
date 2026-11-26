@@ -118,10 +118,12 @@ function toInt(value, fallback) {
     return isNaN(n) ? fallback : n;
 }
 
-// Nuvio's Android TV runtime traditionally bridged fewer host functions than
-// the mobile one. Timer support is detected once; without it the host's own
-// 60s cap still bounds the call, so a slow host costs results, never a crash.
-var HAS_TIMERS = typeof setTimeout === "function";
+// Nuvio's plugin sandbox can bridge fewer host functions than expected (the
+// Android TV runtime is the usual case). Timer support is detected once, and
+// both halves are required: a host with setTimeout but no clearTimeout would
+// otherwise throw when the timeout fires. Without timers the host's own 60s cap
+// still bounds the call, so a slow host costs results, never a crash.
+var HAS_TIMERS = typeof setTimeout === "function" && typeof clearTimeout === "function";
 
 function withTimeout(promise, label) {
     if (!HAS_TIMERS) return promise;

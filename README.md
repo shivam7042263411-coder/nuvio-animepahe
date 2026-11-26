@@ -188,13 +188,22 @@ label. The label therefore carries a zero-padded `NN · ` rank prefix so each
 provider's order (best release first, then resolution, then seeders, then the
 most relevant season entry, then dual audio) survives that sort.
 
-### Plugin hosts differ (Android TV has no timers)
+### Plugin hosts differ (the Android TV sandbox has no timers)
 
-The mobile plugin host installs `setTimeout`/`clearTimeout`; the **Android TV**
-host (`NuvioTV`) defines neither. Both scrapers detect once (`typeof setTimeout`)
-and, when absent, skip their per-request deadline instead of calling a timer that
-throws `ReferenceError`. The host's own 60 s plugin cap still bounds each call,
-so a slow host costs that provider's results, never a stuck lookup.
+The Nuvio plugin sandbox (QuickJS) does not provide `setTimeout`/`clearTimeout`,
+and the **Android TV** runtime (`NuvioTV`) is the strictest case. Both scrapers
+detect timer support once (`typeof setTimeout === "function" &&
+typeof clearTimeout === "function"`) and, when either is missing, skip their
+per-request deadline instead of calling a timer that throws `ReferenceError`.
+Requiring both halves matters: a host that bridges `setTimeout` but not
+`clearTimeout` would otherwise throw when the deadline clears. The host's own
+60 s plugin cap still bounds each call, so a slow host costs that provider's
+results, never a stuck lookup.
+
+Both scrapers are plain ES5-style code (`var`/`function`, `async`/`await`, no
+`?.`, `??`, arrow functions or template literals) and read responses with
+`res.text()`/`res.json()`, so nothing else depends on a mobile-only bridge
+function.
 
 ## Rate limits and request budget
 
