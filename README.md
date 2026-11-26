@@ -124,7 +124,9 @@ fuzzy. The provider never talks to AniList or SeaDex.
 A NekoBT release is kept only when **all** of these hold:
 
 - The name names the show, matched on the whole title phrase (so "One Piece of
-  Cake" is not accepted for "One Piece").
+  Cake" is not accepted for "One Piece"), and a spin-off subtitle is rejected
+  (so "One Piece: Heroines" is not accepted for "One Piece"). A single-word
+  title also matches its spaced form ("Dandadan" → "Dan Da Dan").
 - The name matches the requested episode and season, using the same
   `SxxExx` / `Season N` / absolute-number matcher as the SeaDex path.
 - The name states `1080p` or higher. NekoBT has no curated "best" flag, so a
@@ -132,12 +134,13 @@ A NekoBT release is kept only when **all** of these hold:
 - The torrent has **at least one seeder**. A torrent with zero seeders never
   starts, so it is never returned — that is the "no dead links" rule.
 - A **season pack** is not offered as-is: its magnet would open the pack's
-  largest file, not the episode. When the show has no single-episode release,
-  the plugin reads the pack's file list from NekoBT's per-torrent endpoint, picks
-  the file that is the requested episode, and aims playback at it with
-  `torrent://<hash>/<index>` — the same scheme the SeaDex provider uses. Batches
-  (`(01-12)`, `S01E01-E12`, `S01-S03`, `Batch`/`Complete`, or a bare `S01`) are
-  handled this way and never returned as a plain magnet.
+  largest file, not the episode. The plugin reads the pack's file list from
+  NekoBT's per-torrent endpoint, picks the file that is the requested episode,
+  and aims playback at it with `torrent://<hash>/<index>` — the same scheme the
+  SeaDex provider uses. Batches (`(01-12)`, `S01E01-E12`, `S01-S03`,
+  `Batch`/`Complete`, or a bare `S01`) are handled this way and never returned
+  as a plain magnet. Packs add sources alongside single-episode releases until
+  the result list is full, and a pack naming another season is never used.
 
 Each NekoBT result is a self-contained magnet carrying the release name and four
 public trackers, so it also plays in an external client on a phone, tablet or
@@ -214,13 +217,15 @@ Each provider is bounded on its own; the two never wait on each other.
   entry requests in parallel. The common case is one AniList request, which
   matters because AniList rate-limits. A `429` gets one retry after a short pause
   when timers exist.
-- **NekoBT Torrents:** two TMDB requests, one media lookup, then up to four feed
-  pages of 100 for a show (falling back to two title-search feed requests when
-  the media lookup fails), or up to two for a movie. When the show has no
-  single-episode release, up to three per-torrent file-list lookups resolve a
-  season pack. NekoBT does not rate-limit the feed the way AniList does, but it
-  drops connections now and then, so each request is retried up to three times.
-  NekoBT calls nothing else — no AniList, no SeaDex.
+- **NekoBT Torrents:** two TMDB requests, then up to three media lookups
+  (NekoBT splits some shows into one entry per season and renames others), then
+  up to four feed pages of 100 for a show, or up to two for a movie. If the feed
+  yields nothing, two title-search feed requests run as a fallback. Up to five
+  per-torrent file-list lookups then aim packs at the episode; they run in
+  parallel and stop once the result list is full. NekoBT does not rate-limit the
+  feed the way AniList does, but it drops connections now and then, so each
+  request is retried up to three times. NekoBT calls nothing else — no AniList,
+  no SeaDex.
 
 ## Limits
 
@@ -228,8 +233,8 @@ Each provider is bounded on its own; the two never wait on each other.
   Shows or episodes with no entry, or with only private-tracker copies, return
   no SeaDex rows — NekoBT covers those.
 - NekoBT lists what its users uploaded; a show or episode nobody uploaded has no
-  row. A season pack is aimed at the exact episode file when it is the only
-  source, so batch-only shows such as Undead Unluck still play.
+  row. A season pack is aimed at the exact episode file, so batch-only shows such
+  as Undead Unluck still play even when the pack is the only source.
 - Later seasons are matched through their own AniList entries on the SeaDex
   path, and through the season in the release name on the NekoBT path. A season
   that neither indexes may be missed; the file's own `SxxExx` still prevents a

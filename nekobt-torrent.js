@@ -34,7 +34,11 @@ var NEKOBT_MEDIA = "https://nekobt.to/api/v1/media/search";
 var NEKOBT_TORRENT = "https://nekobt.to/api/v1/torrents/";
 // How many packs to resolve when a show has no single-episode release. Each
 // costs one request, so the best-seeded few are enough.
-var MAX_PACK_LOOKUPS = 3;
+var MAX_PACK_LOOKUPS = 5;
+// A show can be split over several NekoBT media entries: one per season
+// ("Jujutsu Kaisen S3") or a renamed one ("DAN DA DAN"). Each costs one feed
+// request, so only a few are followed.
+var MAX_MEDIA_LOOKUPS = 3;
 // "No dead links": a torrent with no seeder never starts, so it is dropped.
 var MIN_SEEDERS = 1;
 // Public trackers put in every magnet so playback can start on any client
@@ -101,7 +105,7 @@ function seasonNumberFromTitle(value) {
     if (/\bfinal season\b/i.test(t)) return 99;
     var m = t.match(/\bSeason\s*(\d{1,2})\b/i) || t.match(/\b(\d{1,2})(?:st|nd|rd|th)\s+Season\b/i);
     if (!m) m = t.match(/第\s*(\d{1,2})\s*期/);
-    if (!m) m = t.match(/\bS(\d{1,2})\b/);
+    if (!m) m = t.match(/\bS(\d{1,2})(?!\d)/);
     return m ? toInt(m[1], null) : null;
 }
 
@@ -430,6 +434,12 @@ function fileEpisode(name) {
             t.match(/第\s*(\d{1,2})\s*期/);
         if (m) info.season = toInt(m[1], null);
     }
+    // A bracketed season marker in a multi-season pack's file names
+    // ("(S1) - 01"). The episode pass below strips it, so read it here.
+    if (info.season == null) {
+        m = t.match(/\bS(\d{1,2})(?!\d)/i);
+        if (m) info.season = toInt(m[1], null);
+    }
     if (info.episode == null) {
         m = t.match(/\b(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
         if (m) info.episode = toInt(m[1], null);
@@ -442,7 +452,9 @@ function fileEpisode(name) {
         m =
             rest.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?!\.\d)(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
             rest.match(/[\[\(](\d{1,3})(?!\.\d)(?:v\d)?[\]\)]/) ||
-            rest.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(])/);
+            // "Show 01 [1080p]", but not the title's own number before a year
+            // ("Mob Psycho 100 (2016)").
+            rest.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(](?!(?:19|20)\d{2}\s*[\]\)]))/);
         if (m) info.episode = toInt(m[1], null);
     }
     var abs = t.match(/\((\d{2,4})\)/);
@@ -455,8 +467,10 @@ function fileEpisode(name) {
 
 function isSpecialFile(name) {
     var t = String(name || "");
-    if (/\b(?:ova|oad)s?\b/i.test(t)) return true;
-    if (/\b(?:special|specials|recap|picture drama|chibi|junior high|ncop|nced|creditless|preview)\b/i.test(t)) return true;
+    // A complete-series pack may carry "+OVA" in its name and is still a pack.
+    var seriesPack = /\b(?:S\d{1,2}|season|batch|complete)\b/i.test(t);
+    if (/\b(?:ova|oad)s?\b/i.test(t) && !seriesPack) return true;
+    if (/\b(?:specials?|recaps?|picture drama|chibi|junior high|ncop|nced|creditless|preview)\b/i.test(t)) return true;
     if (/\b(?:menu|trailer|teaser|interview|making of)\b/i.test(t)) return true;
     return false;
 }
@@ -592,11 +606,21 @@ async function mediaSearch(title) {
     return (body && body.data && body.data.results) || [];
 }
 
-/** Resolve this show to NekoBT's media id. The TMDB id is matched exactly when
- *  known, so a spin-off ("One Piece: Heroines") cannot stand in for the show. */
-async function nekobtMediaId(info, titles) {
+/** Resolve this show to NekoBT's media ids. The TMDB id is matched exactly when
+ *  known, so a spin-off ("One Piece: Heroines") cannot stand in for the show.
+ *  NekoBT splits a long show into one entry per season and renames some entries
+ *  ("DAN DA DAN"), so every entry whose title is a name of this show is taken:
+ *  the exact-TMDB hit first, then title matches, without unrelated hits.
+ *  A search hit whose title is not a name of the show is only trusted when no
+ *  exact-TMDB entry exists (NekoBT renamed the entry). */
+async function nekobtMediaIds(info, titles) {
     var want = info.tmdbId ? String(info.tmdbId) : null;
-    for (var i = 0; i < titles.length; i++) {
+    var out = [];
+    var seen = {};
+    var exact = null;
+    var byTitle = [];
+    var alias = null;
+    for (var i = 0; i < titles.length && (out.length < MAX_MEDIA_LOOKUPS); i++) {
         var results;
         try {
             results = await mediaSearch(titles[i]);
@@ -604,16 +628,27 @@ async function nekobtMediaId(info, titles) {
             console.error("[NekoBT] media search '" + titles[i] + "' failed: " + (e && e.message));
             continue;
         }
-        if (want) {
-            for (var j = 0; j < results.length; j++) {
-                if (results[j] && String(results[j].tmdbId) === want) return results[j].id;
+        for (var j = 0; j < results.length; j++) {
+            var r = results[j];
+            if (!r || !r.id || seen[r.id]) continue;
+            var isExact = want != null && String(r.tmdbId) === want;
+            if (isExact) {
+                if (!exact) exact = r.id;
+                continue;
             }
-        } else if (results.length) {
-            // No TMDB id (Kitsu path): trust NekoBT's relevance-ranked top hit.
-            return results[0].id;
+            if (r.title && releaseMatchesTitle(r.title, titles)) {
+                seen[r.id] = true;
+                byTitle.push(r.id);
+            } else if (!alias && i === 0) {
+                // NekoBT's own top hit for the show's own name: its ranking.
+                alias = r.id;
+            }
         }
     }
-    return null;
+    if (exact) out.push(exact);
+    for (var t = 0; t < byTitle.length && out.length < MAX_MEDIA_LOOKUPS; t++) out.push(byTitle[t]);
+    if (!out.length && (alias || exact)) out.push(alias || exact);
+    return out;
 }
 
 /** Every torrent NekoBT has for one media id, paged. 300 is a cap, not a
@@ -691,8 +726,11 @@ function looksLikePack(name) {
 }
 
 /** The file in a pack that is the requested episode, or null. The index is the
- *  file's position in NekoBT's list, which is the torrent's file order. */
-function pickBatchFile(files, req) {
+ *  file's position in NekoBT's list, which is the torrent's file order.
+ *  `packHeight` is the resolution the pack's own name states, used when a file
+ *  name does not repeat it. In a multi-season pack a season-less file name
+ *  ("Show - 01") is ambiguous, so only an explicit season marker is trusted. */
+function pickBatchFile(files, req, packHeight, requireSeason) {
     var picked = null;
     for (var i = 0; i < files.length; i++) {
         var f = files[i] || {};
@@ -704,10 +742,12 @@ function pickBatchFile(files, req) {
             }
             continue;
         }
+        var e = fileEpisode(name);
+        if (requireSeason && e.season == null) continue;
         if (!nameMatchesEpisode(name, req)) continue;
         var resolution = resolutionOf(name);
-        var height = resolution ? resolution.height : 0;
-        // 1080p or higher only, and the file name has to say so.
+        var height = resolution ? resolution.height : packHeight || 0;
+        // 1080p or higher only.
         if (height < 1080) continue;
         if (!picked || height > picked.height) {
             picked = { idx: i, name: name, length: toInt(f.length, 0), height: height };
@@ -744,6 +784,47 @@ function packRow(r, picked, seeders) {
     };
 }
 
+/** Every season number the name carries, so "S01+S02" counts for both. */
+function namedSeasons(value) {
+    var t = String(value || "");
+    var out = [];
+    function add(n) {
+        if (n != null && out.indexOf(n) === -1) out.push(n);
+    }
+    var re = /\bS(\d{1,2})(?!\d)/gi;
+    var m;
+    while ((m = re.exec(t))) add(toInt(m[1], null));
+    re = /\b(?:season|part|cour)\s*(\d{1,2})\b/gi;
+    while ((m = re.exec(t))) add(toInt(m[1], null));
+    re = /\b(\d{1,2})(?:st|nd|rd|th)\s+season\b/gi;
+    while ((m = re.exec(t))) add(toInt(m[1], null));
+    return out;
+}
+
+/** Does this release belong to another season of the show, so a season-1
+ *  request must not use it? A name with no season marker is unmarked. */
+function namesOtherSeason(name, season, isMovie) {
+    if (isMovie) return false;
+    var t = String(name || "");
+    if (/\bfinal season\b/i.test(t)) return false;
+    var named = namedSeasons(t);
+    return named.length > 0 && named.indexOf(season) === -1;
+}
+
+/** A pack that spans several seasons: its file names alone decide which season
+ *  an episode belongs to, so a season-less file name is ambiguous. */
+function multiSeasonPack(name) {
+    var t = String(name || "");
+    if (/\bcomplete\b/i.test(t)) return true;
+    if (/\b(?:season|part|cour)s?\b[^\]]*\d{1,2}\s*(?:[+&,]\s*\d{1,2})+/i.test(t)) return true;
+    if (/\bS\d{1,2}\s*[-~+]\s*S?\d{1,2}\b/i.test(t)) return true;
+    return namedSeasons(t).length > 1;
+}
+
+/** Tokens that can follow a show title: episode/season markers and release
+ *  tags. Any other word there is a subtitle, i.e. a different show. */
+var AFTER_TITLE_TAG = /^(?:s\d+e\d+|s\d+|\d{1,4}|\d{3,4}p|\d{3,4}x\d{3,4}|part|season|cour|final|web|webrip|webdl|dl|bd|bdrip|brrip|bluray|blu|ray|dvd|dvdrip|hdtv|tv|uhd|remux|hdr|dv|hevc|avc|av1|vp9|x264|x265|h264|h265|10bit|8bit|aac|ac3|eac3|dts|flac|opus|dd|ddp|truehd|atmos|multi|dual|audio|sub|subs|dub|batch|complete|repack|proper|v\d|eng|english|japanese|jpn|ita|fre|ger|spa|por|rus|ara|chi|kor|raw|raws|uncensored|uncut|extended|edition|internal|limited)$/;
+
 /** The release must name this show, not merely share the episode token the
  *  fuzzy search matched. The title has to appear as a whole phrase, so
  *  "One Piece" does not accept "One Piece of Cake". */
@@ -751,9 +832,22 @@ function releaseMatchesTitle(release, titles) {
     var a = normTitle(stripSeasonMarkers(decodeEntities(release)));
     if (!a) return false;
     var padded = " " + a + " ";
+    var glued = a.replace(/ /g, "");
     for (var i = 0; i < titles.length; i++) {
         var b = normTitle(stripSeasonMarkers(titles[i]));
-        if (b && padded.indexOf(" " + b + " ") !== -1) return true;
+        if (!b) continue;
+        var at = padded.indexOf(" " + b + " ");
+        if (at === -1) {
+            // A single-word title can be split in the release ("Dandadan" ->
+            // "Dan Da Dan"). Only single-word titles: gluing a two-word title
+            // would make "One Piece: Heroines" pass as "One Piece".
+            if (b.indexOf(" ") === -1 && glued.indexOf(b) !== -1) return true;
+            continue;
+        }
+        // A spin-off puts its own subtitle where a release tag belongs
+        // ("One Piece: Heroines S01E01"); that is another show.
+        var next = padded.slice(at + b.length + 2).split(" ")[0] || "";
+        if (!next || AFTER_TITLE_TAG.test(next)) return true;
     }
     return false;
 }
@@ -763,8 +857,7 @@ function isDualName(name) {
 }
 
 /** Split the feed into single-episode rows and pack candidates. A pack is only
- *  a candidate: it is fetched and aimed at one episode later, and only when the
- *  show has no single-episode release for this episode. */
+ *  a candidate: it is fetched and aimed at one episode later. */
 function selectReleases(list, guardTitles, req) {
     var seen = {};
     var singles = [];
@@ -780,10 +873,10 @@ function selectReleases(list, guardTitles, req) {
         // 1080p or higher only, and the name has to say so.
         if (!resolution || resolution.height < 1080) continue;
         if (isBatchName(r.name)) {
-            packs.push(r);
+            if (!namesOtherSeason(r.name, req.season, req.isMovie)) packs.push(r);
         } else if (req.isMovie || nameMatchesEpisode(r.name, req)) {
             singles.push(singleRow(r, resolution));
-        } else if (looksLikePack(r.name)) {
+        } else if (looksLikePack(r.name) && !namesOtherSeason(r.name, req.season, req.isMovie)) {
             packs.push(r);
         }
     }
@@ -793,43 +886,50 @@ function selectReleases(list, guardTitles, req) {
 async function nekobtReleases(info, searchTitles, guardTitles, req) {
     if (!searchTitles[0]) return [];
     var guard = guardTitles && guardTitles.length ? guardTitles : searchTitles;
-    var mediaId = await nekobtMediaId(info, searchTitles);
-    var items;
-    if (mediaId) {
-        items = await nekobtMediaTorrents(mediaId);
-    } else {
-        // No media entry: fall back to plain title searches. Scene-style groups
-        // name the episode "SxxExx", fansub groups "- NN" (or "S2 - NN").
-        var queries;
+    var mediaIds = await nekobtMediaIds(info, searchTitles);
+    var lists = await Promise.all(
+        mediaIds.map(function (id) {
+            return nekobtMediaTorrents(id);
+        })
+    );
+    var items = [];
+    for (var l = 0; l < lists.length; l++) items = items.concat(lists[l] || []);
+
+    var selected = selectReleases(items, guard, req);
+    // Shows NekoBT indexes as one entry per season land in a sibling entry, and
+    // older threads are often not tied to any media entry. Fall back to plain
+    // title searches, one bounded call.
+    if (!selected.singles.length && !selected.packs.length) {
+        var pool = [searchTitles[0]].concat(guardTitles || []);
+        var queries = [];
         if (req.isMovie) {
-            queries = [];
-            var pool = searchTitles.concat(guardTitles || []);
             for (var t = 0; t < pool.length && queries.length < 2; t++) {
                 if (pool[t] && isAscii(pool[t]) && queries.indexOf(pool[t]) === -1) queries.push(pool[t]);
             }
         } else {
+            // Scene-style groups name the episode "SxxExx", fansub groups "- NN".
             var ep = pad2(req.episode);
             queries = [searchTitles[0] + " S" + pad2(req.season) + "E" + ep, searchTitles[0] + " - " + ep];
         }
-        var lists = await Promise.all(
+        var found = await Promise.all(
             queries.map(function (q) {
                 return nekobtTextSearch(q);
             })
         );
-        items = [];
-        for (var l = 0; l < lists.length; l++) items = items.concat(lists[l] || []);
+        for (var f = 0; f < found.length; f++) items = items.concat(found[f] || []);
+        selected = selectReleases(items, guard, req);
     }
-
-    var selected = selectReleases(items, guard, req);
-    // A single-episode release already names the episode, so packs add nothing.
-    if (selected.singles.length || !selected.packs.length) return selected.singles;
+    // A single-episode release already names the episode, but packs of the same
+    // episode add sources, so they are only skipped when the result is full.
+    if (!selected.packs.length || selected.singles.length >= MAX_RESULTS) return selected.singles;
 
     // Batch-only show: resolve the best-seeded packs and take the exact episode
     // file out of each, so the pack cannot open its largest file instead.
     selected.packs.sort(function (a, b) {
         return (b.seeders || 0) - (a.seeders || 0);
     });
-    var chosen = selected.packs.slice(0, MAX_PACK_LOOKUPS);
+    var room = MAX_RESULTS - selected.singles.length;
+    var chosen = selected.packs.slice(0, Math.min(MAX_PACK_LOOKUPS, room));
     var metas = await Promise.all(
         chosen.map(function (pack) {
             return nekobtTorrentFiles(pack.id);
@@ -839,12 +939,13 @@ async function nekobtReleases(info, searchTitles, guardTitles, req) {
     for (var p = 0; p < chosen.length; p++) {
         var meta = metas[p];
         if (!meta) continue;
-        var picked = pickBatchFile(meta.files, req);
+        var packRes = resolutionOf(chosen[p].name);
+        var picked = pickBatchFile(meta.files, req, packRes && packRes.height, multiSeasonPack(chosen[p].name));
         if (!picked) continue;
         if (meta.seeders < MIN_SEEDERS) continue;
         rows.push(packRow(chosen[p], picked, meta.seeders));
     }
-    return rows;
+    return selected.singles.concat(rows);
 }
 
 // ---------------------------------------------------------------------------

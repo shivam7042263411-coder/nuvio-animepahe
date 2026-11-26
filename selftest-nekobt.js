@@ -228,6 +228,17 @@ check("batch: x265-10bit is not a batch", sandbox.isBatchName("[LYS1TH3A] A Sile
 check("title: apostrophe variant matches", sandbox.releaseMatchesTitle("[ToonsHub] Frieren Beyond Journeys End S02E10", ["Frieren: Beyond Journey's End", "Sousou no Frieren"]), true);
 check("title: romaji matches", sandbox.releaseMatchesTitle("[Erai-raws] Sousou no Frieren 2nd Season - 10", ["Frieren: Beyond Journey's End", "Sousou no Frieren"]), true);
 check("title: unrelated release rejected", sandbox.releaseMatchesTitle("Some Other Show S02E10 1080p", ["Sousou no Frieren"]), false);
+check("title: spin-off subtitle rejected", sandbox.releaseMatchesTitle("[Yameii] ONE PIECE HEROINES - S01E01 [English Dub] [CR WEB-DL 1080p]", ["One Piece"]), false);
+check("title: spaced variant matches a single-word title", sandbox.releaseMatchesTitle("[jaaj] DAN DA DAN S01 (2024) (BD 1080p AV1 AAC)", ["Dandadan"]), true);
+
+check("season: a season-3 pack is not a season-1 release", sandbox.namesOtherSeason("[BlackRabbit] JUJUTSU KAISEN (2020) - S03 [Bluray-1080p]", 1, false), true);
+check("season: a multi-season pack counts for each season", sandbox.namesOtherSeason("Dan Da Dan 01-24 (S01+S02) [BD 1080p]", 2, false), false);
+check("season: an S00 recap pack is not season 1", sandbox.namesOtherSeason("One Piece S00E040-E063 Recaps 1080p", 1, false), true);
+check("season: a nameless pack is not filtered", sandbox.namesOtherSeason("[SubsPlease] Frieren (01-28) (1080p) [Batch]", 1, false), false);
+
+check("episode: a title's own number before a year is not an episode", sandbox.fileEpisode("Mob Psycho 100 (2016) - S01 [Bluray-1080p]").episode, null);
+check("special: a complete-series pack with OVAs is still a pack", sandbox.isSpecialFile("[DB] Mob Psycho 100 S01-S03 (Complete Series+OVA+Extra) [BD1080p]"), false);
+check("special: an OVA release is a special", sandbox.isSpecialFile("[Group] Show OVA - 01 [1080p]"), true);
 
 const REQ = { isMovie: false, season: 1, episode: 1, absoluteEpisode: 1, derivedSeason: 1 };
 check("episode: S01E01", sandbox.nameMatchesEpisode("Show S01E01 [1080p].mkv", REQ), true);
@@ -239,6 +250,11 @@ check(
     sandbox.nameMatchesEpisode("Show 2nd Season - 01.mkv", { ...REQ, derivedSeason: 2 }),
     false
 );
+check("episode: a bracketed season marker is read", sandbox.fileEpisode("Show - (S2) - 01.mkv").season, 2);
+check("pack: a resolution-silent file takes the pack's resolution", (sandbox.pickBatchFile([{ name: "Show - S01E01 - Pilot.mkv", length: 1 }], REQ, 1080, false) || {}).idx, 0);
+check("pack: a multi-season pack requires the file's season", (sandbox.pickBatchFile([{ name: "Show - 01.mkv", length: 1 }, { name: "Show - (S2) - 01.mkv", length: 1 }], { ...REQ, season: 2, absoluteEpisode: null }, 1080, true) || {}).name, "Show - (S2) - 01.mkv");
+check("pack: a multi-season pack is detected", sandbox.multiSeasonPack("Show Season 1+2+3 (BD 1080p)"), true);
+check("pack: a single-season pack is not multi", sandbox.multiSeasonPack("Show S01 (BD 1080p)"), false);
 
 check("magnet: starts with btih", /^magnet:\?xt=urn:btih:[0-9a-f]{40}&dn=/.test(sandbox.magnetFor({ hash: H.n1080, name: "x" })), true);
 check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n1080, name: "x" })), true);
@@ -246,21 +262,22 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
 // --- end to end ------------------------------------------------------------
 (async () => {
     // Frieren S1E1: two 1080p and one 2160p pass; the 720p, zero-seeder,
-    // batch, wrong-episode, wrong-show and season-2 rows are dropped. The
-    // bad-hash row never parsed.
+    // wrong-episode, wrong-show and season-2 rows are dropped. The batch is a
+    // pack, so it adds the targeted episode file as a fourth row. The bad-hash
+    // row never parsed.
     const rows = await sandbox.module.exports.getStreams(209867, "tv", 1, 1);
     const has = (h) => rows.some((r) => r.infoHash === h);
-    check("e2e: three playable releases", rows.length, 3);
+    check("e2e: three singles plus the pack's episode", rows.length, 4);
     check("e2e: every infoHash 40-hex", rows.filter((r) => !/^[0-9a-f]{40}$/.test(r.infoHash)).length, 0);
     check("e2e: no blank urls", rows.filter((r) => !r.url).length, 0);
     check("e2e: all rows are torrents from NekoBT", rows.every((r) => r.type === "torrent" && r.provider === "NekoBT"), true);
-    check("e2e: every url is a magnet", rows.every((r) => /^magnet:\?xt=urn:btih:/.test(r.url)), true);
+    check("e2e: every url is a magnet or a pack file", rows.every((r) => /^(?:magnet:\?xt=urn:btih:|torrent:\/\/[0-9a-f]{40}\/\d+$)/.test(r.url)), true);
     check("e2e: 1080p row kept", has(H.n1080), true);
     check("e2e: second 1080p row kept", has(H.n1080b), true);
     check("e2e: 2160p row kept and labelled", (rows.find((r) => r.infoHash === H.n2160) || {}).quality, "2160p");
     check("e2e: 720p row dropped", has(H.n720), false);
     check("e2e: zero-seeder row dropped", has(H.nzero), false);
-    check("e2e: batch row dropped", has(H.nbatch), false);
+    check("e2e: batch row kept as its episode file", (rows.find((r) => r.infoHash === H.nbatch) || {}).url, "torrent://" + H.nbatch + "/0");
     check("e2e: wrong-episode row dropped", has(H.nwrongep), false);
     check("e2e: wrong-show row dropped", has(H.nwrongshow), false);
     check("e2e: another season's row dropped", has(H.nseason2), false);
@@ -286,8 +303,8 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     check("e2e pack: size is the picked file's", (batch[0] || {}).size, "1.50 GiB");
     check("e2e pack: 720p copy not chosen", batch.every((r) => r.url.indexOf("/3") === -1), true);
     check("e2e pack: torrent endpoint queried", torrentUrls.some((u) => /\/torrents\/9001\b/.test(u)), true);
-    // A pack never displaces real single-episode releases.
-    check("e2e: S1E1 returns no pack row", rows.every((r) => r.infoHash !== H.nbatch), true);
+    // A pack row is the exact episode file, not the pack's largest file.
+    check("e2e: S1E1 pack row targets its own episode", (rows.find((r) => r.infoHash === H.nbatch) || {}).url, "torrent://" + H.nbatch + "/0");
 
     // A season-2 request must take its own episode and no season-1 release.
     const s2 = await sandbox.module.exports.getStreams(209867, "tv", 2, 10);
