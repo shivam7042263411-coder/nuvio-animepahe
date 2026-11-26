@@ -20,6 +20,18 @@ const H = {
     hdr: "7777777777777777777777777777777777777777",
     s2: "8888888888888888888888888888888888888888",
     movie: "9999999999999999999999999999999999999999",
+    // Nyaa
+    n1080: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    n2160: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    n720: "cccccccccccccccccccccccccccccccccccccccc",
+    nzero: "dddddddddddddddddddddddddddddddddddddddd",
+    nbatch: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    nwrongep: "ffffffffffffffffffffffffffffffffffffffff",
+    nwrongshow: "4545454545454545454545454545454545454545",
+    n1080b: "5656565656565656565656565656565656565656",
+    ndup: "6767676767676767676767676767676767676767",
+    nmovie: "abababababababababababababababababababab",
+    nmovie720: "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc",
 };
 
 // --- fixtures --------------------------------------------------------------
@@ -89,6 +101,56 @@ const SEADEX = {
     20954: [torrent(H.movie, "MovieGroup", true, [["A Silent Voice (BD 1080p).mkv", 9500000000]])],
 };
 
+// --- nyaa.si fixtures ------------------------------------------------------
+// Real RSS shape: <item><title>..</title><nyaa:infoHash>..</nyaa:infoHash>
+// <nyaa:seeders>..</nyaa:seeders><nyaa:size>..</nyaa:size></item>
+function esc(value) {
+    return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function nyaaItem(row) {
+    return (
+        "<item>" +
+        "<title>" + esc(row.title) + "</title>" +
+        "<nyaa:infoHash>" + row.hash + "</nyaa:infoHash>" +
+        "<nyaa:seeders>" + (row.seeders || 0) + "</nyaa:seeders>" +
+        "<nyaa:trusted>" + (row.trusted ? "Yes" : "No") + "</nyaa:trusted>" +
+        "<nyaa:size>" + (row.size || "1.4 GiB") + "</nyaa:size>" +
+        "</item>"
+    );
+}
+function rss(rows) {
+    return (
+        '<?xml version="1.0"?><rss xmlns:nyaa="https://nyaa.si/xmlns/nyaa"><channel>' +
+        rows.map(nyaaItem).join("") +
+        "</channel></rss>"
+    );
+}
+
+const NYAA_FRIEREN = rss([
+    { title: "[SubsPlease] Sousou no Frieren - 01 (1080p) [ABCD1234]", hash: H.n1080, seeders: 120, size: "1.4 GiB", trusted: true },
+    { title: "[Feibanyama] Frieren Beyond Journeys End S01E01 [2160p HEVC]", hash: H.n2160, seeders: 30, size: "1.8 GiB" },
+    { title: "[Erai-raws] Sousou no Frieren - 01 [1080p][HEVC][Multiple Subtitle]", hash: H.n1080b, seeders: 60, size: "1.3 GiB" },
+    { title: "[Group] Sousou no Frieren - 01 (720p)", hash: H.n720, seeders: 40 },
+    { title: "[Group] Sousou no Frieren - 01 (1080p) [DEAD]", hash: H.nzero, seeders: 0 },
+    { title: "[SubsPlease] Sousou no Frieren (01-28) (1080p) [Batch]", hash: H.nbatch, seeders: 200 },
+    { title: "[Group] Sousou no Frieren - 02 (1080p)", hash: H.nwrongep, seeders: 50 },
+    { title: "[Group] Some Other Show - 01 (1080p)", hash: H.nwrongshow, seeders: 50 },
+    // Same hash SeaDex already returned: the curated row must win.
+    { title: "[Dup] Sousou no Frieren - 01 (1080p)", hash: H.uhd, seeders: 999 },
+]);
+const NYAA_MOVIE = rss([
+    { title: "[Judas] Koe no Katachi (A Silent Voice) [BD 1080p][Dual-Audio]", hash: H.nmovie, seeders: 207, size: "2.2 GiB" },
+    { title: "[Group] Koe no Katachi (720p)", hash: H.nmovie720, seeders: 10 },
+]);
+const NYAA = {
+    "sousou no frieren s01e01": NYAA_FRIEREN,
+    "sousou no frieren - 01": NYAA_FRIEREN,
+    "sousou no frieren": NYAA_FRIEREN,
+    "koe no katachi": NYAA_MOVIE,
+    "a silent voice": NYAA_MOVIE,
+};
+const EMPTY_RSS = '<?xml version="1.0"?><rss xmlns:nyaa="https://nyaa.si/xmlns/nyaa"><channel></channel></rss>';
+
 // --- sandbox ---------------------------------------------------------------
 
 function makeSandbox(overrides) {
@@ -115,6 +177,9 @@ function makeSandbox(overrides) {
                 const id = Number(decodeURIComponent(u).match(/alID=(\d+)/)[1]);
                 return json({ items: [{ expand: { trs: SEADEX[id] || [] } }] });
             }
+            // Default sandbox: Nyaa reachable but empty, so the SeaDex checks
+            // below stay exact. The Nyaa block uses its own sandbox.
+            if (u.indexOf("nyaa.si") !== -1) return raw(EMPTY_RSS);
             return json({});
         },
     };
@@ -123,6 +188,32 @@ function makeSandbox(overrides) {
 
 function json(body) {
     return { ok: true, status: 200, text: async () => JSON.stringify(body), json: async () => JSON.parse(JSON.stringify(body)), headers: { get: () => null } };
+}
+
+function raw(text) {
+    return { ok: true, status: 200, text: async () => text, json: async () => JSON.parse(text), headers: { get: () => null } };
+}
+
+// A sandbox whose Nyaa feed is the fixture map, everything else shared with
+// the default sandbox. The plugin hits Nyaa with `q`, so the map is keyed by
+// the lowercased query.
+function nyaaQueryOf(url) {
+    const m = String(url).match(/[?&]q=([^&]+)/);
+    return decodeURIComponent(m ? m[1] : "").replace(/\+/g, " ").toLowerCase();
+}
+function nyaaSandbox(overrides) {
+    return makeSandbox(
+        Object.assign(
+            {
+                fetch: async (url, options) => {
+                    const u = String(url);
+                    if (u.indexOf("nyaa.si") !== -1) return raw(NYAA[nyaaQueryOf(u)] || EMPTY_RSS);
+                    return sandbox.fetch(url, options);
+                },
+            },
+            overrides || {}
+        )
+    );
 }
 
 const sandbox = makeSandbox();
@@ -212,6 +303,28 @@ check(
     [154587, 182255]
 );
 
+// --- nyaa parsing / guards -------------------------------------------------
+const parsed = sandbox.parseNyaaRss(NYAA_FRIEREN);
+check("nyaa parse: items found", parsed.length, 9);
+check("nyaa parse: every hash is 40-hex", parsed.filter((p) => !/^[0-9a-f]{40}$/.test(p.hash)).length, 0);
+check("nyaa parse: seeders numeric", parsed.filter((p) => typeof p.seeders !== "number").length, 0);
+check("nyaa parse: trusted flag read", parsed.filter((p) => p.trusted).length, 1);
+check("nyaa parse: bad hash skipped", sandbox.parseNyaaRss(rss([{ title: "X - 01 (1080p)", hash: "not-a-hash" }])).length, 0);
+check("nyaa parse: junk gives no items", sandbox.parseNyaaRss("").length, 0);
+check("nyaa parse: group extracted", parsed[0].group, "SubsPlease");
+
+check("nyaa batch: (01-28) [Batch]", sandbox.isBatchName("[SubsPlease] Sousou no Frieren (01-28) (1080p) [Batch]"), true);
+check("nyaa batch: S01E01-E04", sandbox.isBatchName("Frieren S01E01-E04 1080p NF WEB-DL x264-VARYG"), true);
+check("nyaa batch: S02E01-E07", sandbox.isBatchName("Jujutsu Kaisen S02E01-E07.1080p AMZN WEB-DL"), true);
+check("nyaa batch: S01-S03", sandbox.isBatchName("Show S01-S03 (1080p)"), true);
+check("nyaa batch: single episode is not a batch", sandbox.isBatchName("[ToonsHub] Frieren S02E10 1080p CR WEB-DL"), false);
+check("nyaa batch: x265-10bit is not a batch", sandbox.isBatchName("[LYS1TH3A] A Silent Voice (BD 1080p HEVC x265 10-bit Opus)"), false);
+check("nyaa title: apostrophe variant matches", sandbox.releaseMatchesTitle("[ToonsHub] Frieren Beyond Journeys End S02E10", ["Frieren: Beyond Journey's End", "Sousou no Frieren"]), true);
+check("nyaa title: romaji matches", sandbox.releaseMatchesTitle("[Erai-raws] Sousou no Frieren 2nd Season - 10", ["Frieren: Beyond Journey's End", "Sousou no Frieren"]), true);
+check("nyaa title: unrelated release rejected", sandbox.releaseMatchesTitle("Some Other Show S02E10 1080p", ["Sousou no Frieren"]), false);
+check("nyaa magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n1080, name: "x" })), true);
+check("nyaa magnet: starts with btih", /^magnet:\?xt=urn:btih:[0-9a-f]{40}&dn=/.test(sandbox.magnetFor({ hash: H.n1080, name: "x" })), true);
+
 // --- end to end ------------------------------------------------------------
 (async () => {
     const results = await sandbox.module.exports.getStreams(209867, "tv", 1, 1);
@@ -232,7 +345,7 @@ check(
     const batch = results.find((r) => r.infoHash === H.batch);
     check("e2e: multi-file uses torrent://hash/index", batch && batch.url, "torrent://" + H.batch + "/0");
     const uhd = results.find((r) => r.infoHash === H.uhd);
-    check("e2e: single-file uses a magnet", uhd && /^magnet:\?xt=urn:btih:[0-9a-f]{40}$/.test(uhd.url), true);
+    check("e2e: single-file uses a magnet", uhd && /^magnet:\?xt=urn:btih:[0-9a-f]{40}(&|$)/.test(uhd.url), true);
     check("e2e: 2160p labelled", uhd && uhd.quality, "2160p");
     check("e2e: 2160p ranked above 1080p", results.indexOf(uhd) < results.indexOf(batch), true);
     check("e2e: inferred release is labelled HD", results.find((r) => r.infoHash === H.inferred).quality, "HD");
@@ -251,7 +364,7 @@ check(
     const movie = await sandbox.module.exports.getStreams(129999, "movie");
     check("e2e: movie resolves", movie.length, 1);
     check("e2e: movie hash", movie[0] && movie[0].infoHash, H.movie);
-    check("e2e: movie uses magnet", movie[0] && /^magnet:\?xt=urn:btih:[0-9a-f]{40}$/.test(movie[0].url), true);
+    check("e2e: movie uses magnet", movie[0] && /^magnet:\?xt=urn:btih:[0-9a-f]{40}(&|$)/.test(movie[0].url), true);
 
     // IMDb id resolves through TMDB find first.
     const fromImdb = await sandbox.module.exports.getStreams("tt1234567", "tv", 1, 1);
@@ -295,6 +408,80 @@ check(
     vm.runInContext(source, flaky);
     const retried = await flaky.module.exports.getStreams(209867, "tv", 1, 1);
     check("e2e: 429 retried", retried.length, results.length);
+
+    // --- nyaa e2e ----------------------------------------------------------
+    // Both providers merged. Frieren S1E1: nyAa 1080p (x2) and 2160p pass; the
+    // 720p, zero-seeder, batch, wrong-episode and wrong-show rows are dropped.
+    const both = nyaaSandbox();
+    vm.createContext(both);
+    vm.runInContext(source, both);
+    const rows = await both.module.exports.getStreams(209867, "tv", 1, 1);
+    const has = (h) => rows.some((r) => r.infoHash === h);
+    check("nyaa e2e: seadex + nyaa merged", rows.length, 7);
+    check("nyaa e2e: every infoHash 40-hex", rows.filter((r) => !/^[0-9a-f]{40}$/.test(r.infoHash)).length, 0);
+    check("nyaa e2e: every row is a torrent", rows.every((r) => r.type === "torrent"), true);
+    check("nyaa e2e: two providers present", rows.map((r) => r.provider).filter((p, i, a) => a.indexOf(p) === i).sort(), ["Nyaa", "SeaDex"]);
+    check("nyaa e2e: 1080p nyaa row kept", has(H.n1080), true);
+    check("nyaa e2e: second 1080p nyaa row kept", has(H.n1080b), true);
+    check("nyaa e2e: 2160p nyaa row kept and labelled", (rows.find((r) => r.infoHash === H.n2160) || {}).quality, "2160p");
+    check("nyaa e2e: 720p nyaa row dropped", has(H.n720), false);
+    check("nyaa e2e: zero-seeder row dropped", has(H.nzero), false);
+    check("nyaa e2e: batch row dropped", has(H.nbatch), false);
+    check("nyaa e2e: wrong-episode row dropped", has(H.nwrongep), false);
+    check("nyaa e2e: wrong-show row dropped", has(H.nwrongshow), false);
+    check("nyaa e2e: shared hash stays with the curated provider", (rows.find((r) => r.infoHash === H.uhd) || {}).provider, "SeaDex");
+    const nrow = rows.find((r) => r.infoHash === H.n1080);
+    check("nyaa e2e: nyaa row plays a magnet", nrow && /^magnet:\?xt=urn:btih:/.test(nrow.url), true);
+    check("nyaa e2e: nyaa row exposes seeders", nrow && nrow.seeders, 120);
+    check("nyaa e2e: nyaa row carries the provider label", nrow && nrow.provider, "Nyaa");
+    check("nyaa e2e: rank prefix keeps order through Nuvio's sort", rows.map((r) => r.name.slice(0, 2)), rows.map((_, i) => String(i + 1).padStart(2, "0")));
+
+    // Nyaa must still return streams when AniList is down: it does not need it.
+    const anilistDown = nyaaSandbox({
+        fetch: async (url, options) => {
+            if (String(url).indexOf("graphql.anilist.co") !== -1) return json({ data: { Page: { media: [] } } });
+            return both.fetch(url, options);
+        },
+    });
+    vm.createContext(anilistDown);
+    vm.runInContext(source, anilistDown);
+    const onlyNyaa = await anilistDown.module.exports.getStreams(209867, "tv", 1, 1);
+    check("nyaa e2e: works with AniList down", onlyNyaa.length, 4);
+    check("nyaa e2e: all rows are nyaa then", onlyNyaa.every((r) => r.provider === "Nyaa"), true);
+
+    // Android TV host with Nyaa: no setTimeout, retries must not hang.
+    const tvNyaa = nyaaSandbox();
+    delete tvNyaa.setTimeout;
+    delete tvNyaa.clearTimeout;
+    vm.createContext(tvNyaa);
+    vm.runInContext(source, tvNyaa);
+    const tvRows2 = await tvNyaa.module.exports.getStreams(209867, "tv", 1, 1);
+    check("nyaa tv (no setTimeout): still yields streams", tvRows2.length, 7);
+
+    // Nyaa RSS resets on the first try: the fetch retries and still works.
+    let nyaaCalls = 0;
+    const flakyNyaa = nyaaSandbox({
+        fetch: async (url, options) => {
+            const u = String(url);
+            if (u.indexOf("nyaa.si") !== -1) {
+                nyaaCalls++;
+                if (nyaaCalls <= 3) throw new Error("connection reset");
+            }
+            return both.fetch(url, options);
+        },
+    });
+    vm.createContext(flakyNyaa);
+    vm.runInContext(source, flakyNyaa);
+    const retriedNyaa = await flakyNyaa.module.exports.getStreams(209867, "tv", 1, 1);
+    check("nyaa e2e: RSS reset retried, streams still returned", retriedNyaa.length, 7);
+
+    // Movies: one Nyaa query per ASCII title, 1080p+ only.
+    const movieNyaa = nyaaSandbox();
+    vm.createContext(movieNyaa);
+    vm.runInContext(source, movieNyaa);
+    const mRows = await movieNyaa.module.exports.getStreams(129999, "movie");
+    check("nyaa e2e movie: nyaa row kept", mRows.some((r) => r.infoHash === H.nmovie), true);
+    check("nyaa e2e movie: 720p dropped", mRows.some((r) => r.infoHash === H.nmovie720), false);
 
     console.log(failures.length ? `\n${failures.join("\n")}\n\n${failures.length} FAILED` : "\nALL PASS");
     process.exit(failures.length ? 1 : 0);

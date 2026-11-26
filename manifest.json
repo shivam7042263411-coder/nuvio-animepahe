@@ -1,14 +1,14 @@
 {
-  "name": "Nuvio SeaDex Torrents",
-  "version": "2.0.0",
-  "description": "Torrent source for NuvioTV backed by SeaDex (seadex.moe). Returns the curated best releases for an anime, per episode, as 40-hex magnets or torrent:// batch indexes for Nuvio's P2P engine.",
+  "name": "Nuvio Anime Torrents (SeaDex + Nyaa)",
+  "version": "2.1.0",
+  "description": "Torrent source for NuvioTV backed by SeaDex (seadex.moe) and nyaa.si. Returns curated best releases from SeaDex and the weekly fansub releases from Nyaa, per episode, as 40-hex magnets or torrent:// batch indexes for Nuvio's P2P engine. 1080p and above only.",
   "author": "Nuvio Community",
   "scrapers": [
     {
       "id": "anime-torrent",
-      "name": "SeaDex Torrents",
-      "description": "Per-episode torrents from SeaDex (seadex.moe), keyed by AniList id; 1080p and above only, including season batches targeted at the exact episode file",
-      "version": "2.0.0",
+      "name": "Anime Torrents",
+      "description": "Per-episode torrents from SeaDex (curated, keyed by AniList id, season batches targeted at the exact episode file) and nyaa.si (weekly fansub releases). 1080p and above only; zero-seeder torrents and multi-episode Nyaa batches are excluded.",
+      "version": "2.1.0",
       "filename": "anime-torrent.js",
       "supportedTypes": [
         "movie",
