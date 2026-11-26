@@ -53,7 +53,8 @@ content id (TMDB / IMDb / Kitsu)
   NekoBT Torrents (nekobt-torrent.js)
     -> NekoBT media id for this show (exact TMDB id)
     -> every torrent NekoBT lists for it (Torznab feed, paged)
-    -> 1080p+ single-episode releases with at least one seeder
+    -> 1080p+ releases with at least one seeder; a season pack is resolved to
+       the requested episode's file and aimed at it with torrent://hash/index
     -> magnet (name + public trackers)
 ```
 
@@ -130,10 +131,13 @@ A NekoBT release is kept only when **all** of these hold:
   resolution-silent name is dropped rather than guessed.
 - The torrent has **at least one seeder**. A torrent with zero seeders never
   starts, so it is never returned — that is the "no dead links" rule.
-- It is **not a batch or season pack**. The feed carries no file list, so a
-  multi-episode torrent cannot be aimed at one episode; Nuvio would open its
-  largest file. Batches (`(01-12)`, `S01E01-E12`, `S01-S03`, `Batch`/`Complete`)
-  are skipped and left to SeaDex, which does carry file lists.
+- A **season pack** is not offered as-is: its magnet would open the pack's
+  largest file, not the episode. When the show has no single-episode release,
+  the plugin reads the pack's file list from NekoBT's per-torrent endpoint, picks
+  the file that is the requested episode, and aims playback at it with
+  `torrent://<hash>/<index>` — the same scheme the SeaDex provider uses. Batches
+  (`(01-12)`, `S01E01-E12`, `S01-S03`, `Batch`/`Complete`, or a bare `S01`) are
+  handled this way and never returned as a plain magnet.
 
 Each NekoBT result is a self-contained magnet carrying the release name and four
 public trackers, so it also plays in an external client on a phone, tablet or
@@ -203,10 +207,11 @@ Each provider is bounded on its own; the two never wait on each other.
   when timers exist.
 - **NekoBT Torrents:** two TMDB requests, one media lookup, then up to four feed
   pages of 100 for a show (falling back to two title-search feed requests when
-  the media lookup fails), or up to two for a movie. NekoBT does not rate-limit
-  the feed the way AniList does, but it drops connections now and then, so each
-  feed request is retried up to three times. NekoBT calls nothing else — no
-  AniList, no SeaDex.
+  the media lookup fails), or up to two for a movie. When the show has no
+  single-episode release, up to three per-torrent file-list lookups resolve a
+  season pack. NekoBT does not rate-limit the feed the way AniList does, but it
+  drops connections now and then, so each request is retried up to three times.
+  NekoBT calls nothing else — no AniList, no SeaDex.
 
 ## Limits
 
@@ -214,9 +219,8 @@ Each provider is bounded on its own; the two never wait on each other.
   Shows or episodes with no entry, or with only private-tracker copies, return
   no SeaDex rows — NekoBT covers those.
 - NekoBT lists what its users uploaded; a show or episode nobody uploaded has no
-  row. Season packs and batches are intentionally excluded: the feed has no file
-  list, so one cannot be aimed at a single episode. For batch-only shows, use
-  SeaDex (whose entries carry file lists) or a dedicated pack release in the app.
+  row. A season pack is aimed at the exact episode file when it is the only
+  source, so batch-only shows such as Undead Unluck still play.
 - Later seasons are matched through their own AniList entries on the SeaDex
   path, and through the season in the release name on the NekoBT path. A season
   that neither indexes may be missed; the file's own `SxxExx` still prevents a

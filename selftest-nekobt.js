@@ -62,6 +62,7 @@ function torznabItem(row) {
     return (
         "<item>" +
         "<title>" + esc(row.title) + "</title>" +
+        "<guid>https://nekobt.to/torrents/" + (row.id || "1") + "</guid>" +
         '<link>magnet:?xt=urn:btih:' + row.hash + "</link>" +
         '<torznab:attr name="size" value="' + (row.sizeBytes || 1610612736) + '"/>' +
         '<torznab:attr name="seeders" value="' + (row.seeders || 0) + '"/>' +
@@ -85,7 +86,7 @@ const SHOW_FEED = feed([
     { title: "[Erai-raws] Sousou no Frieren - 01 [1080p][HEVC][Multiple Subtitle]", hash: H.n1080b, seeders: 60, sizeBytes: 1395864371 },
     { title: "[Group] Sousou no Frieren - 01 (720p)", hash: H.n720, seeders: 40, sizeBytes: 734003200 },
     { title: "[Group] Sousou no Frieren - 01 (1080p) [DEAD]", hash: H.nzero, seeders: 0 },
-    { title: "[SubsPlease] Sousou no Frieren (01-28) (1080p) [Batch]", hash: H.nbatch, seeders: 200 },
+    { title: "[SubsPlease] Sousou no Frieren (01-28) (1080p) [Batch]", hash: H.nbatch, seeders: 200, id: "9001" },
     { title: "[Group] Sousou no Frieren - 02 (1080p)", hash: H.nwrongep, seeders: 50 },
     { title: "[Group] Some Other Show - 01 (1080p)", hash: H.nwrongshow, seeders: 50 },
     { title: "[Judas] Sousou no Frieren - S02E09 [1080p]", hash: H.nseason2, seeders: 80 },
@@ -97,6 +98,23 @@ const MOVIE_FEED = feed([
     { title: "[Group] Koe no Katachi (720p)", hash: H.nmovie720, seeders: 10, sizeBytes: 734003200 },
 ]);
 const EMPTY_FEED = '<?xml version="1.0"?><rss version="1.0" xmlns:torznab="http://torznab.com/schemas/2015/feed"><channel></channel></rss>';
+
+// The per-torrent endpoint's answer for the batch above: its file list, in
+// torrent order, so a file's position is its index. E03 is at index 2; the
+// 720p copy and the creditless ending must never be picked.
+const BATCH_FILES = {
+    data: {
+        seeders: 200,
+        filesize: 6442450944,
+        files: [
+            { name: "Sousou no Frieren S01E01 (1080p) [ABCD].mkv", length: 1610612736 },
+            { name: "Sousou no Frieren S01E02 (1080p) [ABCD].mkv", length: 1610612736 },
+            { name: "Sousou no Frieren S01E03 (1080p) [ABCD].mkv", length: 1610612736 },
+            { name: "Sousou no Frieren S01E03 (720p) [ABCD].mkv", length: 734003200 },
+            { name: "NCED (1080p) [ABCD].mkv", length: 104857600 },
+        ],
+    },
+};
 
 // --- sandbox ---------------------------------------------------------------
 
@@ -123,6 +141,7 @@ function isMovieQuery(q) {
 const forbidden = [];
 const feedUrls = [];
 const mediaUrls = [];
+const torrentUrls = [];
 function makeSandbox(overrides) {
     const sb = {
         console: { log() {}, error() {} },
@@ -144,6 +163,10 @@ function makeSandbox(overrides) {
                 if (isMovieQuery(q)) return json(TMDB_MOVIE_MEDIA);
                 if (q.indexOf("frieren") !== -1 || q.indexOf("sousou") !== -1) return json(TMDB_SHOW_MEDIA);
                 return json(NO_MEDIA);
+            }
+            if (u.indexOf("nekobt.to/api/v1/torrents/") !== -1) {
+                torrentUrls.push(u);
+                return json(BATCH_FILES);
             }
             if (u.indexOf("nekobt.to/api/torznab/api") !== -1) {
                 feedUrls.push(u);
@@ -254,6 +277,18 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     check("e2e: media id resolved by title", mediaUrls.length > 0, true);
     check("e2e: torrents listed by media_id", feedUrls.some((u) => /[?&]media_id=s462\b/.test(u)), true);
 
+    // Batch-only episode: no single names S1E3, so the pack is fetched and its
+    // exact episode file is targeted by index.
+    const batch = await sandbox.module.exports.getStreams(209867, "tv", 1, 3);
+    check("e2e pack: one row for the batch-only episode", batch.length, 1);
+    check("e2e pack: url targets the pack's episode file index", (batch[0] || {}).url, "torrent://" + H.nbatch + "/2");
+    check("e2e pack: infoHash is the pack's", (batch[0] || {}).infoHash, H.nbatch);
+    check("e2e pack: size is the picked file's", (batch[0] || {}).size, "1.50 GiB");
+    check("e2e pack: 720p copy not chosen", batch.every((r) => r.url.indexOf("/3") === -1), true);
+    check("e2e pack: torrent endpoint queried", torrentUrls.some((u) => /\/torrents\/9001\b/.test(u)), true);
+    // A pack never displaces real single-episode releases.
+    check("e2e: S1E1 returns no pack row", rows.every((r) => r.infoHash !== H.nbatch), true);
+
     // A season-2 request must take its own episode and no season-1 release.
     const s2 = await sandbox.module.exports.getStreams(209867, "tv", 2, 10);
     check("e2e: season 2 finds its episode", s2.some((r) => r.infoHash === H.nseason2ep), true);
@@ -277,6 +312,8 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     vm.runInContext(source, tv);
     const tvRows = await tv.module.exports.getStreams(209867, "tv", 1, 1);
     check("tv (no setTimeout): still yields streams", tvRows.length, rows.length);
+    const tvPack = await tv.module.exports.getStreams(209867, "tv", 1, 3);
+    check("tv (no setTimeout): a pack still resolves", (tvPack[0] || {}).url, "torrent://" + H.nbatch + "/2");
 
     // A reset on the feed: fetchText retries and still returns rows.
     let calls = 0;
@@ -331,7 +368,7 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     check("e2e: AniList/SeaDex never contacted", forbidden.length, 0);
 
     // nyaa.si is fully replaced: no request may go near it.
-    const allUrls = feedUrls.concat(mediaUrls);
+    const allUrls = feedUrls.concat(mediaUrls, torrentUrls);
     check("e2e: every request targets nekobt.to", allUrls.length > 0 && allUrls.every((u) => u.indexOf("nekobt.to") !== -1), true);
     check("e2e: no nyaa.si request", allUrls.every((u) => u.indexOf("nyaa.si") === -1), true);
 

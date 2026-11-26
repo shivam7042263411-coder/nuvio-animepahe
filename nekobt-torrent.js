@@ -10,13 +10,14 @@
 //     -> NekoBT media id for this show (exact TMDB id match)
 //     -> every torrent NekoBT has for it (Torznab feed, paged)
 //     -> the release that is this show and this episode, 1080p+, with seeders
-//     -> a self-contained magnet (name + public trackers)
+//     -> a self-contained magnet, or torrent://<hash>/<index> for a pack
 //
-// The Torznab feed carries no file list, so a multi-episode batch cannot be
-// aimed at one episode (Nuvio would open its largest file). Batches are skipped
-// here; the SeaDex provider covers those, because SeaDex does carry file lists.
-// A torrent with no seeder never starts, so zero-seeder releases are dropped:
-// that is the "no dead links" rule.
+// The Torznab feed carries no file list, but NekoBT's per-torrent endpoint
+// does. When a show has no single-episode release, a season pack is resolved to
+// the exact episode file and emitted as torrent://<hash>/<index> (Nuvio reads
+// the index from that scheme), so it cannot open the wrong file. A torrent with
+// no seeder never starts, so zero-seeder releases are dropped: that is the
+// "no dead links" rule.
 // =============================================================================
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
@@ -28,6 +29,12 @@ var NEKOBT_API = "https://nekobt.to/api/torznab/api";
 // Maps a show/movie to NekoBT's own media id, which the feed accepts as
 // `media_id` to list every torrent for that title (exact show, all seasons).
 var NEKOBT_MEDIA = "https://nekobt.to/api/v1/media/search";
+// Per-torrent metadata. Unlike the feed it carries the file list, which is what
+// lets a season pack be aimed at one episode.
+var NEKOBT_TORRENT = "https://nekobt.to/api/v1/torrents/";
+// How many packs to resolve when a show has no single-episode release. Each
+// costs one request, so the best-seeded few are enough.
+var MAX_PACK_LOOKUPS = 3;
 // "No dead links": a torrent with no seeder never starts, so it is dropped.
 var MIN_SEEDERS = 1;
 // Public trackers put in every magnet so playback can start on any client
@@ -156,6 +163,26 @@ async function fetchText(url, label, attempts) {
                 label
             );
             if (res.ok) return await res.text();
+            last = new Error(label + " HTTP " + res.status);
+            if (res.status >= 400 && res.status < 500) break;
+        } catch (e) {
+            last = e;
+        }
+    }
+    throw last || new Error(label + " failed");
+}
+
+/** GET JSON with the same retry rule as fetchText. */
+async function fetchJson(url, label, attempts) {
+    attempts = attempts || 3;
+    var last = null;
+    for (var attempt = 0; attempt < attempts; attempt++) {
+        try {
+            var res = await withTimeout(
+                fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }),
+                label
+            );
+            if (res.ok) return await res.json();
             last = new Error(label + " HTTP " + res.status);
             if (res.status >= 400 && res.status < 500) break;
         } catch (e) {
@@ -432,6 +459,10 @@ function isSpecialFile(name) {
     return false;
 }
 
+function isVideoName(name) {
+    return /\.(mkv|mp4|m4v|avi|webm|ts|m2ts|mov|wmv)$/i.test(String(name || ""));
+}
+
 /** Does this release name hold the requested episode? */
 function nameMatchesEpisode(name, req) {
     if (isSpecialFile(name)) return false;
@@ -472,8 +503,8 @@ function nameMatchesEpisode(name, req) {
 // NekoBT (nekobt.to)
 //
 // The Torznab feed gives the release name, info hash, byte size and seeder
-// count; that is everything a magnet needs. It gives no file list, so batches
-// are skipped.
+// count; that is everything a magnet needs. It gives no file list, so a pack is
+// aimed at its episode through NekoBT's per-torrent endpoint instead.
 // ---------------------------------------------------------------------------
 
 function tagValue(block, name) {
@@ -501,7 +532,12 @@ function parseTorznab(xml) {
         var hash = String(attrValue(block, "infohash") || "").toLowerCase();
         if (!name || !/^[0-9a-f]{40}$/.test(hash)) continue;
         var group = (name.match(/^\s*\[([^\]]+)\]/) || [])[1] || "";
+        // <guid> is "https://nekobt.to/torrents/<id>"; the id addresses the
+        // per-torrent endpoint that carries the file list.
+        var guid = decodeEntities(tagValue(block, "guid") || "");
+        var id = (guid.match(/\/torrents\/(\d+)/) || [])[1] || "";
         out.push({
+            id: id,
             name: name,
             hash: hash,
             seeders: toInt(attrValue(block, "seeders"), 0),
@@ -607,8 +643,27 @@ async function nekobtMediaTorrents(mediaId) {
     return out;
 }
 
-/** Multi-episode or season pack: its magnet would open the largest file, not
- *  the requested episode, so it cannot be used. */
+/** One torrent's file list, from NekoBT's per-torrent endpoint. The list is in
+ *  torrent byte order, so a file's position is its file index. */
+async function nekobtTorrentFiles(id) {
+    if (!id) return null;
+    try {
+        var body = await fetchJson(NEKOBT_TORRENT + encodeURIComponent(id), "NekoBT torrent " + id);
+        var data = body && body.data;
+        if (!data || !Array.isArray(data.files) || !data.files.length) return null;
+        return {
+            files: data.files,
+            seeders: toInt(data.seeders, 0),
+            sizeBytes: toInt(data.filesize, 0)
+        };
+    } catch (e) {
+        console.error("[NekoBT] torrent " + id + " failed: " + (e && e.message));
+        return null;
+    }
+}
+
+/** Multi-episode or season pack by name: its magnet would open the largest
+ *  file, so it is never used as-is; it is resolved to one episode file instead. */
 function isBatchName(name) {
     var t = String(name || "");
     if (/\b(?:batch|complete|all\s+episodes)\b/i.test(t)) return true;
@@ -622,6 +677,69 @@ function isBatchName(name) {
     var m = t.match(/\b(\d{1,3})\s*[-~]\s*(\d{1,3})\b/);
     if (m && toInt(m[1], 0) <= 200 && toInt(m[2], 0) <= 200) return true;
     return false;
+}
+
+/** A season pack the feed named without an episode: a batch marker, or a bare
+ *  season marker with no episode token ("[Freehold] Undead Unluck S01 [WEBRip
+ *  1080p]"). Has to be looked up by file. A glued "S02E10" is not a pack. */
+function looksLikePack(name) {
+    if (isBatchName(name)) return true;
+    if (!/\bS\d{1,2}\b/i.test(name) && !/\b(?:season|part|cour)\s*\d{1,2}\b/i.test(name)) return false;
+    return fileEpisode(name).episode == null;
+}
+
+/** The file in a pack that is the requested episode, or null. The index is the
+ *  file's position in NekoBT's list, which is the torrent's file order. */
+function pickBatchFile(files, req) {
+    var picked = null;
+    for (var i = 0; i < files.length; i++) {
+        var f = files[i] || {};
+        var name = f.name || "";
+        if (!isVideoName(name)) continue;
+        if (req.isMovie) {
+            if (!picked || toInt(f.length, 0) > picked.length) {
+                picked = { idx: i, name: name, length: toInt(f.length, 0) };
+            }
+            continue;
+        }
+        if (!nameMatchesEpisode(name, req)) continue;
+        var resolution = resolutionOf(name);
+        var height = resolution ? resolution.height : 0;
+        // 1080p or higher only, and the file name has to say so.
+        if (height < 1080) continue;
+        if (!picked || height > picked.height) {
+            picked = { idx: i, name: name, length: toInt(f.length, 0), height: height };
+        }
+    }
+    return picked;
+}
+
+function singleRow(r, resolution) {
+    return {
+        hash: r.hash,
+        idx: 0,
+        multi: false,
+        name: r.name,
+        sizeText: formatSize(r.sizeBytes),
+        height: resolution.height,
+        dual: isDualName(r.name),
+        group: r.group,
+        seeders: r.seeders
+    };
+}
+
+function packRow(r, picked, seeders) {
+    return {
+        hash: r.hash,
+        idx: picked.idx,
+        multi: true,
+        name: r.name,
+        sizeText: formatSize(picked.length),
+        height: picked.height || 1080,
+        dual: isDualName(r.name),
+        group: r.group,
+        seeders: seeders != null ? seeders : r.seeders
+    };
 }
 
 /** The release must name this show, not merely share the episode token the
@@ -642,33 +760,32 @@ function isDualName(name) {
     return /\bdual[\s._-]?audio\b/i.test(String(name || ""));
 }
 
-function filterReleases(list, guardTitles, req) {
+/** Split the feed into single-episode rows and pack candidates. A pack is only
+ *  a candidate: it is fetched and aimed at one episode later, and only when the
+ *  show has no single-episode release for this episode. */
+function selectReleases(list, guardTitles, req) {
     var seen = {};
-    var out = [];
+    var singles = [];
+    var packs = [];
     for (var i = 0; i < list.length; i++) {
         var r = list[i];
         if (seen[r.hash]) continue;
         seen[r.hash] = true;
         if (r.seeders < MIN_SEEDERS) continue;
         if (!releaseMatchesTitle(r.name, guardTitles)) continue;
-        if (isBatchName(r.name)) continue;
         if (isSpecialFile(r.name)) continue;
         var resolution = resolutionOf(r.name);
         // 1080p or higher only, and the name has to say so.
         if (!resolution || resolution.height < 1080) continue;
-        if (!req.isMovie && !nameMatchesEpisode(r.name, req)) continue;
-        out.push({
-            hash: r.hash,
-            idx: 0,
-            name: r.name,
-            sizeText: formatSize(r.sizeBytes),
-            height: resolution.height,
-            dual: isDualName(r.name),
-            group: r.group,
-            seeders: r.seeders
-        });
+        if (isBatchName(r.name)) {
+            packs.push(r);
+        } else if (req.isMovie || nameMatchesEpisode(r.name, req)) {
+            singles.push(singleRow(r, resolution));
+        } else if (looksLikePack(r.name)) {
+            packs.push(r);
+        }
     }
-    return out;
+    return { singles: singles, packs: packs };
 }
 
 async function nekobtReleases(info, searchTitles, guardTitles, req) {
@@ -700,7 +817,32 @@ async function nekobtReleases(info, searchTitles, guardTitles, req) {
         items = [];
         for (var l = 0; l < lists.length; l++) items = items.concat(lists[l] || []);
     }
-    return filterReleases(items, guard, req);
+
+    var selected = selectReleases(items, guard, req);
+    // A single-episode release already names the episode, so packs add nothing.
+    if (selected.singles.length || !selected.packs.length) return selected.singles;
+
+    // Batch-only show: resolve the best-seeded packs and take the exact episode
+    // file out of each, so the pack cannot open its largest file instead.
+    selected.packs.sort(function (a, b) {
+        return (b.seeders || 0) - (a.seeders || 0);
+    });
+    var chosen = selected.packs.slice(0, MAX_PACK_LOOKUPS);
+    var metas = await Promise.all(
+        chosen.map(function (pack) {
+            return nekobtTorrentFiles(pack.id);
+        })
+    );
+    var rows = [];
+    for (var p = 0; p < chosen.length; p++) {
+        var meta = metas[p];
+        if (!meta) continue;
+        var picked = pickBatchFile(meta.files, req);
+        if (!picked) continue;
+        if (meta.seeders < MIN_SEEDERS) continue;
+        rows.push(packRow(chosen[p], picked, meta.seeders));
+    }
+    return rows;
 }
 
 // ---------------------------------------------------------------------------
@@ -749,10 +891,16 @@ function makeResult(item, rank) {
     var label = pad2(rank) + " · " + base;
     var language = item.dual ? "Dual Audio" : "Sub";
     if (item.seeders != null) language += " · " + item.seeders + " seeders";
+    // A pack must name its episode file or Nuvio's P2P engine opens the largest
+    // one; the engine reads the index from this scheme. Single releases keep the
+    // self-contained magnet so they also play outside Nuvio.
+    var url = item.multi
+        ? "torrent://" + item.hash + "/" + item.idx
+        : magnetFor(item);
     return {
         name: label,
         title: base,
-        url: magnetFor(item),
+        url: url,
         infoHash: item.hash,
         quality: quality + (isHdr(item.name) ? " HDR" : ""),
         size: item.sizeText || null,
