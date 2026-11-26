@@ -7,7 +7,8 @@
 //
 // Pipeline:
 //   content id (TMDB / IMDb / Kitsu) -> titles (+ season count)
-//     -> nyaa.si RSS (category "Anime - English-translated", no JSON API)
+//     -> Nyaa RSS (nyaa.si or a mirror if blocked; category
+//        "Anime - English-translated"; no JSON API)
 //     -> the release that is this show and this episode, 1080p+, with seeders
 //     -> a self-contained magnet (name + public trackers)
 //
@@ -20,7 +21,10 @@
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
 var KITSU_BASE = "https://kitsu.io/api/edge";
-var NYAA_RSS = "https://nyaa.si/?page=rss";
+// nyaa.si is DNS- and IP-blocked on some networks (it hangs, it does not fail
+// fast). A reachable Nyaa mirror is queried alongside it and the first host
+// that answers a real RSS feed wins, so a blocked host cannot stall the rest.
+var NYAA_HOSTS = ["https://nyaa.si", "https://nyaa.net"];
 // "Anime - English-translated": carries subbed and dual-audio releases. Raw
 // (Japanese, no subs) and non-English dubs are left out.
 var NYAA_CATEGORY = "1_2";
@@ -140,8 +144,8 @@ function withTimeout(promise, label) {
 
 /** GET text with retries. Nyaa resets the connection now and then, and a
  *  single reset must not read as "no torrents". */
-async function fetchText(url, label) {
-    var attempts = 3;
+async function fetchText(url, label, attempts) {
+    attempts = attempts || 3;
     var last = null;
     for (var attempt = 0; attempt < attempts; attempt++) {
         try {
@@ -500,14 +504,54 @@ function parseNyaaRss(xml) {
     return out;
 }
 
+// The host that answered last; later queries in the same lookup reuse it.
+var nyaaHost = null;
+
+function looksLikeRss(text) {
+    return /<rss[\s>]/i.test(String(text || ""));
+}
+
+async function nyaaFromHost(host, query, attempts) {
+    // `&c=`, not `?c=`: the path already carries `?page=rss`.
+    var url = host + "/?page=rss&c=" + NYAA_CATEGORY + "&q=" + encodeURIComponent(query);
+    var body = await fetchText(url, "Nyaa", attempts);
+    // A block page or the HTML search page is not a feed.
+    if (!looksLikeRss(body)) throw new Error("not an RSS feed");
+    return parseNyaaRss(body);
+}
+
+/** Query every host at once and keep the first that answers a real feed, so a
+ *  blocked host (which only hangs) cannot delay the reachable one. */
 async function nyaaSearch(query) {
-    var url = NYAA_RSS + "?c=" + NYAA_CATEGORY + "&q=" + encodeURIComponent(query);
-    try {
-        return parseNyaaRss(await fetchText(url, "Nyaa"));
-    } catch (e) {
-        console.error("[Nyaa] '" + query + "' failed: " + (e && e.message));
-        return [];
+    if (nyaaHost) {
+        try {
+            return await nyaaFromHost(nyaaHost, query, 2);
+        } catch (e) {
+            nyaaHost = null;
+        }
     }
+    return await new Promise(function (resolve) {
+        var pending = NYAA_HOSTS.length;
+        var done = false;
+        NYAA_HOSTS.forEach(function (host) {
+            nyaaFromHost(host, query, 1).then(
+                function (items) {
+                    if (done) return;
+                    done = true;
+                    nyaaHost = host;
+                    resolve(items);
+                },
+                function () {
+                    if (done) return;
+                    if (--pending === 0) {
+                        done = true;
+                        console.error("[Nyaa] '" + query + "' failed on every host");
+                        resolve([]);
+                    }
+                }
+            );
+        });
+    });
 }
 
 /** Multi-episode or season pack: its magnet would open the largest file, not

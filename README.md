@@ -110,6 +110,12 @@ its RSS feed (`?page=rss&c=1_2`, the *Anime – English-translated* category) an
 parses it directly. The feed gives the release name, info hash, seeder count and
 size — everything a magnet needs.
 
+Some networks DNS- or IP-block `nyaa.si`, and a blocked request hangs rather than
+failing fast. The provider queries `nyaa.si` and a Nyaa mirror
+([nyaa.net](https://nyaa.net)) at the same time and keeps the first that returns
+a real feed, so a blocked host cannot stall the lookup. It never talks to AniList
+or SeaDex.
+
 For a TV episode the plugin issues two searches and merges the results: the
 romaji title plus `SxxExx` (catches scene-style groups such as VARYG/ToonsHub)
 and the romaji title plus `- NN` (catches SubsPlease, Erai-raws, and

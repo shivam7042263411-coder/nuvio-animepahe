@@ -111,6 +111,7 @@ function nyaaQueryOf(url) {
 // AniList and SeaDex are deliberately unreachable: the provider must not need
 // them, and must never even call them.
 const forbidden = [];
+const nyaaUrls = [];
 function makeSandbox(overrides) {
     const sb = {
         console: { log() {}, error() {} },
@@ -126,7 +127,10 @@ function makeSandbox(overrides) {
                 if (u.indexOf("/find/") !== -1) return json(TMDB_FIND);
                 return json(u.indexOf("/movie/") !== -1 ? TMDB_MOVIE : TMDB_SHOW);
             }
-            if (u.indexOf("nyaa.si") !== -1) return raw(NYAA[nyaaQueryOf(u)] || EMPTY_RSS);
+            if (/nyaa\.(si|net)/.test(u)) {
+                nyaaUrls.push(u);
+                return raw(NYAA[nyaaQueryOf(u)] || EMPTY_RSS);
+            }
             if (/anilist|seadex/i.test(u)) {
                 forbidden.push(u);
                 throw new Error("the Nyaa provider must not call " + u);
@@ -243,7 +247,7 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     const tvRows = await tv.module.exports.getStreams(209867, "tv", 1, 1);
     check("tv (no setTimeout): still yields streams", tvRows.length, rows.length);
 
-    // Nyaa RSS resets on the first try: the fetch retries and still works.
+    // Nyaa resets on the primary host: the other host still answers.
     let calls = 0;
     const flaky = makeSandbox({
         fetch: async (url, options) => {
@@ -254,15 +258,33 @@ check("magnet: carries trackers", /tr=udp%3A/.test(sandbox.magnetFor({ hash: H.n
     vm.createContext(flaky);
     vm.runInContext(source, flaky);
     const retried = await flaky.module.exports.getStreams(209867, "tv", 1, 1);
-    check("e2e: RSS reset retried, streams still returned", retried.length, rows.length);
+    check("e2e: a reset on one host still returns rows", retried.length, rows.length);
 
     // The provider is independent: nothing ever called AniList or SeaDex.
     check("e2e: AniList/SeaDex never contacted", forbidden.length, 0);
 
-    // A wholly unreachable Nyaa returns nothing rather than throwing.
+    // The feed URL must be well-formed: `/page=rss&c=1_2&q=`, never the
+    // `?page=rss?c=` form that returns the HTML page instead of a feed.
+    check("e2e: request URL is well-formed", nyaaUrls.length > 0 && nyaaUrls.every((u) => /[?&]page=rss&c=1_2&q=/.test(u)), true);
+    check("e2e: no double question mark in the URL", nyaaUrls.every((u) => u.indexOf("page=rss?") === -1), true);
+
+    // The race does not depend on which host answers: when the primary host is
+    // blocked, the mirror still returns rows.
+    const hostBlocked = makeSandbox({
+        fetch: async (url, options) => {
+            if (/nyaa\.si/.test(String(url))) throw new Error("host blocked");
+            return sandbox.fetch(url, options);
+        },
+    });
+    vm.createContext(hostBlocked);
+    vm.runInContext(source, hostBlocked);
+    const viaMirror = await hostBlocked.module.exports.getStreams(209867, "tv", 1, 1);
+    check("e2e: falls back to a reachable mirror", viaMirror.length, rows.length);
+
+    // A wholly unreachable Nyaa (every host) returns nothing rather than throwing.
     const down = makeSandbox({
         fetch: async (url, options) => {
-            if (String(url).indexOf("nyaa.si") !== -1) throw new Error("host unreachable");
+            if (/nyaa\.(si|net)/.test(String(url))) throw new Error("host unreachable");
             return sandbox.fetch(url, options);
         },
     });
