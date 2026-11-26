@@ -1,35 +1,35 @@
 // =============================================================================
-// Nyaa Torrents - NuvioTV plugin (QuickJS / PluginRuntime)
+// NekoBT Torrents - NuvioTV plugin (QuickJS / PluginRuntime)
 //
 // A separate scraper from the SeaDex one, so the two load independently: a
-// slow or blocked nyaa.si can never hold up the SeaDex provider (or the other
+// slow or failing nekoBT.to can never hold up the SeaDex provider (or the other
 // way round).
 //
 // Pipeline:
 //   content id (TMDB / IMDb / Kitsu) -> titles (+ season count)
-//     -> Nyaa RSS (nyaa.si or a mirror if blocked; category
-//        "Anime - English-translated"; no JSON API)
+//     -> NekoBT media id for this show (exact TMDB id match)
+//     -> every torrent NekoBT has for it (Torznab feed, paged)
 //     -> the release that is this show and this episode, 1080p+, with seeders
 //     -> a self-contained magnet (name + public trackers)
 //
-// Nyaa's RSS carries no file list, so a multi-episode batch cannot be aimed at
-// one episode (Nuvio would open its largest file). Batches are skipped here;
-// the SeaDex provider covers those, because SeaDex does carry file lists.
+// The Torznab feed carries no file list, so a multi-episode batch cannot be
+// aimed at one episode (Nuvio would open its largest file). Batches are skipped
+// here; the SeaDex provider covers those, because SeaDex does carry file lists.
 // A torrent with no seeder never starts, so zero-seeder releases are dropped:
 // that is the "no dead links" rule.
 // =============================================================================
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
 var KITSU_BASE = "https://kitsu.io/api/edge";
-// nyaa.si is DNS- and IP-blocked on some networks (it hangs, it does not fail
-// fast). A reachable Nyaa mirror is queried alongside it and the first host
-// that answers a real RSS feed wins, so a blocked host cannot stall the rest.
-var NYAA_HOSTS = ["https://nyaa.si", "https://nyaa.net"];
-// "Anime - English-translated": carries subbed and dual-audio releases. Raw
-// (Japanese, no subs) and non-English dubs are left out.
-var NYAA_CATEGORY = "1_2";
+// NekoBT serves a public Torznab feed (no API key). Each item carries the
+// release name, info hash, byte size and live seeder count, which is everything
+// a magnet and the "no dead links" rule need.
+var NEKOBT_API = "https://nekobt.to/api/torznab/api";
+// Maps a show/movie to NekoBT's own media id, which the feed accepts as
+// `media_id` to list every torrent for that title (exact show, all seasons).
+var NEKOBT_MEDIA = "https://nekobt.to/api/v1/media/search";
 // "No dead links": a torrent with no seeder never starts, so it is dropped.
-var NYAA_MIN_SEEDERS = 1;
+var MIN_SEEDERS = 1;
 // Public trackers put in every magnet so playback can start on any client
 // (Nuvio adds its own set too; external players on other devices need these).
 var MAGNET_TRACKERS = [
@@ -41,7 +41,7 @@ var MAGNET_TRACKERS = [
 var MAX_RESULTS = 10;
 
 // Nuvio kills a plugin after 60s and its fetch cannot be cancelled, so bound
-// every request: a blocked host would otherwise hold this provider open.
+// every request: an unresponsive host would otherwise hold this provider open.
 var REQUEST_TIMEOUT_MS = 8000;
 
 var UA =
@@ -142,7 +142,7 @@ function withTimeout(promise, label) {
     });
 }
 
-/** GET text with retries. Nyaa resets the connection now and then, and a
+/** GET text with retries. NekoBT resets the connection now and then, and a
  *  single reset must not read as "no torrents". */
 async function fetchText(url, label, attempts) {
     attempts = attempts || 3;
@@ -237,7 +237,7 @@ async function getTmdbInfo(tmdbId, mediaType) {
             }
         }
     } catch (e) {
-        console.error("[Nyaa] alternative titles unavailable: " + (e && e.message));
+        console.error("[NekoBT] alternative titles unavailable: " + (e && e.message));
     }
     jpTitles.sort(function (a, b) {
         return a.length - b.length;
@@ -245,6 +245,7 @@ async function getTmdbInfo(tmdbId, mediaType) {
 
     return {
         kind: kind,
+        tmdbId: String(tmdbId),
         titles: titles,
         jpTitles: jpTitles,
         year: year || null,
@@ -285,6 +286,7 @@ async function kitsuInfo(kitsuId) {
     var hint = seasonNumberFromTitle(titles.join(" "));
     return {
         kind: "tv",
+        tmdbId: null,
         titles: titles,
         jpTitles: asciiTitles([t.en_jp, attrs.canonicalTitle]),
         year: String(attrs.startDate || "").slice(0, 4) || null,
@@ -467,10 +469,11 @@ function nameMatchesEpisode(name, req) {
 }
 
 // ---------------------------------------------------------------------------
-// Nyaa (nyaa.si)
+// NekoBT (nekobt.to)
 //
-// RSS gives the release name, info hash, size and seeder count; that is
-// everything a magnet needs. It gives no file list, so batches are skipped.
+// The Torznab feed gives the release name, info hash, byte size and seeder
+// count; that is everything a magnet needs. It gives no file list, so batches
+// are skipped.
 // ---------------------------------------------------------------------------
 
 function tagValue(block, name) {
@@ -483,75 +486,125 @@ function tagValue(block, name) {
     return block.slice(i + open.length, j).trim();
 }
 
-function parseNyaaRss(xml) {
+/** Read a <torznab:attr name="..." value="..."/> pair out of an item. */
+function attrValue(block, name) {
+    var m = block.match(new RegExp('<torznab:attr name="' + name + '" value="([^"]*)"'));
+    return m ? decodeEntities(m[1]) : null;
+}
+
+function parseTorznab(xml) {
     var out = [];
     var parts = String(xml || "").split("<item>");
     for (var i = 1; i < parts.length; i++) {
         var block = parts[i].split("</item>")[0];
         var name = decodeEntities(tagValue(block, "title") || "");
-        var hash = String(tagValue(block, "nyaa:infoHash") || "").toLowerCase();
+        var hash = String(attrValue(block, "infohash") || "").toLowerCase();
         if (!name || !/^[0-9a-f]{40}$/.test(hash)) continue;
         var group = (name.match(/^\s*\[([^\]]+)\]/) || [])[1] || "";
         out.push({
             name: name,
             hash: hash,
-            seeders: toInt(tagValue(block, "nyaa:seeders"), 0),
-            trusted: String(tagValue(block, "nyaa:trusted") || "").toLowerCase() === "yes",
-            size: tagValue(block, "nyaa:size") || null,
+            seeders: toInt(attrValue(block, "seeders"), 0),
+            sizeBytes: toInt(attrValue(block, "size"), 0),
             group: group
         });
     }
     return out;
 }
 
-// The host that answered last; later queries in the same lookup reuse it.
-var nyaaHost = null;
+/** Torznab reports size in bytes; Nuvio shows a human string. */
+function formatSize(bytes) {
+    if (!bytes || bytes <= 0) return null;
+    var gib = bytes / 1073741824;
+    if (gib >= 1) return gib.toFixed(gib >= 10 ? 1 : 2) + " GiB";
+    return Math.round(bytes / 1048576) + " MiB";
+}
 
-function looksLikeRss(text) {
+function looksLikeTorznab(text) {
     return /<rss[\s>]/i.test(String(text || ""));
 }
 
-async function nyaaFromHost(host, query, attempts) {
-    // `&c=`, not `?c=`: the path already carries `?page=rss`.
-    var url = host + "/?page=rss&c=" + NYAA_CATEGORY + "&q=" + encodeURIComponent(query);
-    var body = await fetchText(url, "Nyaa", attempts);
-    // A block page or the HTML search page is not a feed.
-    if (!looksLikeRss(body)) throw new Error("not an RSS feed");
-    return parseNyaaRss(body);
+/** GET a Torznab feed. A block page or an HTML error page is not a feed, so
+ *  it is rejected rather than parsed into nonsense. */
+async function fetchFeed(url, label) {
+    var body = await fetchText(url, label);
+    if (!looksLikeTorznab(body)) throw new Error("not a Torznab feed");
+    return parseTorznab(body);
 }
 
-/** Query every host at once and keep the first that answers a real feed, so a
- *  blocked host (which only hangs) cannot delay the reachable one. */
-async function nyaaSearch(query) {
-    if (nyaaHost) {
+/** Plain title search, used only when a show has no NekoBT media entry. */
+async function nekobtTextSearch(query) {
+    var url = NEKOBT_API + "?t=search&limit=100&q=" + encodeURIComponent(query);
+    try {
+        return await fetchFeed(url, "NekoBT");
+    } catch (e) {
+        console.error("[NekoBT] '" + query + "' failed: " + (e && e.message));
+        return [];
+    }
+}
+
+async function mediaSearch(title) {
+    var url = NEKOBT_MEDIA + "?query=" + encodeURIComponent(title);
+    var res = await withTimeout(
+        fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }),
+        "NekoBT media"
+    );
+    if (!res.ok) throw new Error("NekoBT media HTTP " + res.status);
+    var body = await res.json();
+    return (body && body.data && body.data.results) || [];
+}
+
+/** Resolve this show to NekoBT's media id. The TMDB id is matched exactly when
+ *  known, so a spin-off ("One Piece: Heroines") cannot stand in for the show. */
+async function nekobtMediaId(info, titles) {
+    var want = info.tmdbId ? String(info.tmdbId) : null;
+    for (var i = 0; i < titles.length; i++) {
+        var results;
         try {
-            return await nyaaFromHost(nyaaHost, query, 2);
+            results = await mediaSearch(titles[i]);
         } catch (e) {
-            nyaaHost = null;
+            console.error("[NekoBT] media search '" + titles[i] + "' failed: " + (e && e.message));
+            continue;
+        }
+        if (want) {
+            for (var j = 0; j < results.length; j++) {
+                if (results[j] && String(results[j].tmdbId) === want) return results[j].id;
+            }
+        } else if (results.length) {
+            // No TMDB id (Kitsu path): trust NekoBT's relevance-ranked top hit.
+            return results[0].id;
         }
     }
-    return await new Promise(function (resolve) {
-        var pending = NYAA_HOSTS.length;
-        var done = false;
-        NYAA_HOSTS.forEach(function (host) {
-            nyaaFromHost(host, query, 1).then(
-                function (items) {
-                    if (done) return;
-                    done = true;
-                    nyaaHost = host;
-                    resolve(items);
-                },
-                function () {
-                    if (done) return;
-                    if (--pending === 0) {
-                        done = true;
-                        console.error("[Nyaa] '" + query + "' failed on every host");
-                        resolve([]);
-                    }
-                }
-            );
-        });
-    });
+    return null;
+}
+
+/** Every torrent NekoBT has for one media id, paged. 300 is a cap, not a
+ *  limit: the largest shows seen hold about 200. */
+async function nekobtMediaTorrents(mediaId) {
+    var out = [];
+    var seen = {};
+    for (var offset = 0; offset < 300; offset += 100) {
+        var url =
+            NEKOBT_API +
+            "?t=search&media_id=" +
+            encodeURIComponent(mediaId) +
+            "&limit=100&offset=" +
+            offset;
+        var page;
+        try {
+            page = await fetchFeed(url, "NekoBT");
+        } catch (e) {
+            console.error("[NekoBT] media " + mediaId + " offset " + offset + " failed: " + (e && e.message));
+            break;
+        }
+        for (var i = 0; i < page.length; i++) {
+            if (seen[page[i].hash]) continue;
+            seen[page[i].hash] = true;
+            out.push(page[i]);
+        }
+        if (page.length < 100) break;
+    }
+    return out;
 }
 
 /** Multi-episode or season pack: its magnet would open the largest file, not
@@ -572,7 +625,7 @@ function isBatchName(name) {
 }
 
 /** The release must name this show, not merely share the episode token the
- *  fuzzy RSS search matched. The title has to appear as a whole phrase, so
+ *  fuzzy search matched. The title has to appear as a whole phrase, so
  *  "One Piece" does not accept "One Piece of Cake". */
 function releaseMatchesTitle(release, titles) {
     var a = normTitle(stripSeasonMarkers(decodeEntities(release)));
@@ -589,60 +642,65 @@ function isDualName(name) {
     return /\bdual[\s._-]?audio\b/i.test(String(name || ""));
 }
 
-async function nyaaReleases(searchTitles, guardTitles, req) {
-    var primary = searchTitles[0];
-    if (!primary) return [];
-    var queries;
-    if (req.isMovie) {
-        queries = [];
-        var pool = searchTitles.concat(guardTitles || []);
-        for (var t = 0; t < pool.length && queries.length < 2; t++) {
-            if (pool[t] && isAscii(pool[t]) && queries.indexOf(pool[t]) === -1) queries.push(pool[t]);
-        }
-    } else {
-        var ep = pad2(req.episode);
-        // Two searches, merged: scene-style groups name the episode "SxxExx",
-        // fansub groups name it "- NN" (or "S2 - NN" / "2nd Season - NN").
-        // Nyaa's search is fuzzy, so the results are filtered below anyway.
-        queries = [primary + " S" + pad2(req.season) + "E" + ep, primary + " - " + ep];
-    }
-
-    var lists = await Promise.all(
-        queries.map(function (q) {
-            return nyaaSearch(q);
-        })
-    );
-
+function filterReleases(list, guardTitles, req) {
     var seen = {};
     var out = [];
-    for (var l = 0; l < lists.length; l++) {
-        var list = lists[l] || [];
-        for (var i = 0; i < list.length; i++) {
-            var r = list[i];
-            if (seen[r.hash]) continue;
-            seen[r.hash] = true;
-            if (r.seeders < NYAA_MIN_SEEDERS) continue;
-            if (!releaseMatchesTitle(r.name, guardTitles && guardTitles.length ? guardTitles : searchTitles)) continue;
-            if (isBatchName(r.name)) continue;
-            if (isSpecialFile(r.name)) continue;
-            var resolution = resolutionOf(r.name);
-            // 1080p or higher only, and the name has to say so.
-            if (!resolution || resolution.height < 1080) continue;
-            if (!req.isMovie && !nameMatchesEpisode(r.name, req)) continue;
-            out.push({
-                hash: r.hash,
-                idx: 0,
-                name: r.name,
-                sizeText: r.size,
-                height: resolution.height,
-                trusted: r.trusted,
-                dual: isDualName(r.name),
-                group: r.group,
-                seeders: r.seeders
-            });
-        }
+    for (var i = 0; i < list.length; i++) {
+        var r = list[i];
+        if (seen[r.hash]) continue;
+        seen[r.hash] = true;
+        if (r.seeders < MIN_SEEDERS) continue;
+        if (!releaseMatchesTitle(r.name, guardTitles)) continue;
+        if (isBatchName(r.name)) continue;
+        if (isSpecialFile(r.name)) continue;
+        var resolution = resolutionOf(r.name);
+        // 1080p or higher only, and the name has to say so.
+        if (!resolution || resolution.height < 1080) continue;
+        if (!req.isMovie && !nameMatchesEpisode(r.name, req)) continue;
+        out.push({
+            hash: r.hash,
+            idx: 0,
+            name: r.name,
+            sizeText: formatSize(r.sizeBytes),
+            height: resolution.height,
+            dual: isDualName(r.name),
+            group: r.group,
+            seeders: r.seeders
+        });
     }
     return out;
+}
+
+async function nekobtReleases(info, searchTitles, guardTitles, req) {
+    if (!searchTitles[0]) return [];
+    var guard = guardTitles && guardTitles.length ? guardTitles : searchTitles;
+    var mediaId = await nekobtMediaId(info, searchTitles);
+    var items;
+    if (mediaId) {
+        items = await nekobtMediaTorrents(mediaId);
+    } else {
+        // No media entry: fall back to plain title searches. Scene-style groups
+        // name the episode "SxxExx", fansub groups "- NN" (or "S2 - NN").
+        var queries;
+        if (req.isMovie) {
+            queries = [];
+            var pool = searchTitles.concat(guardTitles || []);
+            for (var t = 0; t < pool.length && queries.length < 2; t++) {
+                if (pool[t] && isAscii(pool[t]) && queries.indexOf(pool[t]) === -1) queries.push(pool[t]);
+            }
+        } else {
+            var ep = pad2(req.episode);
+            queries = [searchTitles[0] + " S" + pad2(req.season) + "E" + ep, searchTitles[0] + " - " + ep];
+        }
+        var lists = await Promise.all(
+            queries.map(function (q) {
+                return nekobtTextSearch(q);
+            })
+        );
+        items = [];
+        for (var l = 0; l < lists.length; l++) items = items.concat(lists[l] || []);
+    }
+    return filterReleases(items, guard, req);
 }
 
 // ---------------------------------------------------------------------------
@@ -654,7 +712,6 @@ async function nyaaReleases(searchTitles, guardTitles, req) {
 function rankTorrents(list) {
     list.sort(function (a, b) {
         if (b.height !== a.height) return b.height - a.height;
-        if (!!a.trusted !== !!b.trusted) return a.trusted ? -1 : 1;
         var as = a.seeders || 0;
         var bs = b.seeders || 0;
         if (bs !== as) return bs - as;
@@ -679,7 +736,12 @@ function magnetFor(item) {
 
 function makeResult(item, rank) {
     var quality = item.height >= 2160 ? "2160p" : item.height >= 1440 ? "1440p" : "1080p";
-    var base = String(item.name || "").replace(/\.[a-z0-9]{2,4}$/i, "").trim();
+    // NekoBT appends a machine-readable "{Tags:...}" block; drop it from the
+    // label. Then drop a trailing ".mkv"/".mp4".
+    var base = String(item.name || "")
+        .replace(/\s*\{Tags:[^}]*\}\s*$/i, "")
+        .replace(/\.[a-z0-9]{2,4}$/i, "")
+        .trim();
     if (base.length > 150) base = base.slice(0, 147) + "...";
     // Nuvio renders `name` as the bold row label, then re-sorts plugin rows
     // alphabetically (sortedForGroupedDisplay). The zero-padded rank prefix
@@ -695,7 +757,7 @@ function makeResult(item, rank) {
         quality: quality + (isHdr(item.name) ? " HDR" : ""),
         size: item.sizeText || null,
         language: language,
-        provider: "Nyaa",
+        provider: "NekoBT",
         type: "torrent",
         seeders: item.seeders,
         peers: null,
@@ -732,7 +794,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         var info = await resolveContent(tmdbId, mediaType);
         var titles = queryTitles(info);
         if (!titles.length) {
-            console.error("[Nyaa] no searchable title for " + mediaType + " " + tmdbId);
+            console.error("[NekoBT] no searchable title for " + mediaType + " " + tmdbId);
             return results;
         }
 
@@ -756,14 +818,14 @@ async function getStreams(tmdbId, mediaType, season, episode) {
             if (req.absoluteEpisode == null) req.absoluteEpisode = req.episode;
         }
 
-        var found = await nyaaReleases(titles, info.titles, req);
+        var found = await nekobtReleases(info, titles, info.titles, req);
         found = rankTorrents(found);
         for (var n = 0; n < found.length && results.length < MAX_RESULTS; n++) {
             results.push(makeResult(found[n], n + 1));
         }
-        console.log("[nyaa] S" + req.season + "E" + req.episode + " playable=" + found.length + " returning=" + results.length);
+        console.log("[nekobt] S" + req.season + "E" + req.episode + " playable=" + found.length + " returning=" + results.length);
     } catch (e) {
-        console.error("[nyaa] getStreams error:", (e && e.message) || e, (e && e.stack) || "");
+        console.error("[nekobt] getStreams error:", (e && e.message) || e, (e && e.stack) || "");
     }
 
     return results;

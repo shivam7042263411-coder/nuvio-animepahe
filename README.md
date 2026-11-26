@@ -1,15 +1,15 @@
-# Nuvio Anime Torrents plugin (SeaDex + Nyaa)
+# Nuvio Anime Torrents plugin (SeaDex + NekoBT)
 
 Two **independent** torrent providers for the Nuvio app (plugin format,
 QuickJS):
 
 - **SeaDex Torrents** (`anime-torrent.js`) — curated best releases from
   [seadex.moe](https://seadex.moe), keyed by AniList id.
-- **Nyaa Torrents** (`nyaa-torrent.js`) — the weekly fansub releases from
-  [nyaa.si](https://nyaa.si).
+- **NekoBT Torrents** (`nekobt-torrent.js`) — the releases on
+  [nekobt.to](https://nekobt.to).
 
 They are separate scrapers on purpose: each loads and returns on its own, so a
-slow or blocked nyaa.si can never hold up the SeaDex lookup (or the other way
+slow or blocked nekobt.to can never hold up the SeaDex lookup (or the other way
 round). Both return **1080p and above only**, and everything plays through
 Nuvio's built-in P2P engine.
 
@@ -32,7 +32,7 @@ Plugins settings. Both providers appear as separate sources.
 the consent dialog. The defaults (Balanced profile, 2 GB cache) are fine to
 start. Seeding is on by default.
 
-Torrent results are labelled **SeaDex Torrents** and **Nyaa Torrents**. Select
+Torrent results are labelled **SeaDex Torrents** and **NekoBT Torrents**. Select
 one and Nuvio starts `TorrentState.Connecting → Streaming`. Debrid is not used
 for plugin streams; they always play over P2P.
 
@@ -50,8 +50,9 @@ content id (TMDB / IMDb / Kitsu)
     -> the file inside each release that is the requested episode
     -> magnet (single file) or torrent://<hash>/<index> (season batch)
 
-  Nyaa Torrents (nyaa-torrent.js)
-    -> nyaa.si RSS per title + episode
+  NekoBT Torrents (nekobt-torrent.js)
+    -> NekoBT media id for this show (exact TMDB id)
+    -> every torrent NekoBT lists for it (Torznab feed, paged)
     -> 1080p+ single-episode releases with at least one seeder
     -> magnet (name + public trackers)
 ```
@@ -102,42 +103,39 @@ SeaDex redacts the info hash of private-tracker copies (AnimeBytes returns
 `"<redacted>"`). Without a hash there is no magnet, so those are skipped; only
 public-tracker (Nyaa) copies are returned.
 
-## Nyaa (nyaa.si)
+## NekoBT (nekobt.to)
 
-Nyaa is the broad index; it catches the weekly releases from every fansub group,
-including shows SeaDex has no entry for. It has no JSON API, so the plugin reads
-its RSS feed (`?page=rss&c=1_2`, the *Anime – English-translated* category) and
-parses it directly. The feed gives the release name, info hash, seeder count and
-size — everything a magnet needs.
+NekoBT is the broad index; it catches the releases every fansub and scene group
+uploads, including shows SeaDex has no entry for. It exposes a public **Torznab**
+feed (`https://nekobt.to/api/torznab/api`, no API key), whose items carry the
+release name, info hash, seeder count and size — everything a magnet needs.
 
-Some networks DNS- or IP-block `nyaa.si`, and a blocked request hangs rather than
-failing fast. The provider queries `nyaa.si` and a Nyaa mirror
-([nyaa.net](https://nyaa.net)) at the same time and keeps the first that returns
-a real feed, so a blocked host cannot stall the lookup. It never talks to AniList
-or SeaDex.
+The feed also accepts a `media_id`, which lists **every** torrent NekoBT has for
+one show rather than a fuzzy, most-recent-first page. So the plugin first asks
+NekoBT's media search for this show, matches the **exact TMDB id** (so a spin-off
+such as "One Piece: Heroines" cannot stand in for "One Piece"), then pages that
+media id's feed. If the media lookup fails or finds nothing, it falls back to two
+plain title searches, the romaji title plus `SxxExx` (scene-style groups such as
+VARYG/ToonsHub) and the romaji title plus `- NN` (SubsPlease, Erai-raws,
+`S2 - NN`). Every result is client-side filtered, because NekoBT's search is
+fuzzy. The provider never talks to AniList or SeaDex.
 
-For a TV episode the plugin issues two searches and merges the results: the
-romaji title plus `SxxExx` (catches scene-style groups such as VARYG/ToonsHub)
-and the romaji title plus `- NN` (catches SubsPlease, Erai-raws, and
-`S2 - NN`/`2nd Season - NN` names). Each search is client-side filtered, because
-Nyaa's search is fuzzy.
-
-A Nyaa release is kept only when **all** of these hold:
+A NekoBT release is kept only when **all** of these hold:
 
 - The name names the show, matched on the whole title phrase (so "One Piece of
   Cake" is not accepted for "One Piece").
 - The name matches the requested episode and season, using the same
   `SxxExx` / `Season N` / absolute-number matcher as the SeaDex path.
-- The name states `1080p` or higher. Nyaa has no curated "best" flag, so a
+- The name states `1080p` or higher. NekoBT has no curated "best" flag, so a
   resolution-silent name is dropped rather than guessed.
 - The torrent has **at least one seeder**. A torrent with zero seeders never
   starts, so it is never returned — that is the "no dead links" rule.
-- It is **not a batch or season pack**. RSS carries no file list, so a
+- It is **not a batch or season pack**. The feed carries no file list, so a
   multi-episode torrent cannot be aimed at one episode; Nuvio would open its
   largest file. Batches (`(01-12)`, `S01E01-E12`, `S01-S03`, `Batch`/`Complete`)
   are skipped and left to SeaDex, which does carry file lists.
 
-Each Nyaa result is a self-contained magnet carrying the release name and four
+Each NekoBT result is a self-contained magnet carrying the release name and four
 public trackers, so it also plays in an external client on a phone, tablet or
 desktop, not only inside Nuvio.
 
@@ -168,15 +166,15 @@ Each result is:
   quality: "1080p",                              // "1080p HDR", "2160p", or "HD"
   size: "7.0 GiB",
   language: "Dual Audio",                        // or "Sub"
-  provider: "SeaDex",                            // or "Nyaa"
+  provider: "SeaDex",                            // or "NekoBT"
   type: "torrent",
-  seeders: null,                                 // Nyaa rows carry the live count
+  seeders: null,                                 // NekoBT rows carry the live count
   peers: null,
   subtitles: []
 }
 ```
 
-SeaDex carries no seeder count, so its `seeders` is `null`; Nyaa rows report
+SeaDex carries no seeder count, so its `seeders` is `null`; NekoBT rows report
 the live seeder count and append it to the language line.
 
 Nuvio renders `name` as the bold row label and builds the subtitle from
@@ -203,32 +201,30 @@ Each provider is bounded on its own; the two never wait on each other.
   entry requests in parallel. The common case is one AniList request, which
   matters because AniList rate-limits. A `429` gets one retry after a short pause
   when timers exist.
-- **Nyaa Torrents:** two TMDB requests and two RSS requests for a TV episode
-  (`SxxExx` and `- NN`) or up to two for a movie, in parallel. Nyaa does not
-  rate-limit the feed the way AniList does, but it drops connections now and
-  then, so each RSS request is retried up to three times. Nyaa calls nothing
-  else — no AniList, no SeaDex.
+- **NekoBT Torrents:** two TMDB requests, one media lookup, then up to four feed
+  pages of 100 for a show (falling back to two title-search feed requests when
+  the media lookup fails), or up to two for a movie. NekoBT does not rate-limit
+  the feed the way AniList does, but it drops connections now and then, so each
+  feed request is retried up to three times. NekoBT calls nothing else — no
+  AniList, no SeaDex.
 
 ## Limits
 
 - SeaDex is a **curated "best release" database, not a full torrent index**.
   Shows or episodes with no entry, or with only private-tracker copies, return
-  no SeaDex rows — Nyaa covers those.
-- Nyaa RSS returns a capped, most-recent-first window (about 75 items per
-  search), so **very old episodes of a long-running show may have no Nyaa row**;
-  its existing single-episode releases age out of the feed. SeaDex remains the
-  fallback for back-catalogue episodes.
-- Nyaa batches and season packs are intentionally excluded: RSS has no file
+  no SeaDex rows — NekoBT covers those.
+- NekoBT lists what its users uploaded; a show or episode nobody uploaded has no
+  row. Season packs and batches are intentionally excluded: the feed has no file
   list, so one cannot be aimed at a single episode. For batch-only shows, use
   SeaDex (whose entries carry file lists) or a dedicated pack release in the app.
 - Later seasons are matched through their own AniList entries on the SeaDex
-  path, and through the season in the release name on the Nyaa path. A season
+  path, and through the season in the release name on the NekoBT path. A season
   that neither indexes may be missed; the file's own `SxxExx` still prevents a
   wrong episode from being returned.
 - Most releases are **softsub MKV** (subtitles as a track inside the file).
   Playback depends on Media3/ExoPlayer supporting the codec (HEVC/x265 is
   common) and rendering the subtitle track.
-- A low-seed release buffers on a TV stick; Nyaa rows show their seeder count,
+- A low-seed release buffers on a TV stick; NekoBT rows show their seeder count,
   and zero-seeder rows are never offered.
 - Long-running anime are numbered two ways; the absolute episode is derived from
   TMDB's season counts, so a release that restarts numbering inside a batch is
@@ -239,16 +235,16 @@ Each provider is bounded on its own; the two never wait on each other.
 | File | Purpose |
 |------|---------|
 | `anime-torrent.js` | SeaDex provider (`getStreams`): TMDB/Kitsu resolve, AniList, SeaDex, file matching |
-| `nyaa-torrent.js` | Nyaa provider (`getStreams`): TMDB/Kitsu resolve, nyaa.si RSS, release matching |
+| `nekobt-torrent.js` | NekoBT provider (`getStreams`): TMDB/Kitsu resolve, NekoBT media id + Torznab feed, release matching |
 | `manifest.json` | Repository manifest read by Nuvio; registers both scrapers |
 | `selftest.js` | Offline checks for the SeaDex provider |
-| `selftest-nyaa.js` | Offline checks for the Nyaa provider |
+| `selftest-nekobt.js` | Offline checks for the NekoBT provider |
 
 Run the self-checks:
 
 ```
 node selftest.js
-node selftest-nyaa.js
+node selftest-nekobt.js
 ```
 
 `tools/` is leftover AnimePahe harvesting tooling and is not used by the

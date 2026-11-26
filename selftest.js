@@ -137,10 +137,10 @@ function check(name, actual, expected) {
 }
 
 // --- manifest --------------------------------------------------------------
-check("manifest: two scrapers (SeaDex + Nyaa)", manifest.scrapers.length, 2);
+check("manifest: two scrapers (SeaDex + NekoBT)", manifest.scrapers.length, 2);
 check("manifest: SeaDex points at anime-torrent.js", manifest.scrapers[0].filename, "anime-torrent.js");
-check("manifest: Nyaa points at nyaa-torrent.js", manifest.scrapers[1].filename, "nyaa-torrent.js");
-check("manifest: distinct scraper ids", manifest.scrapers.map((s) => s.id).sort(), ["anime-torrent", "nyaa-torrent"]);
+check("manifest: NekoBT points at nekobt-torrent.js", manifest.scrapers[1].filename, "nekobt-torrent.js");
+check("manifest: distinct scraper ids", manifest.scrapers.map((s) => s.id).sort(), ["anime-torrent", "nekobt-torrent"]);
 check(
     "manifest: every scraper supports tv and movie",
     manifest.scrapers.every((s) => s.supportedTypes.slice().sort().join() === "movie,tv"),

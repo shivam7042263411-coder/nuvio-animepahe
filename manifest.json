@@ -1,7 +1,7 @@
 {
-  "name": "Nuvio Anime Torrents (SeaDex + Nyaa)",
-  "version": "2.2.1",
-  "description": "Two independent torrent providers for NuvioTV. SeaDex (seadex.moe) returns curated best releases and season batches aimed at the exact episode file; Nyaa (nyaa.si, with a mirror fallback) returns the weekly fansub releases. Both return 1080p and above only.",
+  "name": "Nuvio Anime Torrents (SeaDex + NekoBT)",
+  "version": "3.0.0",
+  "description": "Two independent torrent providers for NuvioTV. SeaDex (seadex.moe) returns curated best releases and season batches aimed at the exact episode file; NekoBT (nekobt.to) returns the releases indexed by the tracker. Both return 1080p and above only.",
   "author": "Nuvio Community",
   "scrapers": [
     {
@@ -29,11 +29,11 @@
       ]
     },
     {
-      "id": "nyaa-torrent",
-      "name": "Nyaa Torrents",
-      "description": "Per-episode torrents from nyaa.si (with a mirror fallback for blocked networks); 1080p and above only, at least one seeder, multi-episode batches excluded",
-      "version": "2.2.1",
-      "filename": "nyaa-torrent.js",
+      "id": "nekobt-torrent",
+      "name": "NekoBT Torrents",
+      "description": "Per-episode torrents from nekobt.to, resolved to the exact show by TMDB id; 1080p and above only, at least one seeder, multi-episode batches excluded",
+      "version": "1.0.0",
+      "filename": "nekobt-torrent.js",
       "supportedTypes": [
         "movie",
         "tv"
