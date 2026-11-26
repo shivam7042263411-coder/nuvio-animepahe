@@ -1,11 +1,17 @@
 # Nuvio Anime Torrents plugin (SeaDex + Nyaa)
 
-A torrent scraper for the Nuvio app (plugin format, QuickJS) backed by
-[SeaDex](https://seadex.moe) and [nyaa.si](https://nyaa.si). It turns an anime
-episode or movie into playable magnets: SeaDex contributes the curated best
-releases, and Nyaa contributes the weekly fansub releases from every group, so a
-lookup finds both the best copy and the widest set of working copies. Everything
-plays through Nuvio's built-in P2P engine.
+Two **independent** torrent providers for the Nuvio app (plugin format,
+QuickJS):
+
+- **SeaDex Torrents** (`anime-torrent.js`) — curated best releases from
+  [seadex.moe](https://seadex.moe), keyed by AniList id.
+- **Nyaa Torrents** (`nyaa-torrent.js`) — the weekly fansub releases from
+  [nyaa.si](https://nyaa.si).
+
+They are separate scrapers on purpose: each loads and returns on its own, so a
+slow or blocked nyaa.si can never hold up the SeaDex lookup (or the other way
+round). Both return **1080p and above only**, and everything plays through
+Nuvio's built-in P2P engine.
 
 This replaces the earlier AnimeTosho provider. The install URL is unchanged.
 
@@ -18,7 +24,7 @@ https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/ma
 ```
 
 The manifest is reloaded every 6 hours, or immediately via **Refresh** in
-Plugins settings.
+Plugins settings. Both providers appear as separate sources.
 
 ## Enable playback
 
@@ -26,27 +32,31 @@ Plugins settings.
 the consent dialog. The defaults (Balanced profile, 2 GB cache) are fine to
 start. Seeding is on by default.
 
-Torrent results are labelled **Anime Torrents**. Select one and Nuvio starts
-`TorrentState.Connecting → Streaming`. Debrid is not used for plugin streams;
-they always play over P2P.
+Torrent results are labelled **SeaDex Torrents** and **Nyaa Torrents**. Select
+one and Nuvio starts `TorrentState.Connecting → Streaming`. Debrid is not used
+for plugin streams; they always play over P2P.
 
 ## How it works
+
+Each provider resolves the same content id, then runs its own pipeline:
 
 ```
 content id (TMDB / IMDb / Kitsu)
   -> TMDB title, romaji alternative titles, per-season episode counts
-  -> [SeaDex path]  AniList search -> every entry for this show (each season is its own id)
-                    -> SeaDex entry per AniList id (https://seadex.moe)
-                    -> the file inside each release that is the requested episode
-                    -> magnet (single file) or torrent://<hash>/<index> (season batch)
-  -> [Nyaa path]    nyaa.si RSS per title + episode
-                    -> 1080p+ single-episode releases with at least one seeder
-                    -> magnet (name + public trackers)
-  -> merge by info hash (curated SeaDex copy wins), rank, return top 10
+
+  SeaDex Torrents (anime-torrent.js)
+    -> AniList search -> every entry for this show (each season is its own id)
+    -> SeaDex entry per AniList id (https://seadex.moe)
+    -> the file inside each release that is the requested episode
+    -> magnet (single file) or torrent://<hash>/<index> (season batch)
+
+  Nyaa Torrents (nyaa-torrent.js)
+    -> nyaa.si RSS per title + episode
+    -> 1080p+ single-episode releases with at least one seeder
+    -> magnet (name + public trackers)
 ```
 
-Both paths run at once. Nyaa does not need AniList, so it still returns streams
-if AniList is down or rate-limited.
+The two do not merge or wait on each other.
 
 SeaDex is keyed by **AniList id**, not by title. A season of a show is often a
 separate, arc-titled AniList entry ("Kimetsu no Yaiba: Katanakaji no Sato-hen",
@@ -146,7 +156,7 @@ Each result is:
 ```js
 {
   title: "Release name",                         // parsed for badges, not the row label
-  name: "01 · SeaDex · Best · Frieren - S01E01", // row label; leading rank keeps our order
+  name: "01 · Best · Frieren - S01E01 (BD 1080p)", // row label; leading rank keeps our order
   url: "torrent://<40-hex>/3",                   // or a magnet; required non-blank
   infoHash: "<40-hex>",
   quality: "1080p",                              // "1080p HDR", "2160p", or "HD"
@@ -166,37 +176,32 @@ the live seeder count and append it to the language line.
 Nuvio renders `name` as the bold row label and builds the subtitle from
 `quality • size • language`. It then **re-sorts every plugin row** with
 `sortedForGroupedDisplay()` — a plain case-insensitive alphabetical sort on the
-label. The label therefore carries a zero-padded `NN · ` rank prefix, and the
-provider name, so the plugin's order (curated best first, then resolution, then
-seeders, then the most relevant season entry, then dual audio) survives that
-sort.
+label. The label therefore carries a zero-padded `NN · ` rank prefix so each
+provider's order (best release first, then resolution, then seeders, then the
+most relevant season entry, then dual audio) survives that sort.
 
 ### Plugin hosts differ (Android TV has no timers)
 
 The mobile plugin host installs `setTimeout`/`clearTimeout`; the **Android TV**
-host (`NuvioTV`) defines neither. The scraper detects once
-(`typeof setTimeout`) and, when absent, skips its per-request deadline and the
-AniList 429 back-off instead of calling a timer that throws `ReferenceError`.
-The Nyaa feed fetch retries a dropped connection the same way: with timers it
-pauses briefly, without them it retries immediately. The host's own 60 s plugin
-cap still bounds the call, so a slow host costs results, never a stuck plugin.
+host (`NuvioTV`) defines neither. Both scrapers detect once (`typeof setTimeout`)
+and, when absent, skip their per-request deadline instead of calling a timer that
+throws `ReferenceError`. The host's own 60 s plugin cap still bounds each call,
+so a slow host costs that provider's results, never a stuck lookup.
 
 ## Rate limits and request budget
 
-A lookup makes two TMDB requests and runs both providers at once.
+Each provider is bounded on its own; the two never wait on each other.
 
-- **SeaDex path:** one AniList search (the romaji title; the English title only
-  if that yields no strong match), then up to eight SeaDex entry requests in
-  parallel. The common case is one AniList request, which matters because
-  AniList rate-limits. A `429` gets one retry after a short pause when timers
-  exist.
-- **Nyaa path:** two RSS requests for a TV episode (`SxxExx` and `- NN`) or up
-  to two for a movie, in parallel. Nyaa does not rate-limit the feed the way
-  AniList does, but it drops connections now and then, so each request is
-  retried up to three times.
-
-Both paths are wrapped, so one provider failing (AniList down, Nyaa unreachable,
-RSS reset) still leaves the other provider's results.
+- **SeaDex Torrents:** two TMDB requests, one AniList search (the romaji title;
+  the English title only if that yields no strong match), then up to eight SeaDex
+  entry requests in parallel. The common case is one AniList request, which
+  matters because AniList rate-limits. A `429` gets one retry after a short pause
+  when timers exist.
+- **Nyaa Torrents:** two TMDB requests and two RSS requests for a TV episode
+  (`SxxExx` and `- NN`) or up to two for a movie, in parallel. Nyaa does not
+  rate-limit the feed the way AniList does, but it drops connections now and
+  then, so each RSS request is retried up to three times. Nyaa calls nothing
+  else — no AniList, no SeaDex.
 
 ## Limits
 
@@ -227,28 +232,31 @@ RSS reset) still leaves the other provider's results.
 
 | File | Purpose |
 |------|---------|
-| `anime-torrent.js` | The scraper (`getStreams`): TMDB/Kitsu resolve, SeaDex path, Nyaa path, merge |
-| `manifest.json` | Repository manifest read by Nuvio |
-| `selftest.js` | Offline checks: title/season ranking, file matching, 1080p+ rule, Nyaa RSS parsing, batch/zero-seeder rejection, result shape, TV host |
+| `anime-torrent.js` | SeaDex provider (`getStreams`): TMDB/Kitsu resolve, AniList, SeaDex, file matching |
+| `nyaa-torrent.js` | Nyaa provider (`getStreams`): TMDB/Kitsu resolve, nyaa.si RSS, release matching |
+| `manifest.json` | Repository manifest read by Nuvio; registers both scrapers |
+| `selftest.js` | Offline checks for the SeaDex provider |
+| `selftest-nyaa.js` | Offline checks for the Nyaa provider |
 
-Run the self-check:
+Run the self-checks:
 
 ```
 node selftest.js
+node selftest-nyaa.js
 ```
 
 `tools/` is leftover AnimePahe harvesting tooling and is not used by the
 installed plugin. `subs/` is left over from the AnimeTosho subtitle-index
-feature; the SeaDex pipeline does not use it (SeaDex MKVs already carry their
-group's subtitles).
+feature; neither provider uses it (the SeaDex MKVs already carry their group's
+subtitles).
 
 ## Rollback
 
-The previous provider is in git history:
+The previous providers are in git history:
 
 ```
 git log --oneline -- anime-torrent.js
 ```
 
-Restore it with `git checkout <commit> -- anime-torrent.js manifest.json README.md`,
+Restore one with `git checkout <commit> -- anime-torrent.js manifest.json README.md`,
 or reset the branch to the tagged AnimePahe backup if you need the older scraper.

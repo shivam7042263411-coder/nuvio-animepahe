@@ -24,21 +24,6 @@ var TMDB_BASE = "https://api.themoviedb.org/3";
 var KITSU_BASE = "https://kitsu.io/api/edge";
 var ANILIST_API = "https://graphql.anilist.co";
 var SEADEX_API = "https://seadex.moe/api/collections/entries/records";
-var NYAA_RSS = "https://nyaa.si/?page=rss";
-// "Anime - English-translated": the category that carries subbed and
-// dual-audio releases. Raw (Japanese, no subs) and non-English dubs are left
-// out because they do not play for an English catalogue.
-var NYAA_CATEGORY = "1_2";
-// "No dead links": a torrent with no seeder never starts, so it is dropped.
-var NYAA_MIN_SEEDERS = 1;
-// Public trackers put in every magnet so playback can start on any client.
-// Nuvio adds its own set too; external players on other devices need these.
-var MAGNET_TRACKERS = [
-    "udp://tracker.opentrackr.org:1337/announce",
-    "udp://open.stealth.si:80/announce",
-    "udp://tracker.torrent.eu.org:451/announce",
-    "udp://exodus.desync.com:6969/announce"
-];
 var MAX_RESULTS = 10;
 // SeaDex is keyed by AniList id and later seasons are separate entries, so a
 // request may touch several. Cap the fan-out so a title with many spin-offs
@@ -74,9 +59,6 @@ function decodeEntities(value) {
 function normTitle(value) {
     return String(value == null ? "" : value)
         .toLowerCase()
-        // Drop apostrophes so "Journey's End", "Journeys End" and the backtick
-        // variant groups use all normalise the same.
-        .replace(/['\u2018\u2019\u02bc`\u00b4]/g, "")
         .replace(/[^a-z0-9]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
@@ -164,29 +146,6 @@ function delay(ms) {
     return new Promise(function (resolve) {
         setTimeout(resolve, ms);
     });
-}
-
-/** GET text with retries. Nyaa resets the connection now and then, and a
- *  single reset must not read as "no torrents". */
-async function fetchText(url, label) {
-    var attempts = 3;
-    var last = null;
-    for (var attempt = 0; attempt < attempts; attempt++) {
-        try {
-            var res = await withTimeout(
-                fetch(url, {
-                    headers: { Accept: "application/rss+xml, application/xml, text/xml, */*", "User-Agent": UA }
-                }),
-                label
-            );
-            if (res.ok) return await res.text();
-            last = new Error(label + " HTTP " + res.status);
-            if (res.status >= 400 && res.status < 500) break;
-        } catch (e) {
-            last = e;
-        }
-    }
-    throw last || new Error(label + " failed");
 }
 
 // ---------------------------------------------------------------------------
@@ -531,156 +490,6 @@ async function resolveAniListCandidates(titles, req) {
 }
 
 // ---------------------------------------------------------------------------
-// Nyaa (nyaa.si) - the broad episode index
-//
-// SeaDex is curated and small; Nyaa carries the weekly releases from every
-// fansub group. Its RSS feed gives the release name, info hash, size and
-// seeder count, which is everything a magnet needs. It does not give a file
-// list, so a multi-episode batch cannot be opened on the right file; batches
-// are skipped and SeaDex covers those. A release with no seeder is dropped.
-// ---------------------------------------------------------------------------
-
-function tagValue(block, name) {
-    var open = "<" + name + ">";
-    var close = "</" + name + ">";
-    var i = block.indexOf(open);
-    if (i === -1) return null;
-    var j = block.indexOf(close, i + open.length);
-    if (j === -1) return null;
-    return block.slice(i + open.length, j).trim();
-}
-
-function parseNyaaRss(xml) {
-    var out = [];
-    var parts = String(xml || "").split("<item>");
-    for (var i = 1; i < parts.length; i++) {
-        var block = parts[i].split("</item>")[0];
-        var name = decodeEntities(tagValue(block, "title") || "");
-        var hash = String(tagValue(block, "nyaa:infoHash") || "").toLowerCase();
-        if (!name || !/^[0-9a-f]{40}$/.test(hash)) continue;
-        var group = (name.match(/^\s*\[([^\]]+)\]/) || [])[1] || "";
-        out.push({
-            name: name,
-            hash: hash,
-            seeders: toInt(tagValue(block, "nyaa:seeders"), 0),
-            trusted: String(tagValue(block, "nyaa:trusted") || "").toLowerCase() === "yes",
-            size: tagValue(block, "nyaa:size") || null,
-            group: group
-        });
-    }
-    return out;
-}
-
-async function nyaaSearch(query) {
-    var url = NYAA_RSS + "?c=" + NYAA_CATEGORY + "&q=" + encodeURIComponent(query);
-    try {
-        return parseNyaaRss(await fetchText(url, "Nyaa"));
-    } catch (e) {
-        console.error("[Nyaa] '" + query + "' failed: " + (e && e.message));
-        return [];
-    }
-}
-
-/** Multi-episode or season pack: its magnet would open the largest file, not
- *  the requested episode, so it cannot be used. */
-function isBatchName(name) {
-    var t = String(name || "");
-    if (/\b(?:batch|complete|all\s+episodes)\b/i.test(t)) return true;
-    // S01E01-E12, S02E01-E07
-    if (/\bS\d{1,2}E\d{1,3}\s*[-~]\s*(?:S\d{1,2})?E?\d{1,3}\b/i.test(t)) return true;
-    // S01-S03
-    if (/\bS\d{1,2}\s*[-~]\s*S\d{1,2}\b/i.test(t)) return true;
-    // (01-12), [01~12]
-    if (/[\(\[]\s*\d{1,3}\s*[-~]\s*\d{1,3}\s*[\)\]]/.test(t)) return true;
-    // Bare "01-12". The <=200 guard keeps codec tokens ("x265-10bit") out.
-    var m = t.match(/\b(\d{1,3})\s*[-~]\s*(\d{1,3})\b/);
-    if (m && toInt(m[1], 0) <= 200 && toInt(m[2], 0) <= 200) return true;
-    return false;
-}
-
-/** The release must name this show, not merely share the episode token the
- *  fuzzy RSS search matched. The show title has to appear as a whole phrase
- *  so "One Piece" does not accept "One Piece of Cake". */
-function releaseMatchesTitle(release, titles) {
-    var a = normTitle(stripSeasonMarkers(decodeEntities(release)));
-    if (!a) return false;
-    var padded = " " + a + " ";
-    for (var i = 0; i < titles.length; i++) {
-        var b = normTitle(stripSeasonMarkers(titles[i]));
-        if (b && padded.indexOf(" " + b + " ") !== -1) return true;
-    }
-    return false;
-}
-
-function isDualName(name) {
-    return /\bdual[\s._-]?audio\b/i.test(String(name || ""));
-}
-
-async function nyaaReleases(searchTitles, guardTitles, req) {
-    var primary = searchTitles[0];
-    if (!primary) return [];
-    var queries;
-    if (req.isMovie) {
-        queries = [];
-        var pool = searchTitles.concat(guardTitles || []);
-        for (var t = 0; t < pool.length && queries.length < 2; t++) {
-            if (pool[t] && isAscii(pool[t]) && queries.indexOf(pool[t]) === -1) queries.push(pool[t]);
-        }
-    } else {
-        var ep = pad2(req.episode);
-        // Two searches, merged: scene-style groups name the episode "SxxExx",
-        // fansub groups name it "- NN" (or "S2 - NN" / "2nd Season - NN").
-        // Nyaa's search is fuzzy, so the results are filtered below anyway.
-        queries = [
-            primary + " S" + pad2(req.season) + "E" + ep,
-            primary + " - " + ep
-        ];
-    }
-
-    var lists = await Promise.all(
-        queries.map(function (q) {
-            return nyaaSearch(q);
-        })
-    );
-
-    var seen = {};
-    var out = [];
-    for (var l = 0; l < lists.length; l++) {
-        var list = lists[l] || [];
-        for (var i = 0; i < list.length; i++) {
-            var r = list[i];
-            if (seen[r.hash]) continue;
-            seen[r.hash] = true;
-            if (r.seeders < NYAA_MIN_SEEDERS) continue;
-            if (!releaseMatchesTitle(r.name, guardTitles && guardTitles.length ? guardTitles : searchTitles)) continue;
-            if (isBatchName(r.name)) continue;
-            if (isSpecialFile(r.name)) continue;
-            var resolution = resolutionOf(r.name);
-            // 1080p or higher only, and the release name has to say so.
-            if (!resolution || resolution.height < 1080) continue;
-            if (!req.isMovie && !nameMatchesEpisode(r.name, req)) continue;
-            out.push({
-                hash: r.hash,
-                idx: 0,
-                name: r.name,
-                sizeText: r.size,
-                height: resolution.height,
-                inferred: false,
-                best: false,
-                trusted: r.trusted,
-                dual: isDualName(r.name),
-                group: r.group,
-                multi: false,
-                entryRank: 0,
-                seeders: r.seeders,
-                source: "Nyaa"
-            });
-        }
-    }
-    return out;
-}
-
-// ---------------------------------------------------------------------------
 // SeaDex
 // ---------------------------------------------------------------------------
 
@@ -873,17 +682,12 @@ function pickEpisodeFile(torrent, req) {
     return picked;
 }
 
-/** Curated best first, then resolution, then the better-seeded (working)
- *  release, then the entry most likely to be the requested season, then dual
- *  audio. */
+/** SeaDex's own ordering: best first, then resolution, then the entry most
+ *  likely to be the requested season, then dual audio. */
 function rankTorrents(list) {
     list.sort(function (a, b) {
         if (a.best !== b.best) return a.best ? -1 : 1;
-        if (!!a.trusted !== !!b.trusted) return a.trusted ? -1 : 1;
         if (b.height !== a.height) return b.height - a.height;
-        var as = a.seeders || 0;
-        var bs = b.seeders || 0;
-        if (bs !== as) return bs - as;
         if (a.entryRank !== b.entryRank) return a.entryRank - b.entryRank;
         if (a.dual !== b.dual) return a.dual ? -1 : 1;
         var ag = a.group.toLowerCase();
@@ -891,17 +695,6 @@ function rankTorrents(list) {
         return ag < bg ? -1 : ag > bg ? 1 : 0;
     });
     return list;
-}
-
-/** Self-contained magnet: name plus public trackers, so it also plays in an
- *  external client on another device, not only in Nuvio's P2P engine. */
-function magnetFor(item) {
-    var url = "magnet:?xt=urn:btih:" + item.hash;
-    if (item.name) url += "&dn=" + encodeURIComponent(item.name);
-    for (var i = 0; i < MAGNET_TRACKERS.length; i++) {
-        url += "&tr=" + encodeURIComponent(MAGNET_TRACKERS[i]);
-    }
-    return url;
 }
 
 function makeResult(item, rank) {
@@ -912,15 +705,12 @@ function makeResult(item, rank) {
         : item.height >= 1440
         ? "1440p"
         : "1080p";
-    var base = String(item.name || "").replace(/\.[a-z0-9]{2,4}$/i, "").trim();
+    var base = item.name.replace(/\.[a-z0-9]{2,4}$/i, "").trim();
     if (base.length > 150) base = base.slice(0, 147) + "...";
     // Nuvio renders `name` as the bold row label, then re-sorts plugin rows
     // alphabetically (sortedForGroupedDisplay). The zero-padded rank prefix
     // preserves this order through that sort.
-    var source = item.source || "SeaDex";
-    var label = pad2(rank) + " · " + source + " · " + (item.best ? "Best · " : "") + base;
-    var language = item.dual ? "Dual Audio" : "Sub";
-    if (item.seeders != null) language += " · " + item.seeders + " seeders";
+    var label = pad2(rank) + " · " + (item.best ? "Best · " : "") + base;
     return {
         name: label,
         title: base,
@@ -928,14 +718,14 @@ function makeResult(item, rank) {
         // opens the largest file. Nuvio reads the index from this scheme.
         url: item.multi
             ? "torrent://" + item.hash + "/" + item.idx
-            : magnetFor(item),
+            : "magnet:?xt=urn:btih:" + item.hash,
         infoHash: item.hash,
         quality: quality + (isHdr(item.name) ? " HDR" : ""),
-        size: item.sizeText || (item.length ? formatSize(item.length) : null),
-        language: language,
-        provider: source,
+        size: item.length ? formatSize(item.length) : null,
+        language: item.dual ? "Dual Audio" : "Sub",
+        provider: "SeaDex",
         type: "torrent",
-        seeders: item.seeders != null ? item.seeders : null,
+        seeders: null,
         peers: null,
         subtitles: []
     };
@@ -962,21 +752,6 @@ function queryTitles(info) {
 // Entry point
 // ---------------------------------------------------------------------------
 
-/** Dedupe by info hash across providers. SeaDex is passed first, so its
- *  curated copy wins when Nyaa lists the same hash. */
-function mergeUnique(first, second) {
-    var seen = {};
-    var out = [];
-    var all = (first || []).concat(second || []);
-    for (var i = 0; i < all.length; i++) {
-        var item = all[i];
-        if (!item || seen[item.hash]) continue;
-        seen[item.hash] = true;
-        out.push(item);
-    }
-    return out;
-}
-
 async function getStreams(tmdbId, mediaType, season, episode) {
     var results = [];
     var isMovie = String(mediaType || "").toLowerCase() === "movie";
@@ -985,7 +760,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         var info = await resolveContent(tmdbId, mediaType);
         var titles = queryTitles(info);
         if (!titles.length) {
-            console.error("[torrents] no searchable title for " + mediaType + " " + tmdbId);
+            console.error("[SeaDex] no searchable title for " + mediaType + " " + tmdbId);
             return results;
         }
 
@@ -1009,34 +784,12 @@ async function getStreams(tmdbId, mediaType, season, episode) {
             if (req.absoluteEpisode == null) req.absoluteEpisode = req.episode;
         }
 
-        // Nyaa needs only the title and episode, so it starts now and runs
-        // alongside the AniList/SeaDex work. It gets its own request object:
-        // the SeaDex loop rewrites derivedSeason per AniList entry and the two
-        // run interleaved.
-        var nyaaReq = {
-            isMovie: isMovie,
-            season: req.season,
-            episode: req.episode,
-            // A season-less file ("- 01") is numbered inside its own season,
-            // so it only counts for season 1; the absolute number catches
-            // continuously numbered releases.
-            absoluteEpisode: req.absoluteEpisode,
-            derivedSeason: 1
-        };
-        var nyaaPromise = nyaaReleases(titles, info.titles, nyaaReq).catch(function (e) {
-            console.error("[Nyaa] error: " + (e && e.message));
-            return [];
-        });
-
-        // SeaDex is keyed by AniList id, so it needs the AniList lookup. Nyaa
-        // does not, and must still return streams when AniList is down or
-        // rate-limited, so a failure here is not fatal.
-        var candidates = [];
-        try {
-            candidates = (await resolveAniListCandidates(titles, req)).slice(0, MAX_ENTRIES);
-        } catch (e) {
-            console.error("[SeaDex] AniList error: " + (e && e.message));
+        var candidates = await resolveAniListCandidates(titles, req);
+        if (!candidates.length) {
+            console.log("[SeaDex] no AniList match for '" + titles[0] + "'");
+            return results;
         }
+        candidates = candidates.slice(0, MAX_ENTRIES);
 
         // Fetch every plausible season entry at once; the file name decides
         // which torrent actually holds the episode. Later seasons are
@@ -1096,26 +849,22 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                     dual: !!torrent.dualAudio,
                     group: String(torrent.releaseGroup || ""),
                     multi: (torrent.files || []).length > 1,
-                    entryRank: c,
-                    source: "SeaDex"
+                    entryRank: c
                 });
             }
         }
-
-        var nyaaFound = await nyaaPromise;
-        found = mergeUnique(found, nyaaFound);
 
         found = rankTorrents(found);
         for (var n = 0; n < found.length && results.length < MAX_RESULTS; n++) {
             results.push(makeResult(found[n], n + 1));
         }
         console.log(
-            "[torrents] S" + req.season + "E" + req.episode + " seadex(entries=" + candidates.length +
-            " torrents=" + torrentCount + ") nyaa=" + nyaaFound.length +
-            " playable=" + found.length + " returning=" + results.length
+            "[SeaDex] S" + req.season + "E" + req.episode + " entries=" + candidates.length +
+            " torrents=" + torrentCount + " playable=" + found.length +
+            " returning=" + results.length
         );
     } catch (e) {
-        console.error("[torrents] getStreams error:", (e && e.message) || e, (e && e.stack) || "");
+        console.error("[SeaDex] getStreams error:", (e && e.message) || e, (e && e.stack) || "");
     }
 
     return results;
