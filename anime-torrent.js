@@ -1,43 +1,37 @@
 // =============================================================================
-// Anime Torrents - NuvioTV plugin (QuickJS / PluginRuntime)
+// SeaDex Torrents - NuvioTV plugin (QuickJS / PluginRuntime)
 //
 // Pipeline:
-//   content id (Kitsu / IMDb / TMDB) -> titles (+ season count)
-//     -> AnimeTosho HTML search
-//     -> strict release matcher (episode token, season guard, batch rejection)
-//     -> one magnet per release -> Nuvio's P2P engine or a debrid provider
+//   content id (TMDB / IMDb / Kitsu) -> titles (+ season count)
+//     -> AniList search -> the right AniList entry (anime id)
+//     -> SeaDex entry (https://seadex.moe, keyed by AniList id)
+//     -> the file inside each release that is the requested episode
+//     -> magnet for single-file releases, torrent://hash/index for batches
 //
-// AnimeTosho mirrors Nyaa (plus TokyoTosho/AniDex/nekoBT) and stays reachable
-// on networks that block Nyaa, so it is the only source. Magnets arrive in
-// base32 and are decoded to the 40-hex btih Nuvio expects.
+// SeaDex is a curated "best release" index: for each anime it lists the
+// releases worth watching, with the torrent's file list. Entries are batches
+// far more often than single episodes, and Nuvio's plugin bridge drops a
+// `fileIdx` field, so a batch would play its largest file instead of the
+// episode. The bridge does read a file index out of `torrent://<hash>/<index>`
+// (StreamModels.p2pFileIdx), so multi-file releases use that URL form and the
+// P2P engine starts on the exact episode file.
 //
-// Only single-episode releases are returned. Nuvio's plugin bridge hardcodes
-// fileIdx = null, so a batch cannot be resolved to the requested episode.
+// Only public-tracker torrents are usable: SeaDex redacts the info hash of
+// private-tracker (AnimeBytes) copies, and without a hash there is no magnet.
 // =============================================================================
 
 var TMDB_BASE = "https://api.themoviedb.org/3";
 var KITSU_BASE = "https://kitsu.io/api/edge";
-// AnimeTosho.org was frozen on 2026-05-09 (no releases added since) and is
-// end-of-life, so it returns nothing for anything that aired after that date.
-// The community successor animetosho.xyz uses the same markup and carries
-// current releases. Query both in parallel: the successor for fresh episodes,
-// the original for back-catalogue depth and as a mirror if either host stalls.
-var ANIMETOSHO_HOSTS = ["animetosho.xyz", "animetosho.org"];
+var ANILIST_API = "https://graphql.anilist.co";
+var SEADEX_API = "https://seadex.moe/api/collections/entries/records";
 var MAX_RESULTS = 10;
+// SeaDex is keyed by AniList id and later seasons are separate entries, so a
+// request may touch several. Cap the fan-out so a title with many spin-offs
+// stays inside Nuvio's 60s plugin budget.
+var MAX_ENTRIES = 8;
 
-// SubsPlease's subtitles are shipped inside its MKV, where nothing can read
-// them. They are extracted once into plain .srt files in this repo (tools/
-// grab-subs.mjs) and attached to every other group's release of the same
-// episode. SRT rather than the extracted ASS: Nuvio applies the user's subtitle
-// appearance to SRT on every platform, while ASS is drawn by each platform's own
-// libass (Android overlay, mpv on desktop/iOS) with its own font lookup, so the
-// same ASS file looks different per device.
-var SUBS_BASE = "https://raw.githubusercontent.com/shivam7042263411-coder/nuvio-animepahe/main/";
-var subsIndex = null;
-
-// Nuvio kills a plugin after 60s. A blocked host (ISP blackhole, firewall)
-// never settles a fetch, so every request needs its own ceiling or the whole
-// lookup dies before any source answers.
+// Nuvio kills a plugin after 60s and its fetch cannot be cancelled, so bound
+// every request: a blocked host would otherwise hold the whole lookup open.
 var REQUEST_TIMEOUT_MS = 8000;
 
 var UA =
@@ -46,10 +40,6 @@ var UA =
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
-
-function stripTags(value) {
-    return String(value == null ? "" : value).replace(/<[^>]*>/g, "");
-}
 
 function decodeEntities(value) {
     return String(value == null ? "" : value)
@@ -74,27 +64,29 @@ function normTitle(value) {
         .trim();
 }
 
+/** Title with season/cour markers removed, so "Frieren Season 2" compares
+ *  equal to "Frieren" when deciding whether an AniList hit is the same show. */
+function stripSeasonMarkers(value) {
+    return String(value == null ? "" : value)
+        .replace(/\b(?:the\s+)?final\s+season\b/gi, " ")
+        .replace(/\b(?:season|cour)\s*\d{1,2}\b/gi, " ")
+        .replace(/\b\d{1,2}(?:st|nd|rd|th)\s+season\b/gi, " ")
+        .replace(/第\s*\d{1,2}\s*期/g, " ")
+        .replace(/\bS\d{1,2}\b/gi, " ");
+}
+
+/** 1-based season named by the title, 99 for "Final Season", or null. */
+function seasonNumberFromTitle(value) {
+    var t = String(value == null ? "" : value);
+    if (/\bfinal season\b/i.test(t)) return 99;
+    var m = t.match(/\bSeason\s*(\d{1,2})\b/i) || t.match(/\b(\d{1,2})(?:st|nd|rd|th)\s+Season\b/i);
+    if (!m) m = t.match(/第\s*(\d{1,2})\s*期/);
+    if (!m) m = t.match(/\bS(\d{1,2})\b/);
+    return m ? toInt(m[1], null) : null;
+}
+
 function isAscii(value) {
     return /^[\x20-\x7e]+$/.test(String(value == null ? "" : value));
-}
-
-function tokenList(value) {
-    var n = normTitle(value);
-    return n ? n.split(" ") : [];
-}
-
-/** Keep a release only when its cleaned name contains one of the show's
- *  titles. Release names lead with a group tag ("[SubsPlease] ..."), so a
- *  prefix comparison would reject every real result. */
-function isRelevant(title, variants) {
-    var t = normTitle(String(title).replace(/\[[^\]]*\]/g, " ").replace(/\([^)]*\)/g, " "));
-    if (!t) return false;
-    var padded = " " + t + " ";
-    for (var i = 0; i < variants.length; i++) {
-        var v = normTitle(variants[i]);
-        if (v && padded.indexOf(" " + v + " ") !== -1) return true;
-    }
-    return false;
 }
 
 function pad2(n) {
@@ -106,416 +98,24 @@ function toInt(value, fallback) {
     return isNaN(n) ? fallback : n;
 }
 
-/** Nyaa/AnimeTosho magnets use base32 in 32 chars; Nuvio needs 40-hex btih. */
-function base32ToHex(value) {
-    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    var s = String(value == null ? "" : value).toUpperCase();
-    var bits = "";
-    for (var i = 0; i < s.length; i++) {
-        var v = alphabet.indexOf(s.charAt(i));
-        if (v < 0) return null;
-        var bin = v.toString(2);
-        while (bin.length < 5) bin = "0" + bin;
-        bits += bin;
+function formatSize(bytes) {
+    var n = toInt(bytes, 0);
+    if (n <= 0) return null;
+    var units = ["B", "KiB", "MiB", "GiB", "TiB"];
+    var i = 0;
+    var v = n;
+    while (v >= 1024 && i < units.length - 1) {
+        v = v / 1024;
+        i++;
     }
-    var hex = "";
-    for (var j = 0; j + 4 <= bits.length; j += 4) {
-        hex += parseInt(bits.substr(j, 4), 2).toString(16);
-    }
-    return hex.length >= 40 ? hex.slice(0, 40) : null;
+    return (v >= 100 ? Math.round(v) : v.toFixed(1)) + " " + units[i];
 }
 
-// ---------------------------------------------------------------------------
-// TMDB
-// ---------------------------------------------------------------------------
-
-async function tmdbJson(path) {
-    var key = typeof TMDB_API_KEY !== "undefined" && TMDB_API_KEY ? TMDB_API_KEY : "";
-    if (!key) throw new Error("TMDB_API_KEY is not configured in the Nuvio build");
-    var url =
-        TMDB_BASE +
-        path +
-        (path.indexOf("?") === -1 ? "?" : "&") +
-        "api_key=" +
-        encodeURIComponent(key) +
-        "&language=en-US";
-    // TMDB resets a connection now and then on this class of network. Retries
-    // turn that into a working lookup instead of "no streams".
-    var res = null;
-    var attempts = 3;
-    for (var attempt = 0; attempt < attempts; attempt++) {
-        try {
-            res = await withTimeout(
-                fetch(url, { headers: { Accept: "application/json" } }),
-                "TMDB " + path
-            );
-            break;
-        } catch (e) {
-            if (attempt === attempts - 1) throw e;
-        }
-    }
-    if (!res.ok) {
-        var why = res.status === 0 && res.statusText ? " (" + res.statusText + ")" : "";
-        throw new Error("TMDB HTTP " + res.status + why + " for " + path);
-    }
-    return await res.json();
-}
-
-/** English name, romaji alternatives (Nyaa's release names), and season count. */
-async function getTmdbInfo(tmdbId, mediaType) {
-    var kind = String(mediaType || "").toLowerCase() === "movie" ? "movie" : "tv";
-    var data = await tmdbJson("/" + kind + "/" + encodeURIComponent(tmdbId));
-
-    var titles = [];
-    function add(value) {
-        if (value && titles.indexOf(value) === -1) titles.push(value);
-    }
-    add(data.name || data.title);
-    add(data.original_name || data.original_title);
-
-    var year = String(data.release_date || data.first_air_date || "").slice(0, 4);
-    var lastSeason = toInt(data.number_of_seasons, 0);
-    if (!lastSeason && Array.isArray(data.seasons)) lastSeason = data.seasons.length;
-    // Episode counts per season, for absolute-episode numbering. Same payload, no
-    // extra request.
-    var seasons = [];
-    if (Array.isArray(data.seasons)) {
-        for (var s = 0; s < data.seasons.length; s++) {
-            var row = data.seasons[s] || {};
-            seasons.push({
-                n: toInt(row.season_number, 0),
-                c: toInt(row.episode_count, 0)
-            });
-        }
-    }
-
-    // JP-region alternative titles are the romaji Nyaa groups actually use
-    // ("Shingeki no Kyojin"), so they lead the search. Non-fatal on failure.
-    var jpTitles = [];
-    try {
-        var alt = await tmdbJson("/" + kind + "/" + encodeURIComponent(tmdbId) + "/alternative_titles");
-        var rows = (alt && alt.results) || [];
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i] || {};
-            if (!isAscii(row.title)) continue;
-            add(row.title);
-            if (String(row.iso_3166_1 || "").toUpperCase() === "JP" && jpTitles.indexOf(row.title) === -1) {
-                jpTitles.push(row.title);
-            }
-        }
-    } catch (e) {
-        console.error("[AnimeTorrents] alternative titles unavailable: " + (e && e.message));
-    }
-    jpTitles.sort(function (a, b) {
-        return tokenList(a).length - tokenList(b).length;
-    });
-
-    return { kind: kind, titles: titles, jpTitles: jpTitles, year: year || null, lastSeason: lastSeason || null, seasons: seasons };
-}
-
-// ---------------------------------------------------------------------------
-// Content ids
-//
-// Nuvio hands the plugin whatever id the active meta provider uses, not a bare
-// TMDB number: "209867" / "tmdb:209867" (TMDB), "tt22248376" (IMDb), and for
-// anime "kitsu:46474:1" (Kitsu id + episode). Each namespace has to resolve to
-// the same title/season shape or every lookup 404s against TMDB.
-// ---------------------------------------------------------------------------
-
-function asciiTitles(values) {
-    var out = [];
-    for (var i = 0; i < values.length; i++) {
-        var v = values[i] && String(values[i]).trim();
-        if (v && isAscii(v) && out.indexOf(v) === -1) out.push(v);
-    }
-    return out;
-}
-
-/** Kitsu entries are one season each; en_jp is the romaji Nyaa groups use. */
-async function kitsuInfo(kitsuId) {
-    var res = await withTimeout(
-        fetch(KITSU_BASE + "/anime/" + encodeURIComponent(kitsuId), {
-            headers: { Accept: "application/vnd.api+json" }
-        }),
-        "Kitsu"
-    );
-    if (!res.ok) throw new Error("Kitsu HTTP " + res.status);
-    var body = await res.json();
-    var attrs = (body && body.data && body.data.attributes) || {};
-    var t = attrs.titles || {};
-    var titles = asciiTitles([t.en_jp, attrs.canonicalTitle, t.en]);
-    var hints = seasonHints(titles.join(" "));
-    return {
-        kind: "tv",
-        titles: titles,
-        jpTitles: asciiTitles([t.en_jp, attrs.canonicalTitle]),
-        year: String(attrs.startDate || "").slice(0, 4) || null,
-        lastSeason: null,
-        // "Attack on Titan Season 2" carries its season in the title while the
-        // app always reports season 1 for a per-season anime entry.
-        seasonHint: hints.length ? hints[0] : null
-    };
-}
-
-async function resolveContent(contentId, mediaType) {
-    var raw = String(contentId == null ? "" : contentId).trim();
-    var kitsu = raw.match(/^kitsu:(\d+)/);
-    if (kitsu) return await kitsuInfo(kitsu[1]);
-
-    var imdb = raw.match(/^(tt\d+)/);
-    if (imdb) {
-        var found = await tmdbJson("/find/" + encodeURIComponent(imdb[1]) + "?external_source=imdb_id");
-        var wantMovie = String(mediaType || "").toLowerCase() === "movie";
-        var tv = (found && found.tv_results) || [];
-        var movies = (found && found.movie_results) || [];
-        var pick = wantMovie ? movies[0] || tv[0] : tv[0] || movies[0];
-        if (!pick || !pick.id) throw new Error("No TMDB match for " + imdb[1]);
-        return await getTmdbInfo(String(pick.id), mediaType);
-    }
-
-    var tmdb = raw.match(/^(?:tmdb[\/:])?(\d+)$/);
-    if (tmdb) return await getTmdbInfo(tmdb[1], mediaType);
-
-    throw new Error("unsupported content id: " + raw);
-}
-
-// ---------------------------------------------------------------------------
-// Release matching
-// ---------------------------------------------------------------------------
-
-function parseQuality(title) {
-    var m = String(title).match(/\b(2160p|1080p|900p|720p|576p|480p|360p)\b/i);
-    return m ? m[1].toLowerCase() : null;
-}
-
-function isDub(title) {
-    var t = String(title);
-    if (/\b(dual[\s-]*audio|multi[\s-]*audio)\b/i.test(t)) return false;
-    return /\b(dub|dubbed)\b/i.test(t);
-}
-
-/** HDR markers, kept as whole tokens so "HDRip"/"DVDRip" do not match. */
-function isHdr(title) {
-    return /\b(?:hdr10\+?|hdr|hlg|dolby[\s.]?vision|dovi)\b/i.test(String(title));
-}
-
-// Release groups ranked first, most wanted first. The user's priority here is
-// SUBTITLE STYLING: SubsPlease (and its predecessor HorribleSubs) do their own
-// typesetting with embedded fonts, while groups like Erai-raws just mux the raw
-// Crunchyroll subs, which looks plain. Styling lives inside the MKV, so the only
-// lever the plugin has is which release it offers — hence a tier of groups known
-// for typeset subs. Ranking is tiered (not just scored) because these groups name
-// episodes "- 08" rather than "S01E08" and so miss the +60 exact-season bonus.
-var TRUSTED_GROUPS = [
-    "SubsPlease",
-    "HorribleSubs",
-    "AnoZu",
-    "EMBER",
-    "Judas",
-    "DKB",
-    "Yameii",
-    "Anime Time"
-];
-
-/** Release group: the leading [Tag], else a trailing -Tag. */
-function groupOf(title) {
-    var t = String(title);
-    var m = t.match(/^\s*\[([^\]]{1,30})\]/);
-    if (m) return m[1].trim();
-    m = t.match(/-([A-Za-z0-9]{2,20})(?:\.[a-z0-9]{2,4})?\s*$/);
-    return m ? m[1] : "";
-}
-
-/** Sort tier: a trusted group's list index, else one past the list. */
-function trustedRank(title) {
-    var g = groupOf(title).toLowerCase();
-    if (g) {
-        for (var i = 0; i < TRUSTED_GROUPS.length; i++) {
-            if (g === TRUSTED_GROUPS[i].toLowerCase()) return i;
-        }
-    }
-    return TRUSTED_GROUPS.length;
-}
-
-/** Trusted groups first (SubsPlease highest), then score, then seeders. */
-function rankReleases(list) {
-    list.sort(function (a, b) {
-        var tier = trustedRank(a.title) - trustedRank(b.title);
-        if (tier) return tier;
-        if (b.score !== a.score) return b.score - a.score;
-        return toInt(b.seeders, 0) - toInt(a.seeders, 0);
-    });
-    return list;
-}
-
-/** Batch/season packs cannot be resolved without fileIdx, so drop them. */
-function isBatch(title) {
-    var t = String(title);
-    if (/(batch|complete|全集|合集)/i.test(t)) return true;
-    if (/\bS\d{1,2}\s*[-~]\s*S?\d{1,2}\b/i.test(t)) return true;
-    // Season markers are not episode ranges; strip them before the range test
-    // so "Season 4 - 01" survives while "01-13" / "01 ~ 12" does not.
-    var rest = t
-        .replace(/\bSeason\s*\d{1,2}\b/gi, " ")
-        .replace(/\bS\d{1,2}\b/gi, " ");
-    if (/(^|[^\d.])\d{1,4}\s*[-~–—]\s*\d{1,4}(?![\d.])/.test(rest)) return true;
-    if (/\b\d{1,4}\s*\+\s*(?:ova|specials?|extras?|movies?)\b/i.test(rest)) return true;
-    return false;
-}
-
-/** Absolute episode from TMDB's per-season episode counts. Fansub groups number
- *  long-running anime continuously ("[HorribleSubs] Black Clover - 58"), while
- *  TMDB/the app report a season-local number (S2E7), so the query needs both. */
-function absoluteEpisodeFrom(seasons, season, episode) {
-    if (!seasons || !seasons.length || !(season > 1)) return null;
-    var sum = 0;
-    for (var i = 0; i < seasons.length; i++) {
-        var s = seasons[i] || {};
-        if (s.n >= 1 && s.n < season) sum += toInt(s.c, 0);
-    }
-    return sum > 0 ? sum + episode : null;
-}
-
-/** Season hints, used to reject a different season's episode 1. */
-function seasonHints(title) {
-    var t = String(title);
-    var out = [];
-    var re = /\bS(\d{1,2})(?![0-9])/gi;
-    var m;
-    while ((m = re.exec(t))) out.push(toInt(m[1], 0));
-    re = /\bSeason\s*(\d{1,2})\b/gi;
-    while ((m = re.exec(t))) out.push(toInt(m[1], 0));
-    re = /\b(\d{1,2})(?:st|nd|rd|th)\s+season\b/gi;
-    while ((m = re.exec(t))) out.push(toInt(m[1], 0));
-    return out;
-}
-
-/** Season/episode tokens used by scene and fansub release names. */
-function episodeInfo(title) {
-    var t = String(title);
-    var info = { season: null, episode: null, absolute: null };
-    var m = t.match(/\bS(\d{1,2})\s*E(?:P)?\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
-    if (m) {
-        info.season = toInt(m[1], null);
-        info.episode = toInt(m[2], null);
-    }
-    if (info.episode == null) {
-        m = t.match(/\bS(\d{1,2})\s*[-_ ]\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
-        if (m) {
-            info.season = toInt(m[1], null);
-            info.episode = toInt(m[2], null);
-        }
-    }
-    if (info.episode == null) {
-        m =
-            t.match(/\bSeason\s*(\d{1,2})\s*(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i) ||
-            t.match(/\bSeason\s*(\d{1,2})\s*[-–—:]\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
-        if (m) {
-            info.season = toInt(m[1], null);
-            info.episode = toInt(m[2], null);
-        }
-    }
-    if (info.episode == null) {
-        m = t.match(/\b(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
-        if (m) info.episode = toInt(m[1], null);
-    }
-    if (info.episode == null) {
-        // A bare season marker ("Season 01 (S01)") is a season pack, not an
-        // episode: strip it first so its number is not read as episode 1
-        // (found live on "[SubsMix] Bocchi the Rock! - Season 01 (S01) V4").
-        var rest = t
-            .replace(/\bSeason\s*\d{1,2}\b/gi, " ")
-            .replace(/\(\s*S\d{1,2}\s*\)/gi, " ")
-            .replace(/\bS\d{1,2}\b/gi, " ");
-        m =
-            // "(?!\.\d)" keeps "11.5" (an OVA/recap) from parsing as episode 11.
-            rest.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?!\.\d)(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
-            rest.match(/[\[\(](\d{1,3})(?!\.\d)(?:v\d)?[\]\)]/) ||
-            rest.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(])/);
-        if (m) info.episode = toInt(m[1], null);
-    }
-    var abs = t.match(/\((\d{1,4})\)/);
-    if (abs) info.absolute = toInt(abs[1], null);
-    if (info.absolute != null && (info.absolute < 1 || info.absolute > 2000)) info.absolute = null;
-    return info;
-}
-
-function matchesRequest(title, req) {
-    if (isBatch(title)) return false;
-    // "OADs"/"OVAs" are plural in many release names, so the noun needs its own
-    // boundary: \boad\b does not match "OADs", which let specials through.
-    if (/\b(?:ova|oad)s?\b/i.test(title)) return false;
-    if (/\b(?:special|specials|recap|picture drama|chibi|junior high)\b/i.test(title)) return false;
-    if (/\b(kanketsu|final chapter|final chapters)\b/i.test(title) || /完结篇|完結編|前篇|後篇/.test(title)) return false;
-    if (!isRelevant(title, req.titles)) return false;
-
-    var ep = episodeInfo(title);
-    var hints = seasonHints(title);
-
-    if (req.isMovie) return ep.episode == null || ep.episode === 1;
-
-    if (ep.episode == null) return false;
-    var epOk =
-        ep.episode === req.episode ||
-        (req.absoluteEpisode != null && ep.episode === req.absoluteEpisode) ||
-        (ep.absolute != null &&
-            (ep.absolute === req.episode ||
-                (req.absoluteEpisode != null && ep.absolute === req.absoluteEpisode)));
-    if (!epOk) return false;
-
-    // "The Final Season" carries no number. Map it to TMDB's last season, and
-    // otherwise reject it: Kitsu-resolved anime never report a last season, so
-    // a season-1 request was accepting "The Final Season Part 2 - E01".
-    if (/\bfinal season\b/i.test(title)) {
-        var asksFinal = false;
-        for (var f = 0; f < req.titles.length; f++) {
-            if (/\bfinal season\b/i.test(req.titles[f])) { asksFinal = true; break; }
-        }
-        if (!asksFinal && !(req.lastSeason != null && req.season === req.lastSeason)) return false;
-    }
-
-    if (ep.season != null) return ep.season === req.season;
-    if (hints.length) return hints.indexOf(req.season) !== -1;
-    return true;
-}
-
-function scoreOf(candidate, req) {
-    var title = candidate.title;
-    var ep = episodeInfo(title);
-    var score = 0;
-    if (ep.season != null && ep.season === req.season) score += 60;
-    var quality = parseQuality(title);
-    if (quality === "1080p") score += 30;
-    else if (quality === "720p") score += 15;
-    else if (quality === "480p") score += 5;
-    if (/\b(dual[\s-]*audio|multi[\s-]*audio|multi[\s-]*subs?)\b/i.test(title)) score += 5;
-    // A dub is a different audio track, not a subtitle. Push it below every sub
-    // so a high-seeder dub cannot outrank the English-subbed releases.
-    if (isDub(title)) score -= 40;
-    else score += 10;
-    // A release with no seeders has nobody to hand over the torrent metadata, so
-    // Nuvio's P2P engine sits on "loading" (peers=0) until the user gives up --
-    // observed as a 27s stall on a dead 1080p while a live 720p sat below it.
-    // Liveness therefore outranks quality: a live release always sorts first.
-    var seeders = toInt(candidate.seeders, 0);
-    if (seeders <= 0) score -= 100;
-    else score += Math.min(seeders, 50) * 0.2;
-    return score;
-}
-
-// ---------------------------------------------------------------------------
-// Sources
-// ---------------------------------------------------------------------------
-
-// Not every Nuvio host provides timers. The Android TV plugin runtime bridges
-// only fetch/console/cheerio/crypto and defines no setTimeout, while the mobile
-// host installs one - so arming a timer here throws ReferenceError before the
-// fetch even starts and the lookup comes back empty on TV only. Detect it once
-// (typeof on an undeclared name is safe); without timers the host's own 60s cap
-// still bounds the call, so a hung host costs results, never a dead plugin.
+// Nuvio's Android TV runtime traditionally bridged fewer host functions than
+// the mobile one. Timer support is detected once; without it the host's own
+// 60s cap still bounds the call, so a slow host costs results, never a crash.
 var HAS_TIMERS = typeof setTimeout === "function";
 
-/** Races a promise against a timer so one dead host cannot stall the request. */
 function withTimeout(promise, label) {
     if (!HAS_TIMERS) return promise;
     return new Promise(function (resolve, reject) {
@@ -542,110 +142,596 @@ function withTimeout(promise, label) {
     });
 }
 
-function parseAnimeTosho(html) {
-    var out = [];
-    var chunks = String(html).split('class="home_list_entry');
-    for (var i = 1; i < chunks.length; i++) {
-        var block = chunks[i];
-        var titleM = block.match(/<div class="link">\s*<a[^>]*>([\s\S]*?)<\/a>/i);
-        if (!titleM) continue;
-        var title = decodeEntities(stripTags(titleM[1])).trim();
-        var sizeM = block.match(/<div class="size"[^>]*>([^<]*)<\/div>/i);
-        var seedM = block.match(/title="Seeders:\s*(\d+)/i);
-        var magnetM = block.match(/href="(magnet:\?[^"]+)"/i);
-        if (!title || !magnetM) continue;
-        var magnet = decodeEntities(magnetM[1]);
-        var hashM = magnet.match(/urn:btih:([0-9a-fA-F]{40}|[a-zA-Z2-7]{32})/);
-        if (!hashM) continue;
-        var hash = hashM[1].length === 40 ? hashM[1].toLowerCase() : base32ToHex(hashM[1]);
-        if (!hash || !/^[0-9a-f]{40}$/.test(hash)) continue;
-        // The release page id addresses its extracted subtitles (subs/index.json).
-        var viewM = block.match(/\/view\/(\d+)/);
-        out.push({
-            title: title,
-            hash: hash,
-            seeders: seedM ? toInt(seedM[1], 0) : 0,
-            size: sizeM ? decodeEntities(sizeM[1]).trim() : null,
-            source: "AnimeTosho",
-            view: viewM ? viewM[1] : null
-        });
-    }
-    return out;
-}
-
-/** Short wait, used to back off when the index rate-limits a burst. */
 function delay(ms) {
-    if (!HAS_TIMERS) return Promise.resolve();
     return new Promise(function (resolve) {
         setTimeout(resolve, ms);
     });
 }
 
-async function animetoshoSearch(host, query) {
+// ---------------------------------------------------------------------------
+// TMDB
+// ---------------------------------------------------------------------------
+
+async function tmdbJson(path) {
+    var key = typeof TMDB_API_KEY !== "undefined" && TMDB_API_KEY ? TMDB_API_KEY : "";
+    if (!key) throw new Error("TMDB_API_KEY is not configured in the Nuvio build");
     var url =
-        "https://" + host + "/search?q=" + encodeURIComponent(query) + "&type=torrent&order=seeders";
-    for (var attempt = 0; ; attempt++) {
-        var res = await withTimeout(
-            fetch(url, { headers: { "User-Agent": UA, Accept: "text/html" } }),
-            "AnimeTosho " + host
-        );
-        // A burst of queries gets 429s, which would silently empty the list, so
-        // one retry after a pause keeps the lookup whole. Nuvio allows 60s.
-        if (res.status === 429 && attempt < 1) {
-            await delay(1500);
+        TMDB_BASE +
+        path +
+        (path.indexOf("?") === -1 ? "?" : "&") +
+        "api_key=" +
+        encodeURIComponent(key) +
+        "&language=en-US";
+    // TMDB resets a connection now and then; retry so a reset does not read as
+    // "no streams".
+    var res = null;
+    var attempts = 3;
+    for (var attempt = 0; attempt < attempts; attempt++) {
+        try {
+            res = await withTimeout(
+                fetch(url, { headers: { Accept: "application/json" } }),
+                "TMDB " + path
+            );
+            break;
+        } catch (e) {
+            if (attempt === attempts - 1) throw e;
+        }
+    }
+    if (!res.ok) throw new Error("TMDB HTTP " + res.status + " for " + path);
+    return await res.json();
+}
+
+/** English name, romaji alternatives (what AniList indexes), and season count. */
+async function getTmdbInfo(tmdbId, mediaType) {
+    var kind = String(mediaType || "").toLowerCase() === "movie" ? "movie" : "tv";
+    var data = await tmdbJson("/" + kind + "/" + encodeURIComponent(tmdbId));
+
+    var titles = [];
+    function add(value) {
+        if (value && titles.indexOf(value) === -1) titles.push(value);
+    }
+    add(data.name || data.title);
+    add(data.original_name || data.original_title);
+
+    var year = String(data.release_date || data.first_air_date || "").slice(0, 4);
+    var lastSeason = toInt(data.number_of_seasons, 0);
+    if (!lastSeason && Array.isArray(data.seasons)) lastSeason = data.seasons.length;
+    var seasons = [];
+    if (Array.isArray(data.seasons)) {
+        for (var s = 0; s < data.seasons.length; s++) {
+            var row = data.seasons[s] || {};
+            seasons.push({ n: toInt(row.season_number, 0), c: toInt(row.episode_count, 0) });
+        }
+    }
+
+    // JP-region alternative titles carry the romaji name AniList indexes
+    // ("Sousou no Frieren"), so they lead the search. Non-fatal on failure.
+    var jpTitles = [];
+    try {
+        var alt = await tmdbJson("/" + kind + "/" + encodeURIComponent(tmdbId) + "/alternative_titles");
+        // TV answers with `results`, movies with `titles`.
+        var rows = (alt && (alt.results || alt.titles)) || [];
+        for (var i = 0; i < rows.length; i++) {
+            var row2 = rows[i] || {};
+            if (!isAscii(row2.title)) continue;
+            add(row2.title);
+            if (String(row2.iso_3166_1 || "").toUpperCase() === "JP" && jpTitles.indexOf(row2.title) === -1) {
+                jpTitles.push(row2.title);
+            }
+        }
+    } catch (e) {
+        console.error("[SeaDex] alternative titles unavailable: " + (e && e.message));
+    }
+    jpTitles.sort(function (a, b) {
+        return a.length - b.length;
+    });
+
+    return {
+        kind: kind,
+        titles: titles,
+        jpTitles: jpTitles,
+        year: year || null,
+        lastSeason: lastSeason || null,
+        seasons: seasons
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Content ids
+//
+// Nuvio passes whatever id the active meta provider uses. TmdbService usually
+// converts it to a TMDB number first, but IMDb and Kitsu ids still arrive when
+// that conversion fails.
+// ---------------------------------------------------------------------------
+
+function asciiTitles(values) {
+    var out = [];
+    for (var i = 0; i < values.length; i++) {
+        var v = values[i] && String(values[i]).trim();
+        if (v && isAscii(v) && out.indexOf(v) === -1) out.push(v);
+    }
+    return out;
+}
+
+async function kitsuInfo(kitsuId) {
+    var res = await withTimeout(
+        fetch(KITSU_BASE + "/anime/" + encodeURIComponent(kitsuId), {
+            headers: { Accept: "application/vnd.api+json" }
+        }),
+        "Kitsu"
+    );
+    if (!res.ok) throw new Error("Kitsu HTTP " + res.status);
+    var body = await res.json();
+    var attrs = (body && body.data && body.data.attributes) || {};
+    var t = attrs.titles || {};
+    var titles = asciiTitles([t.en_jp, attrs.canonicalTitle, t.en]);
+    var hint = seasonNumberFromTitle(titles.join(" "));
+    return {
+        kind: "tv",
+        titles: titles,
+        jpTitles: asciiTitles([t.en_jp, attrs.canonicalTitle]),
+        year: String(attrs.startDate || "").slice(0, 4) || null,
+        lastSeason: null,
+        seasons: [],
+        // A per-season Kitsu entry carries its season in the title while the
+        // app always reports season 1 for an anime entry.
+        seasonHint: hint != null && hint !== 99 ? hint : null
+    };
+}
+
+async function resolveContent(contentId, mediaType) {
+    var raw = String(contentId == null ? "" : contentId).trim();
+    var kitsu = raw.match(/^kitsu:(\d+)/);
+    if (kitsu) return await kitsuInfo(kitsu[1]);
+
+    var imdb = raw.match(/^(tt\d+)/);
+    if (imdb) {
+        var found = await tmdbJson("/find/" + encodeURIComponent(imdb[1]) + "?external_source=imdb_id");
+        var wantMovie = String(mediaType || "").toLowerCase() === "movie";
+        var tv = (found && found.tv_results) || [];
+        var movies = (found && found.movie_results) || [];
+        var pick = wantMovie ? movies[0] || tv[0] : tv[0] || movies[0];
+        if (!pick || !pick.id) throw new Error("No TMDB match for " + imdb[1]);
+        return await getTmdbInfo(String(pick.id), mediaType);
+    }
+
+    var tmdb = raw.match(/^(?:tmdb[\/:])?(\d+)$/);
+    if (tmdb) return await getTmdbInfo(tmdb[1], mediaType);
+
+    throw new Error("unsupported content id: " + raw);
+}
+
+/** Absolute episode from TMDB's per-season episode counts. Fansub batches
+ *  number long-running anime continuously while TMDB reports S2E7. */
+function absoluteEpisodeFrom(seasons, season, episode) {
+    if (!seasons || !seasons.length || !(season > 1)) return null;
+    var sum = 0;
+    for (var i = 0; i < seasons.length; i++) {
+        var s = seasons[i] || {};
+        if (s.n >= 1 && s.n < season) sum += toInt(s.c, 0);
+    }
+    return sum > 0 ? sum + episode : null;
+}
+
+// ---------------------------------------------------------------------------
+// AniList: TMDB title -> the AniList entry SeaDex is keyed by
+// ---------------------------------------------------------------------------
+
+/** How well one AniList hit's names match the show. 0 means "different show". */
+function titleMatchScore(media, wanted) {
+    var names = [];
+    var t = media && media.title ? media.title : {};
+    function add(v) {
+        if (v) names.push(v);
+    }
+    add(t.romaji);
+    add(t.english);
+    add(t.native);
+    var syn = (media && media.synonyms) || [];
+    for (var s = 0; s < syn.length; s++) add(syn[s]);
+
+    var best = 0;
+    for (var i = 0; i < names.length; i++) {
+        var a = normTitle(stripSeasonMarkers(decodeEntities(names[i])));
+        if (!a) continue;
+        for (var j = 0; j < wanted.length; j++) {
+            var b = normTitle(stripSeasonMarkers(wanted[j]));
+            if (!b) continue;
+            if (a === b) {
+                best = Math.max(best, 3);
+                continue;
+            }
+            // A season/arc entry extends the show's name ("Kimetsu no Yaiba:
+            // Yuukaku-hen"), so one name being a word-prefix of the other is
+            // the same franchise. Matching anywhere would also accept a
+            // different show that merely ends in the title ("Koisuru One
+            // Piece"), which must stay out.
+            if (a.indexOf(b + " ") === 0 || b.indexOf(a + " ") === 0) {
+                best = Math.max(best, 2);
+                continue;
+            }
+            // Token overlap catches "86" vs "86 Eighty Six" and subtitle
+            // variants without accepting a spin-off with one shared word.
+            var aa = a.split(" ");
+            var bb = b.split(" ");
+            var common = 0;
+            for (var k = 0; k < aa.length; k++) if (bb.indexOf(aa[k]) !== -1) common++;
+            var ratio = common / Math.min(aa.length, bb.length);
+            if (ratio >= 0.75 && Math.min(aa.length, bb.length) >= 2) best = Math.max(best, 1);
+        }
+    }
+    return best;
+}
+
+async function searchAniList(title) {
+    var query =
+        "query($s:String){Page(perPage:20){media(search:$s,type:ANIME)" +
+        "{id idMal format seasonYear episodes title{romaji english native} synonyms}}}";
+    for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+            var res = await withTimeout(
+                fetch(ANILIST_API, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "User-Agent": UA
+                    },
+                    body: JSON.stringify({ query: query, variables: { s: title } })
+                }),
+                "AniList"
+            );
+            // AniList allows a small number of requests per minute; one short
+            // retry recovers a burst without turning it into "no streams".
+            if (res.status === 429 && attempt === 0 && HAS_TIMERS) {
+                await delay(1500);
+                continue;
+            }
+            if (!res.ok) throw new Error("AniList HTTP " + res.status);
+            var body = await res.json();
+            return (body && body.data && body.data.Page && body.data.Page.media) || [];
+        } catch (e) {
+            if (attempt === 0 && HAS_TIMERS && /HTTP 429/.test(String(e && e.message))) {
+                await delay(1500);
+                continue;
+            }
+            console.error("[SeaDex] AniList '" + title + "' failed: " + (e && e.message));
+            return [];
+        }
+    }
+    return [];
+}
+
+/** The season an AniList entry represents, from its own names ("Season 2",
+ *  "2nd Season", "Final Season"). Arc-titled entries ("Yuukaku-hen") say
+ *  nothing, so they default to 1; the file's own SxxExx decides the match. */
+function seasonOf(media, req) {
+    var t = media && media.title ? media.title : {};
+    var names = [t.romaji, t.english, t.native].concat((media && media.synonyms) || []);
+    for (var i = 0; i < names.length; i++) {
+        var d = seasonNumberFromTitle(names[i]);
+        if (d != null) return d === 99 ? req.lastSeason || 1 : d;
+    }
+    return 1;
+}
+
+/** Formats whose releases can hold the requested episode. Specials/OVAs are
+ *  separate AniList entries and never carry the episode's SxxExx. */
+function formatAllowed(format, isMovie) {
+    var f = String(format || "").toUpperCase();
+    if (isMovie) return f === "MOVIE" || f === "ONA" || f === "";
+    return f === "TV" || f === "TV_SHORT" || f === "ONA" || f === "";
+}
+
+function candidateScore(m, match, req) {
+    var season = seasonOf(m, req);
+    var score = match * 20;
+    if (season === req.season) score += 60;
+    if (req.isMovie) score += m.format === "MOVIE" ? 20 : 0;
+    else if (m.format === "TV") score += 10;
+    else if (m.format === "TV_SHORT" || m.format === "ONA") score += 5;
+    if (req.year && m.seasonYear) {
+        var d = Math.abs(toInt(m.seasonYear, 0) - toInt(req.year, 0));
+        if (d === 0) score += 12;
+        else if (d === 1) score += 8;
+        else if (d <= 2) score += 3;
+        else if (d > 6) score -= 8;
+    }
+    if (!req.isMovie && req.season === 1 && m.episodes && req.episode && m.episodes < req.episode) {
+        score -= 10;
+    }
+    return { media: m, score: score, season: season, match: match };
+}
+
+/** Every AniList entry that could be this show's requested season, best
+ *  first. SeaDex is keyed by AniList id and later seasons are separate,
+ *  often arc-titled entries, so the caller fetches each and lets the file's
+ *  SxxExx / absolute number pick the episode. Only exact or word-prefix
+ *  title matches are fetched; a loose single match is kept as a fallback. */
+function rankCandidates(media, req) {
+    var out = [];
+    var seen = {};
+    for (var i = 0; i < media.length; i++) {
+        var m = media[i];
+        if (!m || m.id == null || seen[m.id]) continue;
+        seen[m.id] = true;
+        var match = titleMatchScore(m, req.titles);
+        if (!match) continue;
+        if (!formatAllowed(m.format, req.isMovie)) continue;
+        out.push(candidateScore(m, match, req));
+    }
+    out.sort(function (a, b) {
+        return b.score - a.score;
+    });
+    var strong = [];
+    for (var s = 0; s < out.length; s++) if (out[s].match >= 2) strong.push(out[s]);
+    return strong.length ? strong : out.slice(0, 1);
+}
+
+async function resolveAniListCandidates(titles, req) {
+    var queries = titles.slice(0, 2);
+    var seen = {};
+    var media = [];
+    // Query the romaji name first and stop as soon as it yields strong hits;
+    // the second query is the fallback for shows AniList spells differently.
+    // This keeps the common lookup to one AniList request (it rate-limits).
+    for (var q = 0; q < queries.length; q++) {
+        var batch = await searchAniList(queries[q]);
+        for (var i = 0; i < batch.length; i++) {
+            var m = batch[i];
+            if (!m || m.id == null || seen[m.id]) continue;
+            seen[m.id] = true;
+            media.push(m);
+        }
+        var found = rankCandidates(media, req);
+        if (found.length && found[0].match >= 2) return found;
+    }
+    return rankCandidates(media, req);
+}
+
+// ---------------------------------------------------------------------------
+// SeaDex
+// ---------------------------------------------------------------------------
+
+async function seadexTorrents(alID) {
+    var url =
+        SEADEX_API +
+        "?perPage=5&filter=" +
+        encodeURIComponent("(alID=" + alID + ")") +
+        "&expand=trs";
+    var res = await withTimeout(fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }), "SeaDex");
+    if (!res.ok) throw new Error("SeaDex HTTP " + res.status);
+    var body = await res.json();
+    var items = body.items || [];
+    var out = [];
+    for (var i = 0; i < items.length; i++) {
+        var expanded = items[i] && items[i].expand && items[i].expand.trs;
+        if (!expanded) continue;
+        for (var t = 0; t < expanded.length; t++) out.push(expanded[t]);
+    }
+    return out;
+}
+
+// ---------------------------------------------------------------------------
+// Release/file matching
+// ---------------------------------------------------------------------------
+
+function isVideoName(name) {
+    return /\.(mkv|mp4|m4v|avi|webm|ts|m2ts|mov|wmv)$/i.test(String(name || ""));
+}
+
+/** 1080p or better, from the file name. Returns null when it does not say.
+ *  The token may be glued to letters ("BD1080p"), so no leading \b. */
+function resolutionOf(name) {
+    var t = String(name || "");
+    var m = t.match(/(\d{3,4})\s*[pP]\b/);
+    if (m) {
+        var h = toInt(m[1], 0);
+        if (h >= 2000) return { label: "2160p", height: 2160 };
+        if (h >= 1440) return { label: "1440p", height: 1440 };
+        if (h >= 1080) return { label: "1080p", height: 1080 };
+        if (h >= 900) return { label: "900p", height: 900 };
+        if (h >= 720) return { label: "720p", height: 720 };
+        if (h >= 576) return { label: "576p", height: 576 };
+        if (h >= 480) return { label: "480p", height: 480 };
+    }
+    if (/\b(?:4k|uhd)\b/i.test(t)) return { label: "2160p", height: 2160 };
+    m = t.match(/\b(\d{3,4})\s*[xX]\s*(\d{3,4})\b/);
+    if (m) {
+        // Width x Height: the short side is the resolution.
+        var hh = Math.min(toInt(m[1], 0), toInt(m[2], 0));
+        if (hh >= 2000) return { label: "2160p", height: 2160 };
+        if (hh >= 1440) return { label: "1440p", height: 1440 };
+        if (hh >= 1080) return { label: "1080p", height: 1080 };
+        if (hh >= 720) return { label: "720p", height: 720 };
+    }
+    return null;
+}
+
+/** Explicitly sub-1080p sources, so a resolution-silent name is not guessed
+ *  into the list as HD. */
+function isSdName(name) {
+    return /\b(?:dvdrip|dvd|hdtvrip|480p|576p|720p|sd)\b/i.test(String(name || ""));
+}
+
+/** HDR markers, kept as whole tokens so "HDRip"/"DVDRip" do not match. */
+function isHdr(name) {
+    return /\b(?:hdr10\+?|hdr|hlg|dolby[\s.]?vision|dovi)\b/i.test(String(name || ""));
+}
+
+/** Episode/absolute tokens used by scene and fansub file names. */
+function fileEpisode(name) {
+    var t = String(name || "");
+    var info = { season: null, episode: null, absolute: null };
+    var m = t.match(/\bS(\d{1,2})\s*E(?:P)?\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
+    if (m) {
+        info.season = toInt(m[1], null);
+        info.episode = toInt(m[2], null);
+    }
+    if (info.episode == null) {
+        m = t.match(/\bS(\d{1,2})\s*[-_ ]\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
+        if (m) {
+            info.season = toInt(m[1], null);
+            info.episode = toInt(m[2], null);
+        }
+    }
+    if (info.episode == null) {
+        m = t.match(/\bSeason\s*(\d{1,2})\s*(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
+        if (m) {
+            info.season = toInt(m[1], null);
+            info.episode = toInt(m[2], null);
+        }
+    }
+    // "Season 3 - 01" and "2nd Season - 01" carry the season but not the
+    // SxxExx form; keep it so a season-1 request cannot take season 3's file.
+    if (info.season == null) {
+        m =
+            t.match(/\bSeason\s*(\d{1,2})\b/i) ||
+            t.match(/\b(\d{1,2})(?:st|nd|rd|th)\s+Season\b/i) ||
+            t.match(/第\s*(\d{1,2})\s*期/);
+        if (m) info.season = toInt(m[1], null);
+    }
+    if (info.episode == null) {
+        m = t.match(/\b(?:Episode|Ep\.?|E)\s*(\d{1,4})(?!\.\d)(?:v\d)?\b/i);
+        if (m) info.episode = toInt(m[1], null);
+    }
+    if (info.episode == null) {
+        var rest = t
+            .replace(/\bSeason\s*\d{1,2}\b/gi, " ")
+            .replace(/\(\s*S\d{1,2}\s*\)/gi, " ")
+            .replace(/\bS\d{1,2}\b/gi, " ");
+        m =
+            rest.match(/(?:^|[\s_])-[\s_]*(\d{1,4})(?!\.\d)(?:v\d)?(?=[\s_\]]|[\[\(\.]|$)/i) ||
+            rest.match(/[\[\(](\d{1,3})(?!\.\d)(?:v\d)?[\]\)]/) ||
+            rest.match(/(?:^|[\s_])(\d{1,3})(?!\.\d)(?:v\d)?(?=[\s_]*[\[\(])/);
+        if (m) info.episode = toInt(m[1], null);
+    }
+    var abs = t.match(/\((\d{2,4})\)/);
+    if (abs) {
+        var a = toInt(abs[1], null);
+        if (a != null && a >= 1 && a <= 2000) info.absolute = a;
+    }
+    return info;
+}
+
+function isSpecialFile(name) {
+    var t = String(name || "");
+    if (/\b(?:ova|oad)s?\b/i.test(t)) return true;
+    if (/\b(?:special|specials|recap|picture drama|chibi|junior high|ncop|nced|creditless|preview)\b/i.test(t)) return true;
+    if (/\b(?:menu|trailer|teaser|interview|making of)\b/i.test(t)) return true;
+    return false;
+}
+
+/** Does this file inside a release hold the requested episode? */
+function nameMatchesEpisode(name, req) {
+    if (isSpecialFile(name)) return false;
+    var e = fileEpisode(name);
+    function absOk(n) {
+        return n != null && (n === req.episode || (req.absoluteEpisode != null && n === req.absoluteEpisode));
+    }
+    if (e.season != null) {
+        if (e.season === req.season && e.episode === req.episode) return true;
+        if (absOk(e.absolute)) return true;
+        // Continuous numbering inside a season-1-labelled batch (S2E7 is the
+        // 58th file and named S01E58 by groups that never restart).
+        if (
+            req.absoluteEpisode != null &&
+            req.absoluteEpisode !== req.episode &&
+            e.season === 1 &&
+            req.season > 1 &&
+            e.episode === req.absoluteEpisode
+        ) {
+            return true;
+        }
+        return false;
+    }
+    if (e.absolute != null && absOk(e.absolute)) return true;
+    if (e.episode == null) return false;
+    // A season-less file ("Show - 01") is numbered inside its own AniList
+    // entry, so it only counts when that entry is the requested season.
+    if (e.episode === req.episode && req.derivedSeason === req.season) return true;
+    // Absolute numbering only when it actually crosses seasons; for season 1
+    // it equals the episode number and must not bypass the season guard.
+    if (req.absoluteEpisode != null && req.absoluteEpisode !== req.episode && e.episode === req.absoluteEpisode) {
+        return true;
+    }
+    return false;
+}
+
+/** The file in this release that is the requested episode, or null. */
+function pickEpisodeFile(torrent, req) {
+    var files = torrent.files || [];
+    var picked = null;
+    for (var i = 0; i < files.length; i++) {
+        var f = files[i] || {};
+        var name = f.name || "";
+        if (!isVideoName(name)) continue;
+        if (req.isMovie) {
+            if (!picked || toInt(f.length, 0) > picked.length) {
+                picked = { idx: i, name: name, length: toInt(f.length, 0) };
+            }
             continue;
         }
-        if (!res.ok) throw new Error("AnimeTosho " + host + " HTTP " + res.status);
-        return parseAnimeTosho(await res.text());
+        if (!nameMatchesEpisode(name, req)) continue;
+        var r = resolutionOf(name);
+        var height = r ? r.height : 0;
+        if (!picked || height > picked.height) {
+            picked = { idx: i, name: name, length: toInt(f.length, 0), height: height };
+        }
     }
+    return picked;
 }
 
-/** One source/query pair. A failure returns [] so the other sources still
- *  contribute instead of aborting the lookup. */
-async function searchSource(search, label, query) {
-    try {
-        var found = await search(query);
-        console.log("[AnimeTorrents] " + label + " '" + query + "' -> " + found.length);
-        return found;
-    } catch (e) {
-        console.error("[AnimeTorrents] " + label + " '" + query + "' failed: " + (e && e.message));
-        return [];
-    }
+/** SeaDex's own ordering: best first, then resolution, then the entry most
+ *  likely to be the requested season, then dual audio. */
+function rankTorrents(list) {
+    list.sort(function (a, b) {
+        if (a.best !== b.best) return a.best ? -1 : 1;
+        if (b.height !== a.height) return b.height - a.height;
+        if (a.entryRank !== b.entryRank) return a.entryRank - b.entryRank;
+        if (a.dual !== b.dual) return a.dual ? -1 : 1;
+        var ag = a.group.toLowerCase();
+        var bg = b.group.toLowerCase();
+        return ag < bg ? -1 : ag > bg ? 1 : 0;
+    });
+    return list;
 }
 
-/** view id -> "subs/<group>/<id>.srt" for episodes whose subtitles were
- *  extracted. One request per lookup; a miss only means no extra track, never a
- *  failed lookup. Values stay plain path strings so a cached older plugin (which
- *  only knows SubsPlease) still reads the index without breaking. */
-async function loadSubsIndex() {
-    if (subsIndex) return subsIndex;
-    subsIndex = {};
-    try {
-        var res = await withTimeout(
-            fetch(SUBS_BASE + "subs/index.json", { headers: { "User-Agent": UA } }),
-            "subs index"
-        );
-        if (res.ok) subsIndex = (await res.json()) || {};
-    } catch (e) {
-        console.log("[AnimeTorrents] subs index unavailable: " + ((e && e.message) || e));
-    }
-    return subsIndex;
+function makeResult(item, rank) {
+    var quality = item.inferred
+        ? "HD"
+        : item.height >= 2160
+        ? "2160p"
+        : item.height >= 1440
+        ? "1440p"
+        : "1080p";
+    var base = item.name.replace(/\.[a-z0-9]{2,4}$/i, "").trim();
+    if (base.length > 150) base = base.slice(0, 147) + "...";
+    // Nuvio renders `name` as the bold row label, then re-sorts plugin rows
+    // alphabetically (sortedForGroupedDisplay). The zero-padded rank prefix
+    // preserves this order through that sort.
+    var label = pad2(rank) + " · " + (item.best ? "Best · " : "") + base;
+    return {
+        name: label,
+        title: base,
+        // A multi-file release must name the episode file or the P2P engine
+        // opens the largest file. Nuvio reads the index from this scheme.
+        url: item.multi
+            ? "torrent://" + item.hash + "/" + item.idx
+            : "magnet:?xt=urn:btih:" + item.hash,
+        infoHash: item.hash,
+        quality: quality + (isHdr(item.name) ? " HDR" : ""),
+        size: item.length ? formatSize(item.length) : null,
+        language: item.dual ? "Dual Audio" : "Sub",
+        provider: "SeaDex",
+        type: "torrent",
+        seeders: null,
+        peers: null,
+        subtitles: []
+    };
 }
 
-/** "subs/horriblesubs/1.srt" -> "HorribleSubs", so the track is labelled with
- *  the group whose subtitles it carries (HorribleSubs covers pre-2021 shows). */
-function subsGroupOf(path) {
-    var m = String(path).match(/^subs\/([^/]+)\//);
-    var slug = m ? m[1].toLowerCase() : "";
-    var names = { subsplease: "SubsPlease", horriblesubs: "HorribleSubs" };
-    return names[slug] || slug || "SubsPlease";
-}
-
-// ---------------------------------------------------------------------------
-// Query building / results
-// ---------------------------------------------------------------------------
-
-/** Romaji first: Nyaa release names use it. */
+/** Romaji first: AniList and release names use it. */
 function queryTitles(info) {
     var out = [];
     function add(value) {
@@ -655,188 +741,18 @@ function queryTitles(info) {
         out.push(t);
     }
     var jp = (info.jpTitles || []).slice().sort(function (a, b) {
-        return tokenList(a).length - tokenList(b).length;
+        return a.length - b.length;
     });
     for (var i = 0; i < jp.length; i++) add(jp[i]);
     for (var j = 0; j < info.titles.length; j++) add(info.titles[j]);
     return out.slice(0, 2);
 }
 
-/** Brackets/punctuation an index search can't tokenize, for the group query. */
-function cleanTitle(t) {
-    return String(t).replace(/[\[\](){}]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-// Each query is one request per host, sent in waves, so this bounds the fan-out.
-var QUERY_LIMIT = 12;
-
-// Only the tier's leaders are queried by name. Each named query is one request
-// per host, and the index answers 429 when too many hit it at once — the generic
-// searches must fit in that budget too, and they already surface the lower
-// groups (DKB, Judas, Yameii) when they rank.
-var QUERY_GROUPS = TRUSTED_GROUPS.slice(0, 4);
-
-function buildQueries(titles, req, year) {
-    if (!titles.length) return [];
-    var seen = {};
-    function add(list, q) {
-        q = String(q || "").replace(/\s+/g, " ").trim();
-        if (!q || seen[q]) return;
-        seen[q] = true;
-        list.push(q);
-    }
-    // A generic "<title> <episode>" search returns a capped, relevance-ranked
-    // page that omits the trusted groups' per-episode singles (seen live:
-    // Jujutsu Kaisen 75 rows with zero SubsPlease; Re:Zero with zero
-    // HorribleSubs). Querying each group by name surfaces them directly.
-    var groups = [];
-    // Groups that number long-running anime continuously (HorribleSubs, SubsPlease)
-    // use the absolute episode, not the season-local one, so their query uses it.
-    var groupEp =
-        req.absoluteEpisode != null && req.absoluteEpisode !== req.episode
-            ? String(req.absoluteEpisode)
-            : pad2(req.episode);
-    for (var g = 0; g < QUERY_GROUPS.length; g++) {
-        add(
-            groups,
-            QUERY_GROUPS[g] +
-                " " +
-                cleanTitle(titles[0]) +
-                (req.isMovie ? (year ? " " + year : "") : " " + groupEp)
-        );
-    }
-    var generic = [];
-    if (req.isMovie) {
-        for (var i = 0; i < titles.length; i++) {
-            if (year) add(generic, titles[i] + " " + year);
-            add(generic, titles[i]);
-        }
-    } else {
-        add(generic, titles[0] + " S" + pad2(req.season) + "E" + pad2(req.episode));
-        add(generic, titles[0] + " " + pad2(req.episode));
-        if (req.absoluteEpisode != null && req.absoluteEpisode !== req.episode) {
-            add(generic, titles[0] + " " + req.absoluteEpisode);
-        }
-        if (titles[1]) add(generic, titles[1] + " " + pad2(req.episode));
-    }
-    // The generic searches are the only source for everything outside the
-    // trusted tier (Hyouka: the group queries matched nothing, and when they
-    // filled the cap the generic ones were dropped, emptying the list), so the
-    // groups are the ones trimmed.
-    var room = Math.max(2, QUERY_LIMIT - generic.length);
-    return groups.slice(0, room).concat(generic);
-}
-
-function addCandidates(list, out, seen) {
-    for (var i = 0; i < list.length; i++) {
-        var c = list[i];
-        if (!c || !/^[0-9a-f]{40}$/.test(c.hash) || seen[c.hash]) continue;
-        seen[c.hash] = true;
-        out.push(c);
-    }
-}
-
-/**
- * Drops releases with no seeders when a live alternative exists. A dead torrent
- * never fetches metadata, so the player sits on "fetching torrent metadata"
- * until the engine gives up.
- */
-function dropDeadReleases(list) {
-    var live = [];
-    for (var i = 0; i < list.length; i++) {
-        if (toInt(list[i].seeders, 0) > 0) live.push(list[i]);
-    }
-    return live.length ? live : list;
-}
-
-/** A group that numbered this show continuously (an absolute-episode release of
- *  it is present) must not also offer its bare "- 07" for a season-2 episode 7 —
- *  that file is season 1. Groups that restart numbering each season have no
- *  absolute release here, so their "- 07" is kept.
- *  shortcut: inferred per group from the candidates; a very long season whose
- *  local episode equals the absolute one could tip it the wrong way. Revisit if a
- *  show is reported as missing an episode. */
-function dropSeasonAmbiguity(list, req) {
-    if (req.absoluteEpisode == null || req.absoluteEpisode === req.episode) return list;
-    var usesAbsolute = {};
-    var i;
-    for (i = 0; i < list.length; i++) {
-        var e = episodeInfo(list[i].title);
-        if (e.episode === req.absoluteEpisode || e.absolute === req.absoluteEpisode) {
-            usesAbsolute[groupOf(list[i].title)] = true;
-        }
-    }
-    var out = [];
-    for (i = 0; i < list.length; i++) {
-        var t = episodeInfo(list[i].title);
-        var bare = t.season == null && t.absolute == null && t.episode === req.episode;
-        if (bare && usesAbsolute[groupOf(list[i].title)]) continue;
-        out.push(list[i]);
-    }
-    return out;
-}
-
-function matchCandidates(candidates, req) {
-    var matched = [];
-    for (var i = 0; i < candidates.length; i++) {
-        if (!matchesRequest(candidates[i].title, req)) continue;
-        candidates[i].score = scoreOf(candidates[i], req);
-        matched.push(candidates[i]);
-    }
-    return matched;
-}
-
-/** The user wants 1080p only (including 1080p HDR). Falls back to the full set
- *  when a show has no 1080p release, so the list is never emptied. */
-function prefer1080p(list) {
-    var hd = [];
-    for (var i = 0; i < list.length; i++) {
-        if (parseQuality(list[i].title) === "1080p") hd.push(list[i]);
-    }
-    return hd.length ? hd : list;
-}
-
-function makeResult(candidate, rank, sub) {
-    var quality = parseQuality(candidate.title) || "";
-    var hdr = isHdr(candidate.title);
-    var language = isDub(candidate.title) ? "Dub" : "Sub";
-    var title = candidate.title.replace(/\.(mkv|mp4|avi|m4v)$/i, "").trim();
-    if (title.length > 140) title = title.slice(0, 137) + "...";
-    var seeders = toInt(candidate.seeders, 0);
-    // SubsPlease/HorribleSubs files already carry these subtitles, so the
-    // extracted copy is only an extra track on everyone else's release.
-    var embeddedSubs = /^(SubsPlease|HorribleSubs)$/i.test(groupOf(candidate.title));
-    return {
-        // Nuvio's plugin bridge renders `name` as the bold row label (subtitle
-        // comes from quality/size/language; `title` is never shown) and then
-        // re-sorts every plugin row with `List<StreamItem>.sortedForGroupedDisplay()`,
-        // which is a plain case-insensitive alphabetical sort on this label. Our
-        // ranking therefore has to be baked into the label's sort order, or Nuvio
-        // throws it away (a seeder-prefixed label sorted "30↑" before "852↑").
-        // The zero-padded rank prefix keeps our order intact through that sort.
-        name: pad2(rank) + " · " + (seeders ? seeders + "↑ · " : "") + title,
-        title: title,
-        url: "magnet:?xt=urn:btih:" + candidate.hash,
-        infoHash: candidate.hash,
-        quality: quality ? quality + (hdr ? " HDR" : "") : null,
-        size: candidate.size || null,
-        language: language,
-        provider: "AnimeTorrents",
-        type: "torrent",
-        seeders: seeders,
-        peers: null,
-        subtitles:
-            sub && !embeddedSubs
-                ? [{ url: sub.url, language: "en", name: sub.name }]
-                : []
-    };
-}
-
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 
-async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
+async function getStreams(tmdbId, mediaType, season, episode) {
     var results = [];
     var isMovie = String(mediaType || "").toLowerCase() === "movie";
 
@@ -844,86 +760,111 @@ async function getStreams(tmdbId, mediaType, season, episode, absoluteEpisode) {
         var info = await resolveContent(tmdbId, mediaType);
         var titles = queryTitles(info);
         if (!titles.length) {
-            console.error("[AnimeTorrents] no searchable title for " + mediaType + " " + tmdbId);
+            console.error("[SeaDex] no searchable title for " + mediaType + " " + tmdbId);
             return results;
         }
 
         var req = {
             titles: info.titles,
             isMovie: isMovie,
-            // Anime ids are per-season, so the real season number is in the
-            // title ("... Season 2") while the app always reports season 1.
+            // Anime ids are per-season, so the real season is in the title
+            // ("... Season 2") while the app always reports season 1.
             season: info.seasonHint || toInt(season, 1),
             episode: toInt(episode, 1),
-            absoluteEpisode: absoluteEpisode == null ? null : toInt(absoluteEpisode, null),
-            lastSeason: info.lastSeason
+            absoluteEpisode: null,
+            derivedSeason: 1,
+            lastSeason: info.lastSeason,
+            year: info.year
         };
-        // TMDB reports season-local episodes, but most fansub groups number
-        // long-running anime continuously: Black Clover S2E7 is released as
-        // "[HorribleSubs] Black Clover - 58". Derive that absolute number from
-        // the season episode counts so both numbering schemes are searched.
-        if (req.absoluteEpisode == null && !req.isMovie) {
+        if (!isMovie) {
             req.absoluteEpisode = absoluteEpisodeFrom(info.seasons, req.season, req.episode);
+            // Nuvio's bridge passes only four args, so the absolute episode the
+            // app knows is never handed over; TMDB's season counts are the
+            // fallback. A single-season request is already absolute.
+            if (req.absoluteEpisode == null) req.absoluteEpisode = req.episode;
         }
-        var queries = buildQueries(titles, req, info.year);
 
-        var candidates = [];
+        var candidates = await resolveAniListCandidates(titles, req);
+        if (!candidates.length) {
+            console.log("[SeaDex] no AniList match for '" + titles[0] + "'");
+            return results;
+        }
+        candidates = candidates.slice(0, MAX_ENTRIES);
+
+        // Fetch every plausible season entry at once; the file name decides
+        // which torrent actually holds the episode. Later seasons are
+        // separate, often arc-titled AniList entries, so guessing one entry
+        // silently loses those episodes.
+        var lists = await Promise.all(
+            candidates.map(function (c) {
+                return seadexTorrents(c.media.id).catch(function () {
+                    return [];
+                });
+            })
+        );
+
+        var found = [];
         var seen = {};
+        var torrentCount = 0;
+        for (var c = 0; c < candidates.length; c++) {
+            // Season-less files ("- 60") only count when the entry is the
+            // requested season; set it per entry before matching.
+            req.derivedSeason = candidates[c].season;
+            var torrents = lists[c];
+            torrentCount += torrents.length;
+            for (var i = 0; i < torrents.length; i++) {
+                var torrent = torrents[i] || {};
+                var hash = String(torrent.infoHash || "").toLowerCase();
+                // Private-tracker copies have their info hash redacted by
+                // SeaDex; without a hash there is no magnet, so they cannot be
+                // played.
+                if (!/^[0-9a-f]{40}$/.test(hash)) continue;
+                if (seen[hash]) continue;
 
-        // A blocked or dead host never settles its fetch and the QuickJS runtime
-        // keeps the evaluation alive while that async job is outstanding, so every
-        // request is bounded by withTimeout. The two hosts mirror the same index,
-        // so a slow one cannot stall the lookup or hide the results the other
-        // already produced.
-        // The index answers 429 when every query hits it at once (seen live with
-        // 10 parallel requests, which silently emptied the result list), so each
-        // host is queried in small waves. Nuvio allows 60s per plugin call.
-        var CONCURRENCY = 3;
-        async function querySource(search, label) {
-            for (var i = 0; i < queries.length; i += CONCURRENCY) {
-                var jobs = [];
-                for (var j = i; j < Math.min(queries.length, i + CONCURRENCY); j++) {
-                    jobs.push(searchSource(search, label, queries[j]));
+                var file = pickEpisodeFile(torrent, req);
+                if (!file) continue;
+                var resolution = resolutionOf(file.name);
+                var inferred = false;
+                if (resolution) {
+                    // 1080p or higher only.
+                    if (resolution.height < 1080) continue;
+                } else if (torrent.isBest && !isSdName(file.name)) {
+                    // SeaDex lists curated best releases, which are HD even when
+                    // the file name omits the token; anything explicitly SD or
+                    // non-best stays out rather than guessing.
+                    inferred = true;
+                } else {
+                    continue;
                 }
-                var batches = await Promise.all(jobs);
-                for (var b = 0; b < batches.length; b++) {
-                    addCandidates(batches[b], candidates, seen);
-                }
+
+                seen[hash] = true;
+                found.push({
+                    hash: hash,
+                    idx: file.idx,
+                    name: file.name,
+                    length: file.length,
+                    height: resolution ? resolution.height : 1080,
+                    inferred: inferred,
+                    best: !!torrent.isBest,
+                    dual: !!torrent.dualAudio,
+                    group: String(torrent.releaseGroup || ""),
+                    multi: (torrent.files || []).length > 1,
+                    entryRank: c
+                });
             }
         }
 
-        await Promise.all(
-            ANIMETOSHO_HOSTS.map(function (host) {
-                return querySource(function (query) {
-                    return animetoshoSearch(host, query);
-                }, "animetosho:" + host);
-            })
-        );
-        var matched = matchCandidates(candidates, req);
-        matched = dropSeasonAmbiguity(matched, req);
-        matched = prefer1080p(matched);
-        matched = rankReleases(matched);
-        matched = dropDeadReleases(matched);
-
-        // The first index hit wins, and `matched` is already ranked, so that is
-        // the most trusted group's file (SubsPlease before anyone else; on
-        // pre-2021 shows HorribleSubs is the only group with one).
-        var extraSub = null;
-        var idx = await loadSubsIndex();
-        for (var s = 0; s < matched.length && !extraSub; s++) {
-            var subsPath = idx[matched[s].view];
-            if (subsPath) extraSub = { url: SUBS_BASE + subsPath, name: subsGroupOf(subsPath) };
-        }
-
-        for (var n = 0; n < matched.length && results.length < MAX_RESULTS; n++) {
-            results.push(makeResult(matched[n], n + 1, extraSub));
+        found = rankTorrents(found);
+        for (var n = 0; n < found.length && results.length < MAX_RESULTS; n++) {
+            results.push(makeResult(found[n], n + 1));
         }
         console.log(
-            "[AnimeTorrents] S" + req.season + "E" + req.episode +
-            " matched " + matched.length + ", returning " + results.length
+            "[SeaDex] S" + req.season + "E" + req.episode + " entries=" + candidates.length +
+            " torrents=" + torrentCount + " playable=" + found.length +
+            " returning=" + results.length
         );
     } catch (e) {
-        console.error("[AnimeTorrents] getStreams error:", (e && e.message) || e, (e && e.stack) || "");
+        console.error("[SeaDex] getStreams error:", (e && e.message) || e, (e && e.stack) || "");
     }
 
     return results;

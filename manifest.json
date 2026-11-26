@@ -1,14 +1,14 @@
 {
-  "name": "Nuvio Anime Torrents",
-  "version": "1.1.12",
-  "description": "Torrent source for NuvioTV. Strict per-episode matching from AnimeTosho; returns 40-hex magnets for Nuvio's P2P engine or a debrid provider.",
+  "name": "Nuvio SeaDex Torrents",
+  "version": "2.0.0",
+  "description": "Torrent source for NuvioTV backed by SeaDex (seadex.moe). Returns the curated best releases for an anime, per episode, as 40-hex magnets or torrent:// batch indexes for Nuvio's P2P engine.",
   "author": "Nuvio Community",
   "scrapers": [
     {
       "id": "anime-torrent",
-      "name": "Anime Torrents",
-      "description": "Per-episode anime magnets from AnimeTosho (live .xyz successor + .org mirror); 1080p/1080p HDR only, SubsPlease first",
-      "version": "1.1.12",
+      "name": "SeaDex Torrents",
+      "description": "Per-episode torrents from SeaDex (seadex.moe), keyed by AniList id; 1080p and above only, including season batches targeted at the exact episode file",
+      "version": "2.0.0",
       "filename": "anime-torrent.js",
       "supportedTypes": [
         "movie",

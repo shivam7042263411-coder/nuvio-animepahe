@@ -1,10 +1,11 @@
-# Nuvio Anime Torrents plugin
+# Nuvio SeaDex Torrents plugin
 
-A torrent scraper for the Nuvio app (plugin format, QuickJS). It turns a show or
-anime episode into per-episode magnets that Nuvio plays through its built-in P2P
-engine or resolves instantly through a debrid provider.
+A torrent scraper for the Nuvio app (plugin format, QuickJS) backed by
+[SeaDex](https://seadex.moe). It turns an anime episode or movie into the
+curated best releases SeaDex indexes, as magnets that Nuvio plays through its
+built-in P2P engine.
 
-This replaces the earlier AnimePahe scraper. The install URL is unchanged.
+This replaces the earlier AnimeTosho provider. The install URL is unchanged.
 
 ## Install in the app
 
@@ -23,16 +24,69 @@ Plugins settings.
 the consent dialog. The defaults (Balanced profile, 2 GB cache) are fine to
 start. Seeding is on by default.
 
-**Debrid (recommended):** Settings → Debrid → connect Torbox or Premiumize. A
-cached magnet becomes a direct HTTP stream with no peer wait.
+Torrent results are labelled **SeaDex Torrents**. Select one and Nuvio starts
+`TorrentState.Connecting → Streaming`. Debrid is not used for plugin streams;
+they always play over P2P.
 
-Torrent results are labelled **AnimeTorrents**. Select one and Nuvio either
-starts `TorrentState.Connecting → Streaming` or asks debrid for a link.
+## How it works
+
+```
+content id (TMDB / IMDb / Kitsu)
+  -> TMDB title, romaji alternative titles, per-season episode counts
+  -> AniList search -> every entry for this show (each season is its own id)
+  -> SeaDex entry per AniList id (https://seadex.moe)
+  -> the file inside each release that is the requested episode
+  -> magnet (single file) or torrent://<hash>/<index> (season batch)
+```
+
+SeaDex is keyed by **AniList id**, not by title. A season of a show is often a
+separate, arc-titled AniList entry ("Kimetsu no Yaiba: Katanakaji no Sato-hen",
+not "Season 4"), so the plugin does not guess one entry. It fetches SeaDex for
+every strong same-title candidate and lets the **file name's `SxxExx` or
+absolute episode number** decide which torrent holds the episode. That is why
+Demon Slayer S2–S5, Attack on Titan S3 Part 2, and similar split seasons resolve
+without a hardcoded arc table.
+
+The matcher:
+
+- Accepts `S01E01`, `S1 - 01`, `Season 3 - 01`, `2nd Season - 01`,
+  `Episode 45`, `- 60`, and the absolute number in `(0337)`.
+- Rejects a different season. A season-less file (`Show - 01`) only counts when
+  the AniList entry it came from is the requested season, and a season-1 request
+  can never take a "Season 3 - 01" or "2nd Season - 01" file.
+- Rejects OVAs, OADs, specials, recaps, NCOP/NCED, and other extras.
+- Uses TMDB's per-season episode counts to derive the absolute episode, so
+  continuously numbered releases (`[MTBB] Shingeki no Kyojin - 60` for TMDB
+  S4E1) are found.
+- Returns **1080p and above only**: `1080p`, `1440p`, `2160p`, `4K`/`UHD`,
+  `1920x1080`-style dimensions, and glued tokens such as `BD1080p`. Anything
+  explicitly `720p`/`480p`/`576p`/`DVDrip` is dropped.
+- When a file name says nothing about resolution, a SeaDex **best** release is
+  included and labelled `HD` (SeaDex only lists curated HD releases); a
+  non-best resolution-silent file, or one with an SD marker, is dropped rather
+  than guessed.
+
+### Season batches
+
+SeaDex entries are often multi-file season batches. Nuvio's plugin bridge drops
+a JSON `fileIdx` field, but it reads the index from the URL scheme
+`torrent://<40-hex>/<index>` (`StreamItem.p2pFileIdx`), and its P2P engine
+selects that file (`P2pStreamRequest.fileIdx`). The plugin therefore emits:
+
+- a plain `magnet:?xt=urn:btih:<40-hex>` for a single-file release, and
+- `torrent://<40-hex>/<index>` plus `infoHash` for a batch, so playback starts
+  on the exact episode file instead of the largest one.
+
+### Private-tracker copies
+
+SeaDex redacts the info hash of private-tracker copies (AnimeBytes returns
+`"<redacted>"`). Without a hash there is no magnet, so those are skipped; only
+public-tracker (Nyaa) copies are returned.
 
 ## Content ids
 
-Nuvio passes the plugin whatever id the active metadata provider uses, not just
-a TMDB number, so all three namespaces are resolved before searching:
+Nuvio usually converts the active meta provider's id to a TMDB number first. The
+plugin also resolves the raw forms:
 
 | Id | Resolved via |
 |----|--------------|
@@ -40,94 +94,8 @@ a TMDB number, so all three namespaces are resolved before searching:
 | `tt22248376` (IMDb) | TMDB `/find` |
 | `kitsu:46474:1` (anime) | Kitsu API for the title |
 
-The Kitsu path is the one that matters for anime: anime metadata is per-season,
-so the season number lives in the title ("Attack on Titan Season 2") while the
-app always reports season 1. Those titles also carry the romaji name (`Sousou no
-Frieren`) that Nyaa releases actually use.
-
-## How it works
-
-```
-content id -> titles + season count
-  -> AnimeTosho HTML (8s cap per request)
-  -> strict release matcher
-  -> magnet (40-hex infoHash)
-```
-
-Queries (max 3 per episode):
-
-```
-<romaji title> S01E01
-<romaji title> 01
-<english title> 01        (and the absolute episode when the app provides one)
-```
-
-The matcher is deliberately strict:
-
-- The release must actually contain the show title (group tags are stripped
-  first, so `[SubsPlease] Frieren - 01` still matches).
-- The episode token must match: `S01E01`, `S1 - 01`, `Episode 01`, `- 01`,
-  `01v2`, `[01]`, or the absolute number in `(60)`.
-- A different season is rejected (`S02E05` for a season 1 request).
-- Season packs and batches are rejected: `Batch`, `Complete`, `01-12`,
-  `01 ~ 12`, `S1-S4`, `(01-25)`, and a bare season marker with no episode
-  (`Season 01 (S01)`), which otherwise read as episode 1.
-- OVAs, OADs, specials, recaps, chibi shorts, "Junior High" spin-offs, and the
-  "Kanketsu-hen" finale specials are rejected.
-- Fractional episode numbers (`11.5`, `12.5`) are OVAs and never satisfy episode
-  `11`/`12` (found live on Hyouka, where only the 11.5 OVA had a 1080p file).
-- "The Final Season" is mapped to TMDB's last season.
-- Only `1080p` releases are returned; `1080p HDR` is included and labelled
-  `· HDR`. If a show has no 1080p at all, the full set is used as a fallback so
-  the list is never empty.
-- Ranking is tiered by release group, most wanted first: `SubsPlease`,
-  `HorribleSubs`, `AnoZu`, `EMBER`, then `Judas`, `DKB`, `Yameii`, `Anime Time`,
-  then everything else. The first four are the original trusted tier; the next
-  four were added for their **typeset subtitles** (the styling lives inside the
-  MKV, so ranking is the only lever the plugin has — Erai-raws and similar just
-  mux plain Crunchyroll subs). Within a tier, score decides (1080p > 720p,
-  sub > dub), then seeders break ties.
-- Each lookup queries the **leading four groups by name** first
-  (`SubsPlease <title> <ep>`, `HorribleSubs <title> <ep>`, ...). A generic
-  `<title> <episode>` search returns a capped, relevance-ranked page that omits
-  the trusted groups' per-episode singles (Jujutsu Kaisen: 75 rows, zero
-  SubsPlease; Re:Zero: zero HorribleSubs), so the groups are queried directly.
-  Only four are named because each query is a request per host and the index
-  answers HTTP 429 when too many hit it at once (that silently emptied the list
-  live); the lower tier still ranks high when the generic search finds it.
-- The generic searches are never trimmed to make room for the named ones. They
-  are the only source for shows no trusted group released (Hyouka, 2012), and
-  trimming them emptied the list.
-- A 429 gets one retry after a pause, and each host is queried in waves of three
-  rather than all at once.
-- Long-running anime are numbered two ways. The app reports a season-local
-  episode (TMDB `Black Clover` S2E7), but the release names count continuously
-  (`[HorribleSubs] Black Clover - 58`). The absolute episode is derived from
-  TMDB's per-season episode counts and searched too, so the trusted group is
-  found for both schemes. A group proven to number this show continuously also
-  has its bare same-numbered release dropped for that request, since `- 07`
-  under a continuous scheme is season 1, not season 2.
-
-Two AnimeTosho hosts are queried in parallel and merged by info hash:
-`animetosho.xyz` (the community successor, live) and `animetosho.org` (frozen on
-2026-05-09, kept for back-catalogue depth and as a mirror). Both render the same
-`home_list_entry` markup and list Nyaa/TokyoTosho/AniDex/nekoBT releases; base32
-info hashes are decoded to the 40-hex form Nuvio requires. AnimeTosho.org alone
-was the "missing latest episodes" cause — it has no releases after May 2026.
-
-Dropping a direct Nyaa query matters. Nuvio's QuickJS runtime keeps a plugin
-evaluation alive until every `fetch` it started settles, and its `fetch` cannot
-be cancelled. A blackholed host (ISP block) never settles, so one fallback to a
-blocked `nyaa.si` burned the whole 60s plugin budget and the results were
-discarded — the "no stream found"/timeout bug. Every request is now bounded by
-`withTimeout` and hosts run in parallel, so a slow one cannot stall the rest.
-
-## Why only single episodes
-
-Nuvio's plugin bridge hardcodes `fileIdx = null` for scraper results, so a batch
-torrent cannot be pointed at the requested file. The scraper therefore returns
-only single-episode releases. Debrid's own file selector is not used for these
-results either.
+The Kitsu path carries the romaji title and the season number in the title,
+which is what AniList indexes.
 
 ## What Nuvio accepts
 
@@ -135,97 +103,65 @@ Each result is:
 
 ```js
 {
-  title: "Release name",                        // parsed for badges, not shown as the row label
-  name: "01 · 26↑ · [SubsPlease] Show - 08 (1080p)", // row label; the leading rank keeps our order
-  url: "magnet:?xt=urn:btih:<40-hex>",   // required non-blank
+  title: "Release name",                         // parsed for badges, not the row label
+  name: "01 · Best · Frieren - S01E01 (BD 1080p)", // row label; leading rank keeps our order
+  url: "torrent://<40-hex>/3",                   // or a magnet; required non-blank
   infoHash: "<40-hex>",
-  quality: "1080p",                           // "1080p HDR" when HDR; Nuvio shows this in the subtitle
-  size: "1.4 GiB",
-  language: "Sub",
-  provider: "AnimeTorrents",
+  quality: "1080p",                              // "1080p HDR", "2160p", or "HD"
+  size: "7.0 GiB",
+  language: "Dual Audio",                        // or "Sub"
+  provider: "SeaDex",
   type: "torrent",
-  seeders: 26,
+  seeders: null,
   peers: null,
-  subtitles: []                          // [{ url, language, name }] when one is extracted
+  subtitles: []
 }
 ```
 
-Nuvio's plugin bridge renders `name` as the bold row label and builds the row
-subtitle from `quality • size • language`. It never shows `title` (only parses it
-for badge rules), so every release puts its own name + seeder count in `name`.
+SeaDex carries no seeder count, so `seeders` is `null`.
 
-Crucially, Nuvio then **re-sorts every plugin row** with
-`List<StreamItem>.sortedForGroupedDisplay()` — a plain case-insensitive
-alphabetical sort on the label (grouped after `sourceName`). Our ranking would be
-thrown away by that sort, so the label carries a zero-padded `NN · ` rank prefix
-that reproduces our order under a plain string sort (a `852↑ …`/`30↑ …` label
-sorted "30↑" first). SubsPlease therefore always stays at `01 · `.
-
-Nuvio adds its own tracker list; the scraper does not need to.
+Nuvio renders `name` as the bold row label and builds the subtitle from
+`quality • size • language`. It then **re-sorts every plugin row** with
+`sortedForGroupedDisplay()` — a plain case-insensitive alphabetical sort on the
+label. The label therefore carries a zero-padded `NN · ` rank prefix so the
+plugin's order (best release first, then resolution, then the most relevant
+season entry, then dual audio) survives that sort.
 
 ### Plugin hosts differ (Android TV has no timers)
 
 The mobile plugin host installs `setTimeout`/`clearTimeout`; the **Android TV**
-host (`NuvioTV`) bridges only fetch/console/cheerio/crypto and defines neither.
-The scraper therefore detects once (`typeof setTimeout`) and, when absent, skips
-its per-request deadline and retry back-off instead of calling a timer that
-throws `ReferenceError` — which used to blank the whole lookup on TV only. The
-host's own 60 s plugin cap still bounds the call, so a hung AnimeTosho costs
+host (`NuvioTV`) defines neither. The scraper detects once
+(`typeof setTimeout`) and, when absent, skips its per-request deadline and the
+AniList 429 back-off instead of calling a timer that throws `ReferenceError`.
+The host's own 60 s plugin cap still bounds the call, so a slow host costs
 results, never a stuck plugin.
 
-## SubsPlease / HorribleSubs subtitles on other groups' releases
+## Rate limits and request budget
 
-SubsPlease ships its subtitles inside the MKV, and nothing inside the plugin can
-read them out: AnimeTosho's copy is xz-compressed and QuickJS has no xz decoder.
-So the files are extracted once, offline, into `subs/` and the plugin attaches
-them to *every other group's* release of the same episode.
-
-They are committed as **SRT**, not ASS. Nuvio applies your subtitle appearance to
-SRT on every platform, so one setting set gives one look on phone, TV, iOS and
-desktop. ASS is handed to each platform's own libass instead — the Android
-overlay, or mpv on desktop and iOS — and those resolve fonts and rasterise
-differently, which is why the same ASS file looked heavier or bolder on some
-devices. The conversion drops typesetting (fonts, signs, positioning) and keeps
-the dialogue text and timings.
-
-SubsPlease only starts in 2021. **HorribleSubs** runs the same pipeline and
-carries everything before that, so it is the group to use for older shows:
-
-```
-node tools/grab-subs.mjs SubsPlease "Bocchi the Rock" 1
-node tools/grab-subs.mjs HorribleSubs "Black Clover" 1
-node tools/grab-subs.mjs --view 393812           # straight from a release page
-```
-
-It writes `subs/<group>/<view>.srt` and adds `<view>` to `subs/index.json`. The
-plugin reads that index once per lookup (one extra request, failure is harmless),
-looks up the release ids of the results it already matched, and labels the track
-with the group it came from. SubsPlease and HorribleSubs rows are skipped
-because their MKV already carries the same subtitles.
-
-Two things the tool deliberately refuses: a row that is not the show (a spin-off
-like `Shingeki! Kyojin Chuugakkou`, a season pack, a `Director's Cut`), and an
-episode where AnimeTosho never extracted the subtitles — many older releases have
-no attachment at all, so coverage is only as good as AnimeTosho's. It prints what
-it skipped; pass a release id with `--view <id>` to override.
-
-Caveats: the match is by episode, not by video, so the extra track is only
-frame-accurate when the raw shares the same script (measured on
-`Bocchi the Rock!` S01E01: all 519 dialogue lines and timings identical between
-SubsPlease and Erai-raws, only the style table differs). Files in `subs/` are
-redistributed fansub work; the repo is public, which is your call.
+A lookup makes two TMDB requests, then one AniList search (the romaji title;
+the English title is only tried if that yields no strong match), then up to
+eight SeaDex entry requests in parallel. The common case is one AniList request,
+which matters because AniList rate-limits. A `429` gets one retry after a short
+pause when timers exist.
 
 ## Limits
 
-- Most anime torrents are **softsub MKV** (subtitles as a track inside the
-  file), not hardsubbed MP4. Playback depends on Media3/ExoPlayer supporting the
-  codec (HEVC/x265 is common) and rendering the subtitle track.
-- A low-seed release buffers on a TV stick. Debrid is the smooth path.
-- A network that blocks `nyaa.si` is unaffected: nothing but AnimeTosho (and
-  TMDB/Kitsu for ids) is ever contacted, so a blocked host cannot hold the
-  lookup open. When AnimeTosho has no match for an episode, the list is simply
-  empty — no timeout.
-- Only single-episode English-translated releases are searched.
+- SeaDex is a **curated "best release" database, not a full torrent index**.
+  Shows or episodes with no entry, or with only private-tracker copies, return
+  an empty list. One Piece episode 1, for example, has no matching file in
+  SeaDex's batches.
+- Later seasons are matched through their own AniList entries. A season that
+  AniList has not indexed, or whose title differs too much from TMDB's, may be
+  missed; the file's own `SxxExx` still prevents a wrong episode from being
+  returned.
+- Most releases are **softsub MKV** (subtitles as a track inside the file).
+  Playback depends on Media3/ExoPlayer supporting the codec (HEVC/x265 is
+  common) and rendering the subtitle track.
+- A low-seed release buffers on a TV stick; SeaDex entries are often large BD
+  remuxes.
+- Long-running anime are numbered two ways; the absolute episode is derived from
+  TMDB's season counts, so a release that restarts numbering inside a batch is
+  still matched by its `SxxExx`.
 
 ## Files
 
@@ -233,9 +169,7 @@ redistributed fansub work; the repo is public, which is your call.
 |------|---------|
 | `anime-torrent.js` | The scraper (`getStreams`) |
 | `manifest.json` | Repository manifest read by Nuvio |
-| `selftest.js` | Offline checks: matching, hash decoding, result shape |
-| `subs/index.json` | Release id → extracted `.srt` used for the extra subtitle track |
-| `tools/grab-subs.mjs` | Extracts a SubsPlease `.ass` out of AnimeTosho and converts it to `subs/<group>/<view>.srt` |
+| `selftest.js` | Offline checks: title/season ranking, file matching, 1080p+ rule, result shape, TV host |
 
 Run the self-check:
 
@@ -244,25 +178,17 @@ node selftest.js
 ```
 
 `tools/` is leftover AnimePahe harvesting tooling and is not used by the
-installed plugin. It is kept only so nothing is lost.
+installed plugin. `subs/` is left over from the AnimeTosho subtitle-index
+feature; the SeaDex pipeline does not use it (SeaDex MKVs already carry their
+group's subtitles).
 
 ## Rollback
 
-The AnimePahe scraper was archived before removal:
+The previous provider is in git history:
 
 ```
-git branch -a                    # backup/animepahe-20261122-203337
-git tag -l                       # animepahe-20261122-203337
-ls ../backups/                   # nuvio-animepahe-*.zip
+git log --oneline -- anime-torrent.js
 ```
 
-Restore it with:
-
-```
-git checkout main
-git reset --hard animepahe-20261122-203337
-```
-
-or unpack `../backups/nuvio-animepahe-worktree-20261122-203337.zip` (includes
-untracked files) / `../backups/nuvio-animepahe-20261122-203337.zip` (committed
-HEAD only).
+Restore it with `git checkout <commit> -- anime-torrent.js manifest.json README.md`,
+or reset the branch to the tagged AnimePahe backup if you need the older scraper.
